@@ -1,0 +1,79 @@
+clear
+set orientation portrait
+!
+read traj.dat z x y
+wind 34 0 60 100 80
+scale -1200 1200 12 -0.002 0.002 4
+!set autoscale y
+set xlabel `Z (mm)'
+set ylabel `X, Y (mm)'
+set curvecolour blue
+gra z x
+set curvecolour red
+gra\noaxes z y
+replot
+!
+read bxy.dat bx by z
+!read peak_x.dat zpx px
+!read peak_y.dat zpy py
+bx=bx/1e4
+by=by/1e4
+wind 33 0 80 100 100
+scale -1200 1200 12 -1 1 8
+set ylabel `B (T)'
+set curvecolour blue
+gra z by
+set curvecolour red
+gra\noaxes z bx
+set colour blue
+!set pchar -12
+!colour blue
+!graph\noaxes zpx px
+!graph\noaxes zpy py
+!set pchar 16
+!
+read pherr.dat zz pherr
+wind 36 0 40 100 60
+scale -1200 1200 12 -3 3 8
+!set autoscale y
+set ylabel `Ph_err (deg)'
+set curvecolour blue
+gra zz pherr
+!
+wind 24 0 20 50 40
+read int1.dat x ix iy
+scale -30 30 6 -.05 .05 10
+set xlabel `X (mm)'
+set ylabel `I1 (Gm)'
+set curvecolour blue
+graph x iy
+set curvecolour red
+graph\noaxes x ix
+!
+wind 25 50 20 100 40
+read int2.dat x iix iiy
+scale -30 30 6 -10 10 10
+set xlabel `X (mm)'
+set ylabel `I2 (Gm<u>2<d>)'
+set curvecolour blue
+!graph x iiy
+set curvecolour red
+!graph\noaxes x iix
+!
+read spec.dat a b e f
+wind 35 0 0 50 20
+scale 1400 2000 6 0 1.5E18 5
+!set autoscale y
+set xlabel `Photon Energy (eV)'
+set ylabel `Intensity'
+set curvecolour blue
+gra e f
+!
+wind 38 50 0 100 20
+read history.dat t cmean
+set xlog 10
+!set autoscale y
+set xlabel `T'
+set ylabel `Av. Cost'
+set curvecolour blue
+graph t cmean

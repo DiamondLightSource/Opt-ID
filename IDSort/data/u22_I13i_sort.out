@@ -1,0 +1,41 @@
+ STARTING CONFIGURATION COST =  46.4185219
+
+ Bxo     (G)     = -0.564195454
+ Byo     (G)     = -72.9117432
+ <Byo>   (G)     =  25.1178951
+ Sig_B   (%)     =  71.4930573
+ IXmax   (G m)   =  1.76672339
+ IYmax   (G m)   =  2.09301066
+ IX0     (G m)   =  0.793581307
+ IY0     (G m)   =  0.758868575
+ I2Xmax  (G m^2) =  1.73514926
+ I2Ymax  (G m^2) =  1.47418463
+ I2X0    (G m^2) = -1.1613704
+ I2Y0    (G m^2) =  0.931964695
+ RMS Phase Error (deg) (ALL)=  6.26647663
+ RMS Phase Error (deg) (TOP)=  3.06644416
+ RMS Phase Error (deg) (BOTTOM)=  6.81518602
+ X-traj straightness (micron) =  11.8647795
+ Y-traj straightness (micron) =  7.69078016
+
+
+ FINAL CONFIGURATION COST =  5.84702015
+
+ Bxo     (G)     = -1.60275221
+ Byo     (G)     = -1.95128465
+ <Byo>   (G)     =  22.4775848
+ Sig_B   (%)     =  79.3926086
+ IXmax   (G m)  =  0.0138193704( C1=  1.)
+ IYmax   (G m)  =  0.0104839997( C2=  1.)
+ IX0     (G m)  =  0.00542944251( C3=  1.)
+ IY0     (G m)  = -0.0024735888( C4=  1.)
+ I2Xmax  (G m^2) =  0.0205434281( C5=  1.)
+ I2Ymax  (G m^2) =  0.153958991( C6=  1.)
+ I2X0    (G m^2) = -0.000281721412( C7=  1.)
+ I2Y0    (G m^2) = -0.137350395( C8=  1.)
+ RMS Phase Error (deg) (ALL)=  1.33240104( C9=  1.)
+ RMS Phase Error (deg) (TOP)=  1.1381551( C10=  1.)
+ RMS Phase Error (deg) (BOTTOM)=  1.16717672
+ X-traj straightness (micron) =  1.52253962( C11=  1.)
+ Y-traj straightness (micron) =  0.342406869( C12=  1.)
+

@@ -1,0 +1,4 @@
+91 2.2 3.0 0.3			! NP, PER (cm), E (GeV), CURR (A)
+8				! NSKIP (poles to skip in averages)
+0				! NN (interpolating points)
+1 1 400 			! IMIN, IMAX, NPOINTS
