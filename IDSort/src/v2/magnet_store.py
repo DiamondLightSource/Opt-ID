@@ -11,8 +11,10 @@ import magnet_tools as mt
 import numpy as np
 
 class MagnetStore(object):
-    ''' object which contains all the real magnets and there values, 
-    but not the order of them in the arrays'''
+    ''' 
+    object which contains all the real magnets and there values, 
+    but not the order of them in the arrays
+    '''
     
     HORIZONTAL = "HH"
     VERTICAL = "VV"
@@ -33,8 +35,10 @@ class MagnetStore(object):
 
 
 class BArray(object):
-    ''' Simple class which contains a single BArray for use in lookups
-    It can be specified on construction and used as required. '''
+    ''' 
+    Simple class which contains a single BArray for use in lookups
+    It can be specified on construction and used as required. 
+    '''
     
     def __init__(self, magdims=[41.,16.,5.25],
                  xmin=0., xmax=1., xstep=1., xoff=0.,
@@ -50,9 +54,11 @@ class BArray(object):
 
 
 class Beam(object):
-    ''' This class contains all the information about a beam for calculating the 
+    ''' 
+    This class contains all the information about a beam for calculating the 
     full barray from it, however it should not include the actual magnet positions
-    in the beam array'''
+    in the beam array
+    '''
     
     SYMETRIC = "SYM"
     ANTISYMETRIC = "ASYM"
@@ -228,6 +234,11 @@ class Beam(object):
                         #self.fint_arrays[i] = self.end_VE_fint
                         #self.sint_arrays[i] = self.end_VE_sint
 
+
+class BeamDiscription(object):
+    '''
+    This is the description of the beam in terms of real magnets
+    '''
 
 
 
