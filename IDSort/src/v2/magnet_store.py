@@ -3,9 +3,7 @@ Created on 15 Feb 2013
 
 @author: ssg37927
 
-x = x
-y = z
-z = s
+x = x,  y = z,  z = s
 
 '''
 
@@ -16,11 +14,11 @@ class MagnetStore(object):
     ''' object which contains all the real magnets and there values, 
     but not the order of them in the arrays'''
     
-    horizontal = "HH"
-    vertical = "VV"
-    horizontal_end = "HE"
-    vertical_end = "VE"
-    air_gap = "AA"
+    HORIZONTAL = "HH"
+    VERTICAL = "VV"
+    HORIZONTAL_END = "HE"
+    VERTICAL_END = "VE"
+    AIR_GAP = "AA"
     
     def __init__(self):
         self.magnets = {}
@@ -32,6 +30,7 @@ class MagnetStore(object):
             vals = line.split()
             dict[vals[0]] = (float(vals[1]), float(vals[2]), float(vals[3]))
         self.magnets[mag_type] = mags
+
 
 class BArray(object):
     ''' Simple class which contains a single BArray for use in lookups
@@ -49,12 +48,23 @@ class BArray(object):
             smin, smax, sstep, soff, 
             magdims, mingap)
 
-#TODO this needs to be updates, and should be able to use subclasses to describe symetric etc, and the main thng id to overload the approipriate parrs. 
+
 class Beam(object):
     ''' This class contains all the information about a beam for calculating the 
     full barray from it, however it should not include the actual magnet positions
     in the beam array'''
-
+    
+    SYMETRIC = "SYM"
+    ANTISYMETRIC = "ASYM"
+    
+    TOP = "TOP"
+    BOTTOM = "BOTTOM"
+    
+    UP = "Y+"
+    DOWN = "Y-"
+    LEFT = "Z+"
+    RIGHT = "Z-"
+    
     def __init__(self, id_type, position, periods,
                 magdims=[41.,16.,5.25],
                 xmin=0., xmax=1., xstep=5.,
@@ -73,7 +83,7 @@ class Beam(object):
         self.mag_steps = steps_per_magnet
         
         self.trunc_length=(periods+16)*4*steps_per_magnet
-        if(self.id_type == self.symetric):
+        if(self.id_type == Beam.SYMETRIC):
             self.id_length = self.id_periods*4+9
         else :
             self.id_length = self.id_periods*4+5
@@ -88,71 +98,138 @@ class Beam(object):
         self.mag_sintx_array = None
         self.mag_sintz_array = None
         self.generate_B_List(xmin, xmax, xstep, zmin, zmax, zstep, mingap, offset)
-        
-        
+    
+    def get_beam_length(self):
+        return self.id_length*self.mag_dims[2]
+    
     def create_type_list(self):
         # do the first end
         self.types = []
         start = 0
         stop = 0
         vertical = False
-        if(self.id_type == self.symetric):
-            self.types.append(MagnetStore.horizontal_end)
-            self.types.append(MagnetStore.air_gap)
-            self.types.append(MagnetStore.vertical_end)
-            self.types.append(MagnetStore.horizontal_end)
+        if(self.id_type == Beam.SYMETRIC):
+            self.types.append(MagnetStore.HORIZONTAL_END)
+            self.types.append(MagnetStore.AIR_GAP)
+            self.types.append(MagnetStore.VERTICAL_END)
+            self.types.append(MagnetStore.HORIZONTAL_END)
             start, stop = (4, self.id_length-4)
             vertical = True
         else :
-            self.types.append(MagnetStore.horizontal_end)
-            self.types.append(MagnetStore.vertical_end)
+            self.types.append(MagnetStore.HORIZONTAL_END)
+            self.types.append(MagnetStore.VERTICAL_END)
             start, stop = (2, self.id_length-2)
         
         # now put in all the middle periods
         for i in range(start, stop):
             if vertical :
-                self.types.append(MagnetStore.vertical)
+                self.types.append(MagnetStore.VERTICAL)
                 vertical = False
             else :
-                self.types.append(MagnetStore.horizontal)
+                self.types.append(MagnetStore.HORIZONTAL)
                 vertical = True
         
         # finaly add in the other end
-        if(self.id_type == self.symetric):
-            self.types.append(MagnetStore.horizontal_end)
-            self.types.append(MagnetStore.vertical_end)
-            self.types.append(MagnetStore.air_gap)
-            self.types.append(MagnetStore.horizontal_end)
+        if(self.id_type == Beam.SYMETRIC):
+            self.types.append(MagnetStore.HORIZONTAL_END)
+            self.types.append(MagnetStore.VERTICAL_END)
+            self.types.append(MagnetStore.AIR_GAP)
+            self.types.append(MagnetStore.HORIZONTAL_END)
         else :
-            self.types.append(MagnetStore.vertical_end)
-            self.types.append(MagnetStore.horizontal_end)
+            self.types.append(MagnetStore.VERTICAL_END)
+            self.types.append(MagnetStore.HORIZONTAL_END)
     
     def create_direction_list(self):
         self.direction = []
         for i in range(0,self.id_length-1,4):
-            if(self.id_position == BeamAssembly.top) :
-                self.direction.append(BeamAssembly.left)
-                self.direction.append(BeamAssembly.up)
-                self.direction.append(BeamAssembly.right)
-                self.direction.append(BeamAssembly.down)
+            if(self.id_position == Beam.TOP) :
+                self.direction.append(Beam.LEFT)
+                self.direction.append(Beam.UP)
+                self.direction.append(Beam.RIGHT)
+                self.direction.append(Beam.DOWN)
             else :
-                self.direction.append(BeamAssembly.right)
-                self.direction.append(BeamAssembly.up)
-                self.direction.append(BeamAssembly.left)
-                self.direction.append(BeamAssembly.down)
+                self.direction.append(Beam.RIGHT)
+                self.direction.append(Beam.UP)
+                self.direction.append(Beam.LEFT)
+                self.direction.append(Beam.DOWN)
                 
         # append the last element
-        if(self.id_position == BeamAssembly.top):
-            self.direction.append(BeamAssembly.left)
+        if(self.id_position == Beam.TOP):
+            self.direction.append(Beam.LEFT)
         else :
-            self.direction.append(BeamAssembly.right)
+            self.direction.append(Beam.RIGHT)
         
         # Sort out porblems with the air holes
-        if self.id_type == BeamAssembly.symetric:
+        if self.id_type == Beam.SYMETRIC:
             self.direction.insert(1, "NN")
             self.direction.insert(self.id_length-2, "NN")
             self.direction.pop()
             self.direction.pop()
+    
+    def generate_B_List(self, xmin, xmax, xstep, zmin, zmax, zstep, mingap, offset):
+        '''
+        offset is the amount that the air gap in different than a normal block
+        or that the HE magnet is bigger
+        '''
+        self.b_arrays = []
+        self.fint_arrays = []
+        self.sint_arrays = []
+        
+        # full size magnets here
+        print "Creating BeamAssembly.barray"
+        #(BeamAssembly.barray, BeamAssembly.fint, BeamAssembly.sint) = self.create_int_array(xmin, xmax, xstep, zmin, zmax, zstep, self.magdims, mingap)
+        self.barray = mt.generate_B_array_with_offsets(xmin, xmax, xstep, 0.0, zmin, zmax, zstep, 0.0, -2 * self.get_beam_length(), 2 * self.get_beam_length(), self.mag_dims[2] / self.mag_steps, 0.0, self.mag_dims, mingap)
+        
+        for i in range(self.id_length):
+            self.b_arrays.append(self.barray)
+            #self.fint_arrays.append(self.fint)
+            #self.sint_arrays.append(self.sint)
+        
+        if self.id_type == Beam.ANTISYMETRIC :
+            #print "self.magdims is ", self.magdims
+            magdims = np.array(self.mag_dims)
+            #print "magdims is ", magdims
+            magdims[2] = magdims[2] / 2.0
+            #print "magdims for VE", magdims 
+            print "Creating BeamAssembly.start_VE_barray"
+            #(BeamAssembly.start_VE_barray, BeamAssembly.start_VE_fint, BeamAssembly.start_VE_sint) = self.create_int_array(xmin, xmax, xstep, zmin, zmax, zstep, magdims, mingap)
+            self.start_VE_barray = mt.generate_B_array_with_offsets(xmin, xmax, xstep, 0.0, zmin, zmax, zstep, 0.0, -2 * self.get_beam_length(), 2 * self.get_beam_length(), self.mag_dims[2] / self.mag_steps, 0.0, magdims, mingap)
+            print "Creating BeamAssembly.end_VE_barray"
+            #(BeamAssembly.end_VE_barray, BeamAssembly.end_VE_fint, BeamAssembly.end_VE_sint) = self.create_int_array(xmin, xmax, xstep, zmin, zmax, zstep, magdims, mingap)
+            self.end_VE_barray = mt.generate_B_array_with_offsets(xmin, xmax, xstep, 0.0, zmin, zmax, zstep, 0.0, -2 * self.get_beam_length(), 2 * self.get_beam_length(), self.mag_dims[2] / self.mag_steps, 0.0, magdims, mingap)
+            
+            magdims[2] = magdims[2] + offset
+            #print "magdims for HE", magdims 
+            print "Creating BeamAssembly.start_HE_barray"
+            #(BeamAssembly.start_HE_barray, BeamAssembly.start_HE_fint, BeamAssembly.start_HE_sint) = self.create_int_array_with_offset(xmin, xmax, xstep, zmin, zmax, zstep, -(offset/2.0), magdims, mingap)
+            self.start_HE_barray = mt.generate_B_array_with_offsets(xmin, xmax, xstep, 0.0, zmin, zmax, zstep, 0.0, -2 * self.get_beam_length(), 2 * self.get_beam_length(), self.mag_dims[2] / self.mag_steps, -offset / 2.0, magdims, mingap)
+            
+            print "Creating BeamAssembly.end_HE_barray"
+            #(BeamAssembly.end_HE_barray, BeamAssembly.end_HE_fint, BeamAssembly.end_HE_sint) = self.create_int_array_with_offset(xmin, xmax, xstep, zmin, zmax, zstep, (offset/2.0), magdims, mingap)
+            self.end_HE_barray = mt.generate_B_array_with_offsets(xmin, xmax, xstep, 0.0, zmin, zmax, zstep, 0.0, -2 * self.get_beam_length(), 2 * self.get_beam_length(), self.mag_dims[2] / self.mag_steps, offset / 2.0, magdims, mingap)
+            
+            for i in range(self.id_length):
+                if self.types[i] == MagnetStore.HORIZONTAL_END:
+                    if i < (self.id_length / 2):
+                        self.b_arrays[i] = self.start_HE_barray
+                        #self.fint_arrays[i] = self.start_HE_fint
+                        #self.sint_arrays[i] = self.start_HE_sint
+                    else :
+                        self.b_arrays[i] = self.end_HE_barray
+                        #self.fint_arrays[i] = self.end_HE_fint
+                        #self.sint_arrays[i] = self.end_HE_sint
+                if self.types[i] == MagnetStore.VERTICAL_END:
+                    if i < (self.id_length / 2):
+                        self.b_arrays[i] = self.start_VE_barray
+                        #self.fint_arrays[i] = self.start_VE_fint
+                        #self.sint_arrays[i] = self.start_VE_sint
+                    else :
+                        self.b_arrays[i] = self.end_VE_barray
+                        #self.fint_arrays[i] = self.end_VE_fint
+                        #self.sint_arrays[i] = self.end_VE_sint
+
+
+
 
 
 
