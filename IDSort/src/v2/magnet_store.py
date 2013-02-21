@@ -88,7 +88,8 @@ class Beam(object):
         self.mag_dims = np.array(magdims);
         self.mag_steps = steps_per_magnet
         
-        self.trunc_length=(periods+16)*4*steps_per_magnet
+        #TODO remove this if unneeded
+        #self.trunc_length=(periods+16)*4*steps_per_magnet
         if(self.id_type == Beam.SYMETRIC):
             self.id_length = self.id_periods*4+9
         else :
@@ -234,16 +235,39 @@ class Beam(object):
                         #self.fint_arrays[i] = self.end_VE_fint
                         #self.sint_arrays[i] = self.end_VE_sint
 
-
+#TODO need to think about how to do this list properly.
 class BeamDiscription(object):
     '''
     This is the description of the beam in terms of real magnets
     '''
+    
+    def __init__(self, beam):
+        self.beam = beam
+        self.flip = []
+        self.magnets = []
+    
+    
+class MagnetProvider(object):
+    '''
+    Class which contains which magnets have been used in the assembly
+    '''
+    
+    def __init__(self, magnet_store):
+        self.magnet_store = magnet_store
+        pass
 
 
-
-
-
+class IDDescription(object):
+    '''
+    Description of the whole system which can be optimised.
+    '''
+    
+    def __init__(self, beams, magnet_store):
+        self.beam_descriptions = []
+        for beam in beams:
+            self.beam_descriptions.append(BeamDiscription(beam))
+        self.magnet_provider = MagnetProvider(magnet_store)
+        pass
 
 # OLD CODE BELOW!!!!!
 
