@@ -6,16 +6,16 @@ Created on 16 Jan 2012
 
 import numpy as np
 
-def fortPMB_NEW(testpoint,m,i,s_offset, magdims, mingap):
+def fortPMB_NEW(testpoint,m,i,magdims, V1):
     '''This function Calculates the B-field in a single orientation according to the calling function
     It's pretty much a carbon-copy of the FORTRAN code
     
     '''
 
     B=0.0
-
-    V1=np.array([-magdims[0]/2,-mingap/2-magdims[1],-magdims[2]/2+s_offset])
-    V2=np.array([magdims[0]/2,-mingap/2,magdims[2]/2+s_offset])
+    
+    V2=V1+magdims
+    
     
     r1=np.zeros(3)
     r2=np.zeros(3)
@@ -87,7 +87,7 @@ def fortPMB_NEW(testpoint,m,i,s_offset, magdims, mingap):
 #TODO might be able to remove s_offset altogether
 #TODO not sure about mingap either 
 
-def wrapCalcB(testpoint,s_offset, magdims, mingap):
+def wrapCalcB(testpoint, magdims,  V1):
     '''This function takes the arguments 'testpoint' and 's_offset'
     'testpoint' requires an array of floats of length 3 describing the [x,z,s] co-ordinates of the point under consideration
     's_offset' requires a float that describes the s-direction offset of the magnet block
@@ -104,34 +104,34 @@ def wrapCalcB(testpoint,s_offset, magdims, mingap):
         m=np.zeros(3)
         m[i]=1
         for j in range(3):
-            B[i][j]= fortPMB_NEW(testpoint,m,j,s_offset, magdims, mingap)
+            B[i][j]= fortPMB_NEW(testpoint,m,j, magdims, V1)
     return B, 
 
 
-def generate_B_array(xmin, xmax, xstep, zmin, zmax, zstep, smin, smax, sstep, magdims, mingap):
+def generate_B_array(xmin, xmax, xstep, zmin, zmax, zstep, smin, smax, sstep, magdims, V1):
     '''
     magdims = np.array([41.,16.,5.25])
     mingap = 5.0
     '''
-    return generate_B_array_with_offsets(xmin, xmax, xstep, 0.0, zmin, zmax, zstep, 0.0, smin, smax, sstep, 0.0, magdims, mingap)
+    return generate_B_array_with_offsets(xmin, xmax, xstep, 0.0, zmin, zmax, zstep, 0.0, smin, smax, sstep, 0.0, magdims, V1)
 
 
-def generate_B_array_with_offsets(xmin, xmax, xstep, xoff, zmin, zmax, zstep, zoff, smin, smax, sstep, soff, magdims, mingap):
+def generate_B_array_with_offsets(xmin, xmax, xstep, xoff, zmin, zmax, zstep, zoff, smin, smax, sstep, soff, magdims, V1):
     x = np.arange(xmin, xmax, xstep)+xoff
     z = np.arange(zmin, zmax, zstep)+zoff
     s = np.arange(smin, smax, sstep)+soff
     
-    return generate_B_array_from_arrays(x, z, s, magdims, mingap)
+    return generate_B_array_from_arrays(x, z, s, magdims, V1)
 
 
-def generate_B_array_from_arrays(x, z, s, magdims, mingap):
+def generate_B_array_from_arrays(x, z, s, magdims,V1):
     
     result = np.zeros([len(x),len(z),len(s),3,3])
     for xx in range(len(x)):
         for zz in range(len(z)):
             for ss in range(len(s)):
                 testpoint=np.array([x[xx],z[zz],s[ss]])
-                B=wrapCalcB(testpoint,0, magdims, mingap)
+                B=wrapCalcB(testpoint, magdims, V1)
                 result[xx,zz,ss,:,:] = np.array(B)
     return result
 

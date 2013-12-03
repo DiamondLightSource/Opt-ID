@@ -39,7 +39,7 @@ if __name__ == "__main__":
     outfile = h5py.File(args[1], 'w')
 
     for mag in magnets:
-        data = mt.generate_B_array(mag['xmin'], mag['xmax'], mag['xstep'], mag['zmin'], mag['zmax'], mag['zstep'], mag['smin'], mag['smax'], mag['sstep'], mag['magdims'], mag['mingap'])
+        data = mt.generate_B_array(mag['xmin'], mag['xmax'], mag['xstep'], mag['zmin'], mag['zmax'], mag['zstep'], mag['smin'], mag['smax'], mag['sstep'], mag['magdims'], mag['V1'])
         outfile.create_dataset("vals", data=data)
 
     outfile.close()
