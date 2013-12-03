@@ -9,7 +9,7 @@ a=json.load(fp)
 fp.close()
 
 
-def create_type_list_antisymetric_ppm(period):
+def create_type_list_antisymetric_ppm(nperiods):
     # do the first end
     types = []
     start = 0
@@ -19,7 +19,7 @@ def create_type_list_antisymetric_ppm(period):
     types.append('HE')
     types.append('VE')
 
-    start, stop = (2, (4*period+1)-2)
+    start, stop = (2, (4*nperiods+1)-2)
 
     # now put in all the middle periods
     for i in range(start, stop):
@@ -37,9 +37,9 @@ def create_type_list_antisymetric_ppm(period):
     return types
 
 
-def create_direction_list_antisymetric_ppm_top(period):
+def create_direction_list_antisymetric_ppm_top(nperiods):
     direction = []
-    for i in range(0,(4*period+1)-1,4):
+    for i in range(0,(4*nperiods+1)-1,4):
         direction.append((0,0,1))
         direction.append((0,1,0))
         direction.append((0,0,-1))
@@ -48,9 +48,10 @@ def create_direction_list_antisymetric_ppm_top(period):
     # Append last element
     direction.append((0,0,1))
 
-def create_direction_list_antisymetric_ppm_bottom(period):
+
+def create_direction_list_antisymetric_ppm_bottom(nperiods):
     direction = []
-    for i in range(0,(4*period+1)-1,4):
+    for i in range(0,(4*nperiods+1)-1,4):
         direction.append((0,0,-1))
         direction.append((0,1,0))
         direction.append((0,0,1))
@@ -58,6 +59,42 @@ def create_direction_list_antisymetric_ppm_bottom(period):
     
     # Append last element
     direction.append((0,0,-1))
+
+    
+def create_magdim_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap):
+    V1 = []
+    length = (4*(nperiods-1)+1)*fullmagdims[2]+2*vemagdims[2]+2*hemagdims[2]
+    x=-fullmagdims[0]/2
+    z=mingap/2
+    s=-length/2.0
+    V1.append((x,z,s))
+    s+=vemagdims[2]
+    V1.append((x,z,s))
+    s+=hemagdims[2]
+    for i in range(2,(4*period+1)-2,1):
+        V1.append((x,z,s))
+        s+=fullmagdims[2]
+    V1.append((x,z,s))
+    s+=hemagdims[2]
+    V1.append((x,z,s))
+    
+    
+def create_magdim_list_antisymmetric_ppm_bottom(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap):
+    V1 = []
+    length = (4*(nperiods-1)+1)*fullmagdims[2]+2*vemagdims[2]+2*hemagdims[2]
+    x=-fullmagdims[0]/2
+    z=-fullmagdims[1]-mingap/2
+    s=-length/2.0
+    V1.append((x,z,s))
+    s+=vemagdims[2]
+    V1.append((x,z,s))
+    s+=hemagdims[2]
+    for i in range(2,(4*period+1)-2,1):
+        V1.append((x,z,s))
+        s+=fullmagdims[2]
+    V1.append((x,z,s))
+    s+=hemagdims[2]
+    V1.append((x,z,s))
 
 
 if __name__ == "__main__" :
