@@ -61,7 +61,7 @@ def create_direction_list_antisymetric_ppm_bottom(nperiods):
     direction.append((0,0,-1))
 
     
-def create_magdim_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap):
+def create_location_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap):
     V1 = []
     length = (4*(nperiods-1)+1)*fullmagdims[2]+2*vemagdims[2]+2*hemagdims[2]
     x=-fullmagdims[0]/2
@@ -79,7 +79,7 @@ def create_magdim_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vemagd
     V1.append((x,z,s))
     
     
-def create_magdim_list_antisymmetric_ppm_bottom(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap):
+def create_location_list_antisymmetric_ppm_bottom(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap):
     V1 = []
     length = (4*(nperiods-1)+1)*fullmagdims[2]+2*vemagdims[2]+2*hemagdims[2]
     x=-fullmagdims[0]/2
