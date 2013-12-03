@@ -7,6 +7,7 @@ Created on 3 Dec 2013
 import numpy as np
 import magnet_tools as mt
 import h5py
+import json
 
 if __name__ == "__main__":
     import optparse
@@ -21,26 +22,29 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     # Add all the magnets
 
-    magnets = []
-    mag = {}
-    mag['xmin'] = -5.0
-    mag['xmax'] = 5.0
-    mag['xstep'] = 1.0
-    mag['zmin'] = -2.0
-    mag['zmax'] = 2.0
-    mag['zstep'] = 1.0
-    mag['smin'] = -100.0
-    mag['smax'] = 100.0
-    mag['sstep'] = 0.1
-    mag['magdims'] = (5,5,1)
-    mag['mingap'] = 5.0
-    magnets.append(mag)
+    fp = open(args[0], 'r')
+    data = json.load(fp)
+    fp.close()
+
+    # create calculation arrays
+    x = np.arange(data['xmin'], data['xmax'], data['xstep'])
+    z = np.arange(data['zmin'], data['zmax'], data['zstep'])
+    s = np.arange(data['smin'], data['smax'], data['sstep'])
 
     outfile = h5py.File(args[1], 'w')
 
-    for mag in magnets:
-        data = mt.generate_B_array(mag['xmin'], mag['xmax'], mag['xstep'], mag['zmin'], mag['zmax'], mag['zstep'], mag['smin'], mag['smax'], mag['sstep'], mag['magdims'], mag['V1'])
-        outfile.create_dataset("vals", data=data)
+    count = 0
+    for b in range(len(data['beams'])):
+        print("Processing beam %02i" % (b))
+        datashape = (len(data['beams'][0]['mags']), len(x), len(z), len(s), 3, 3)
+        print ("datashape is : " + str(datashape))
+        ds = outfile.create_dataset("Beam%02i"%(b), shape=datashape, dtype=np.float64)
+
+        for mag in data['beams'][b]['mags']:
+            print("processing beam %02i magnet %04i" % (b, count))
+            data = mt.generate_B_array_from_arrays(x, z, s, mag['dimentions'], mag['position'])
+            ds[count] = data
+            count += 1
 
     outfile.close()
 

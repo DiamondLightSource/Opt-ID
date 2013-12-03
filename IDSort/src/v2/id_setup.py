@@ -1,12 +1,5 @@
 # order  x, z, s
-
-
 import json
-
-fp=open('C:/Documents and Settings/gdy32713/My Documents/GitHub/Opt-ID/IDSort/src/v2/IDinput2.json','r')
-
-a=json.load(fp)
-fp.close()
 
 
 def create_type_list_antisymetric_ppm(nperiods):
@@ -33,7 +26,7 @@ def create_type_list_antisymetric_ppm(nperiods):
     # finaly add in the other end
     types.append('VE')
     types.append('HE')
-    
+
     return types
 
 
@@ -44,23 +37,24 @@ def create_direction_list_antisymetric_ppm_top(nperiods):
         direction.append((0,1,0))
         direction.append((0,0,-1))
         direction.append((0,-1,0))
-    
+
     # Append last element
     direction.append((0,0,1))
+    return direction
 
 
 def create_direction_list_antisymetric_ppm_bottom(nperiods):
     direction = []
-    for i in range(0,(4*nperiods+1)-1,4):
-        direction.append((0,0,-1))
-        direction.append((0,1,0))
-        direction.append((0,0,1))
-        direction.append((0,-1,0))
-    
-    # Append last element
-    direction.append((0,0,-1))
+    for i in range(0, (4 * nperiods + 1) - 1, 4):
+        direction.append((0, 0, -1))
+        direction.append((0, 1, 0))
+        direction.append((0, 0, 1))
+        direction.append((0, -1, 0))
 
-    
+    # Append last element
+    direction.append((0, 0, -1))
+    return direction
+
 def create_location_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap):
     V1 = []
     length = (4*(nperiods-1)+1)*fullmagdims[2]+2*vemagdims[2]+2*hemagdims[2]
@@ -77,8 +71,8 @@ def create_location_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vema
     V1.append((x,z,s))
     s+=hemagdims[2]
     V1.append((x,z,s))
-    
-    
+    return V1
+
 def create_location_list_antisymmetric_ppm_bottom(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap):
     V1 = []
     length = (4*(nperiods-1)+1)*fullmagdims[2]+2*vemagdims[2]+2*hemagdims[2]
@@ -95,19 +89,93 @@ def create_location_list_antisymmetric_ppm_bottom(period, nperiods,fullmagdims,v
     V1.append((x,z,s))
     s+=hemagdims[2]
     V1.append((x,z,s))
+    return V1
 
-
-if __name__ == "__main__" :
+if __name__ == "__main__":
     import optparse
     usage = "%prog [options] OutputFile"
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-p", "--periods", dest="periods", help="Set the number of full periods for the Device", default=5, type="int")
+    parser.add_option("--fullmagdims", dest="fullmagdims", help="Set the number of full periods for the Device", nargs=3, default=(1.0, 1.0, 1.0), type="float")
+    parser.add_option("--vemagdims", dest="vemagdims", help="Set the number of full periods for the Device", nargs=3, default=(1.0, 1.0, 1.0), type="float")
+    parser.add_option("--hemagdims", dest="hemagdims", help="Set the number of full periods for the Device", nargs=3, default=(1.0, 1.0, 1.0), type="float")
+    parser.add_option("-g", "--gap", dest="gap", help="Set the gap for the device to be created at", default=5.0, type="float")
     parser.add_option("-t", "--type", dest="type", help="Set the device type", type="string", default="PPM_AntiSymetric")
     parser.add_option("-v", "--verbose", dest="verbose", help="display debug information", action="store_true", default=False)
+    parser.add_option("-n", "--name", dest="name", help="PPM name", default="PPM Name", type="string")
 
     (options, args) = parser.parse_args()
-    
+
     if options.type == 'PPM_AntiSymetric':
+        output = {}
+        output['name'] = options.name
+        output['type'] = options.type
+        output['number_of_beams'] = 2
+        output['gap'] = options.gap
+        output['periods'] = options.periods
+        # TODO needs sorting out
+        output['xmin'] = -5.0
+        output['xmax'] = 5.0
+        output['xstep'] = 1.0
+        output['zmin'] = -2.0
+        output['zmax'] = 2.0
+        output['zstep'] = 1.0
+        output['smin'] = -100.0
+        output['smax'] = 100.0
+        output['sstep'] = 1.0
+
+        # calculate all magnet values
         types = create_type_list_antisymetric_ppm(options.periods)
         top_directions = create_direction_list_antisymetric_ppm_top(options.periods)
         bottom_directions = create_direction_list_antisymetric_ppm_bottom(options.periods)
+        top_positions = create_location_list_antisymmetric_ppm_top(options.periods,options.fullmagdims[2]*4, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap)
+        bottom_positions = create_location_list_antisymmetric_ppm_bottom(options.periods,options.fullmagdims[2]*4, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap)
+
+        # output beams
+        output['beams'] = []
+        top_beam = {}
+        top_beam['name'] = "Top Beam"
+        top_beam['mags'] = []
+        bottom_beam = {}
+        bottom_beam = {}
+        bottom_beam['name'] = "Bottom Beam"
+        bottom_beam['mags'] = []
+
+        # top beam
+        for i in range(len(types)):
+            mag = {}
+            mag['type'] = types[i]
+            mag['direction'] = top_directions[i]
+            mag['position'] = top_positions[i]
+            if types[i] == 'VV':
+                mag['dimentions'] = options.fullmagdims
+            elif types[i] == 'HH':
+                mag['dimentions'] = options.fullmagdims
+            elif types[i] == 'HE':
+                mag['dimentions'] = options.hemagdims
+            elif types[i] == 'VE':
+                mag['dimentions'] = options.vemagdims
+            top_beam['mags'].append(mag)
+
+        # bottom beam
+        for i in range(len(types)):
+            mag = {}
+            mag['type'] = types[i]
+            mag['direction'] = bottom_directions[i]
+            mag['position'] = bottom_positions[i]
+            if types[i] == 'VV':
+                mag['dimentions'] = options.fullmagdims
+            elif types[i] == 'HH':
+                mag['dimentions'] = options.fullmagdims
+            elif types[i] == 'HE':
+                mag['dimentions'] = options.hemagdims
+            elif types[i] == 'VE':
+                mag['dimentions'] = options.vemagdims
+            bottom_beam['mags'].append(mag)
+
+        output['beams'].append(top_beam)
+        output['beams'].append(bottom_beam)
+
+        fp = open(args[0], 'w')
+        json.dump(output, fp, sort_keys=False)
+        fp.close()
