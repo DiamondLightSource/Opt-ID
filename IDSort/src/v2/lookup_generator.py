@@ -33,17 +33,17 @@ if __name__ == "__main__":
 
     outfile = h5py.File(args[1], 'w')
 
-    count = 0
     for b in range(len(data['beams'])):
+        count = 0
         print("Processing beam %02i" % (b))
-        datashape = (len(data['beams'][0]['mags']), len(x), len(z), len(s), 3, 3)
+        datashape = (len(data['beams'][b]['mags']), len(x), len(z), len(s), 3, 3)
         print ("datashape is : " + str(datashape))
         ds = outfile.create_dataset("Beam%02i"%(b), shape=datashape, dtype=np.float64)
 
         for mag in data['beams'][b]['mags']:
             print("processing beam %02i magnet %04i" % (b, count))
-            data = mt.generate_B_array_from_arrays(x, z, s, mag['dimentions'], mag['position'])
-            ds[count] = data
+            dataset = mt.generate_B_array_from_arrays(x, z, s, np.array(mag['dimensions']), np.array(mag['position']))
+            ds[count] = dataset * np.array(mag['direction'])
             count += 1
 
     outfile.close()
