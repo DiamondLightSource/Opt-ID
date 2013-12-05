@@ -36,14 +36,14 @@ if __name__ == "__main__":
     for b in range(len(data['beams'])):
         count = 0
         print("Processing beam %02i" % (b))
-        datashape = (len(data['beams'][b]['mags']), len(x), len(z), len(s), 3, 3)
+        datashape = (len(x), len(z), len(s), 3, 3, len(data['beams'][b]['mags']))
         print ("datashape is : " + str(datashape))
-        ds = outfile.create_dataset("Beam%02i"%(b), shape=datashape, dtype=np.float64)
+        ds = outfile.create_dataset(data['beams'][b]['name'], shape=datashape, dtype=np.float64)
 
         for mag in data['beams'][b]['mags']:
             print("processing beam %02i magnet %04i" % (b, count))
             dataset = mt.generate_B_array_from_arrays(x, z, s, np.array(mag['dimensions']), np.array(mag['position']))
-            ds[count] = dataset * np.array(mag['direction'])
+            ds[:, :, :, :, :, count] = dataset * np.array(mag['direction'])
             count += 1
 
     outfile.close()

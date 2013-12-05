@@ -6,27 +6,31 @@ Created on 5 Dec 2013
 import numpy as np
 import random
 
+
 class Magnets(object):
     '''
     This calss deals with all the real magnet information
     '''
     def __init__(self):
         self.magnet_sets = {}
+        self.magnet_flip = {}
 
-    def add_magnet_set(self, name, filename):
+    def add_magnet_set(self, name, filename, flip_vector):
         f = open(filename)
         magnets = {}
         for line in f:
             vals = line.split()
             magnets[vals[0]] = np.array((float(vals[1]), float(vals[2]), float(vals[3])))
         self.magnet_sets[name] = magnets
-    
-    def add_perfect_magnet_set(self, name, number, vector):
+        self.magnet_flip[name] = np.array(flip_vector)
+
+    def add_perfect_magnet_set(self, name, number, vector, flip_vector):
         magnets = {}
         for i in range(number):
-            magnets['%03i'%(i)] = np.array(vector)
+            magnets['%03i' % (i)] = np.array(vector)
         self.magnet_sets[name] = magnets
-        
+        self.magnet_flip[name] = np.array(flip_vector)
+
 
 class MagLists():
     '''
@@ -34,6 +38,7 @@ class MagLists():
     '''
     
     def __init__(self, magnets):
+        self.magnets = magnets
         self.magnet_lists = {}
         for magnet_set in magnets.magnet_sets.keys():
             mags = []
@@ -62,6 +67,13 @@ class MagLists():
     def swap(self, name, a, b):
         L = self.magnet_lists[name]
         L[a], L[b] = L[b], L[a]
+    
+    def get_magnet_vals(self, name, number):
+        magnet = self.magnet_lists[name][number]
+        magdata = self.magnets.magnet_sets[name][magnet[0]]
+        if magnet[1] < 0:
+            magdata = magdata*self.magnets.magnet_flip[name]
+        return magdata
 
 
 if __name__ == "__main__" :
@@ -71,10 +83,10 @@ if __name__ == "__main__" :
     #mags.add_magnet_set('VV', "../../data/I23V.sim")
     #mags.add_magnet_set('VE', "../../data/I23VE.sim")
     
-    mags.add_perfect_magnet_set('HH', 20 , (0.,0.,1.))
-    mags.add_perfect_magnet_set('HE', 5 , (0.,0.,1.))
-    mags.add_perfect_magnet_set('VV', 20 , (0.,1.,0.))
-    mags.add_perfect_magnet_set('VE', 5 , (0.,1.,0.))
+    mags.add_perfect_magnet_set('HH', 20 , (0.,0.,1.), (-1.,1.,-1.))
+    mags.add_perfect_magnet_set('HE', 5 , (0.,0.,1.), (-1.,1.,-1.))
+    mags.add_perfect_magnet_set('VV', 20 , (0.,1.,0.), (-1.,-1.,1.))
+    mags.add_perfect_magnet_set('VE', 5 , (0.,1.,0.), (-1.,-1.,1.))
     
     import pprint
     pprint.pprint(mags.magnet_sets)
