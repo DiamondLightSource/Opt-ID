@@ -39,10 +39,11 @@ def generate_per_magnet_array(info, magnetlist):
 def generate_per_magnet_b_field(beam_arrays, lookup):
     fields = {}
     for beam in beam_arrays.keys():
-        data = lookup[beam][:,2,:,:,:,:]
+        data = lookup[beam][:, 1, :, :, :, :]
         beam_array = beam_arrays[beam]
         result = data * beam_array
-        fields[beam] = np.sum(result, 2)
+        result2 = np.sum(result, 3)
+        fields[beam] = result2
     return fields
 
 def generate_per_beam_b_field(fields):

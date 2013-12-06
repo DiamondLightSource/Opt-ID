@@ -30,7 +30,7 @@ def create_type_list_antisymetric_ppm(nperiods):
     return types
 
 
-def create_direction_list_antisymetric_ppm_top(nperiods):
+def create_direction_list_antisymetric_ppm_bottom(nperiods):
     direction = []
     for i in range(0, (4 * nperiods + 1) - 1, 4):
         direction.append((1, 1, 1))
@@ -43,7 +43,7 @@ def create_direction_list_antisymetric_ppm_top(nperiods):
     return direction
 
 
-def create_direction_list_antisymetric_ppm_bottom(nperiods):
+def create_direction_list_antisymetric_ppm_top(nperiods):
     direction = []
     for i in range(0, (4 * nperiods + 1) - 1, 4):
         direction.append((-1, 1, -1))
@@ -58,8 +58,8 @@ def create_direction_list_antisymetric_ppm_bottom(nperiods):
 def create_location_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap):
     V1 = []
     length = (4*(nperiods-1)+1)*fullmagdims[2]+2*vemagdims[2]+2*hemagdims[2]
-    x=-fullmagdims[0]/2
-    z=mingap/2
+    x=-fullmagdims[0]/2.0
+    z=mingap/2.0
     s=-length/2.0
     V1.append((x,z,s))
     s+=vemagdims[2]
@@ -76,8 +76,8 @@ def create_location_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vema
 def create_location_list_antisymmetric_ppm_bottom(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap):
     V1 = []
     length = (4*(nperiods-1)+1)*fullmagdims[2]+2*vemagdims[2]+2*hemagdims[2]
-    x=-fullmagdims[0]/2
-    z=-fullmagdims[1]-mingap/2
+    x=-fullmagdims[0]/2.0
+    z=-fullmagdims[1]-mingap/2.0
     s=-length/2.0
     V1.append((x,z,s))
     s+=vemagdims[2]
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     parser.add_option("-v", "--verbose", dest="verbose", help="display debug information", action="store_true", default=False)
     parser.add_option("-n", "--name", dest="name", help="PPM name", default="PPM Name", type="string")
     parser.add_option("-x", "--xstartstopstep", dest="x", help="X start stop and step", nargs=3, default=(-40.0, 41., 2.5), type="float")
-    parser.add_option("-z", "--zstartstopstep", dest="z", help="Z start stop and step", nargs=3, default=(-0.15, 0.17, 0.05), type="float")
+    parser.add_option("-z", "--zstartstopstep", dest="z", help="Z start stop and step", nargs=3, default=(-0.15, 0.17, 0.15), type="float")
     parser.add_option("-s", "--stepsperperiod", dest="steps", help="Number of steps in S per magnet", default=12, type="float")
 
     (options, args) = parser.parse_args()
