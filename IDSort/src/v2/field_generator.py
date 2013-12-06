@@ -42,24 +42,30 @@ def generate_per_magnet_b_field(beam_arrays, lookup):
         data = lookup[beam][:,2,:,:,:,:]
         beam_array = beam_arrays[beam]
         result = data * beam_array
-        fields[beam] = result
+        fields[beam] = np.sum(result, 2)
     return fields
+
+def generate_per_beam_b_field(fields):
+    beam_fields = {}
+    for beam in fields.keys():
+        beam_fields[beam] = np.sum(fields[beam],3)
+    return beam_fields
 
 if __name__ == "__main__" :
     mags = magnets.Magnets()
 
-    mags.add_magnet_set('HH', "../../data/I23H.sim", (-1.,1.,-1.))
-    mags.add_magnet_set('HE', "../../data/I23HEA.sim", (-1.,1.,-1.))
-    mags.add_magnet_set('VV', "../../data/I23V.sim", (-1.,-1.,1.))
-    mags.add_magnet_set('VE', "../../data/I23VE.sim", (-1.,-1.,1.))
+#     mags.add_magnet_set('HH', "../../data/I23H.sim", (-1.,1.,-1.))
+#     mags.add_magnet_set('HE', "../../data/I23HEA.sim", (-1.,1.,-1.))
+#     mags.add_magnet_set('VV', "../../data/I23V.sim", (-1.,-1.,1.))
+#     mags.add_magnet_set('VE', "../../data/I23VE.sim", (-1.,-1.,1.))
 
-#     mags.add_perfect_magnet_set('HH', 40 , (0.,0.,1.), (-1.,1.,-1.))
-#     mags.add_perfect_magnet_set('HE', 20 , (0.,0.,1.), (-1.,1.,-1.))
-#     mags.add_perfect_magnet_set('VV', 40 , (0.,1.,0.), (-1.,-1.,1.))
-#     mags.add_perfect_magnet_set('VE', 20 , (0.,1.,0.), (-1.,-1.,1.))
+    mags.add_perfect_magnet_set('HH', 40 , (0.,0.,1.), (-1.,1.,-1.))
+    mags.add_perfect_magnet_set('HE', 20 , (0.,0.,1.), (-1.,1.,-1.))
+    mags.add_perfect_magnet_set('VV', 40 , (0.,1.,0.), (-1.,-1.,1.))
+    mags.add_perfect_magnet_set('VE', 20 , (0.,1.,0.), (-1.,-1.,1.))
 
     maglist = magnets.MagLists(mags)
-    
+
     maglist.shuffle_all()
 
     import h5py
@@ -69,12 +75,14 @@ if __name__ == "__main__" :
     info = json.load(f2)
 
     magarrays = generate_per_magnet_array(info, maglist)
-    data = generate_per_magnet_b_field(magarrays, f1)
+    per_mag_field = generate_per_magnet_b_field(magarrays, f1)
+    per_beam_field = generate_per_beam_b_field(per_mag_field)
 
     f1.close()
     f2.close()
-    
-    f3 = h5py.File('random.h5', 'w')
-    for name in data.keys():
-        f3.create_dataset(name, data=data[name])
+
+    f3 = h5py.File('perfect.h5', 'w')
+    for name in per_mag_field.keys():
+        f3.create_dataset("%s_per_magnet" % (name), data=per_mag_field[name])
+        f3.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
     f3.close()
