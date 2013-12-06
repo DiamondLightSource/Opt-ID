@@ -48,12 +48,19 @@ def generate_per_magnet_b_field(beam_arrays, lookup):
 if __name__ == "__main__" :
     mags = magnets.Magnets()
 
-    mags.add_perfect_magnet_set('HH', 20 , (0.,0.,1.), (-1.,1.,-1.))
-    mags.add_perfect_magnet_set('HE', 5 , (0.,0.,1.), (-1.,1.,-1.))
-    mags.add_perfect_magnet_set('VV', 20 , (0.,1.,0.), (-1.,-1.,1.))
-    mags.add_perfect_magnet_set('VE', 5 , (0.,1.,0.), (-1.,-1.,1.))
+    mags.add_magnet_set('HH', "../../data/I23H.sim", (-1.,1.,-1.))
+    mags.add_magnet_set('HE', "../../data/I23HEA.sim", (-1.,1.,-1.))
+    mags.add_magnet_set('VV', "../../data/I23V.sim", (-1.,-1.,1.))
+    mags.add_magnet_set('VE', "../../data/I23VE.sim", (-1.,-1.,1.))
+
+#     mags.add_perfect_magnet_set('HH', 40 , (0.,0.,1.), (-1.,1.,-1.))
+#     mags.add_perfect_magnet_set('HE', 20 , (0.,0.,1.), (-1.,1.,-1.))
+#     mags.add_perfect_magnet_set('VV', 40 , (0.,1.,0.), (-1.,-1.,1.))
+#     mags.add_perfect_magnet_set('VE', 20 , (0.,1.,0.), (-1.,-1.,1.))
 
     maglist = magnets.MagLists(mags)
+    
+    maglist.shuffle_all()
 
     import h5py
     f1 = h5py.File('test.h5', 'r')
@@ -67,7 +74,7 @@ if __name__ == "__main__" :
     f1.close()
     f2.close()
     
-    f3 = h5py.File('real.h5', 'w')
+    f3 = h5py.File('random.h5', 'w')
     for name in data.keys():
         f3.create_dataset(name, data=data[name])
     f3.close()

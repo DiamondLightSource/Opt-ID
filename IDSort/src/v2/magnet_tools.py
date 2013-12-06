@@ -105,7 +105,7 @@ def wrapCalcB(testpoint, magdims,  V1):
         m[i]=1
         for j in range(3):
             B[i][j]= fortPMB_NEW(testpoint,m,j, magdims, V1)
-    return B, 
+    return B
 
 
 def generate_B_array(xmin, xmax, xstep, zmin, zmax, zstep, smin, smax, sstep, magdims, V1):
@@ -132,7 +132,8 @@ def generate_B_array_from_arrays(x, z, s, magdims,V1):
             for ss in range(len(s)):
                 testpoint=np.array([x[xx],z[zz],s[ss]])
                 B=wrapCalcB(testpoint, magdims, V1)
-                result[xx,zz,ss,:,:] = np.array(B)
+                #TODO Remove the transpose here as it is a test
+                result[xx,zz,ss,:,:] = np.transpose(np.array(B))
     return result
 
 

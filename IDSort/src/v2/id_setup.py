@@ -103,6 +103,9 @@ if __name__ == "__main__":
     parser.add_option("-t", "--type", dest="type", help="Set the device type", type="string", default="PPM_AntiSymetric")
     parser.add_option("-v", "--verbose", dest="verbose", help="display debug information", action="store_true", default=False)
     parser.add_option("-n", "--name", dest="name", help="PPM name", default="PPM Name", type="string")
+    parser.add_option("-x", "--xstartstopstep", dest="x", help="X start stop and step", nargs=3, default=(-40.0, 41., 2.5), type="float")
+    parser.add_option("-z", "--zstartstopstep", dest="z", help="Z start stop and step", nargs=3, default=(-0.15, 0.17, 0.05), type="float")
+    parser.add_option("-s", "--stepsperperiod", dest="steps", help="Number of steps in S per magnet", default=12, type="float")
 
     (options, args) = parser.parse_args()
 
@@ -114,15 +117,16 @@ if __name__ == "__main__":
         output['gap'] = options.gap
         output['periods'] = options.periods
         # TODO needs sorting out
-        output['xmin'] = -2.0
-        output['xmax'] = 2.0
-        output['xstep'] = 1.0
-        output['zmin'] = -2.0
-        output['zmax'] = 2.0
-        output['zstep'] = 1.0
-        output['smin'] = -100.0
-        output['smax'] = 100.0
-        output['sstep'] = 1.0
+        output['xmin'] = options.x[0]
+        output['xmax'] = options.x[1]
+        output['xstep'] = options.x[2]
+        output['zmin'] = options.z[0]
+        output['zmax'] = options.z[1]
+        output['zstep'] = options.z[2]
+        length = options.fullmagdims[2]*(options.periods+16)
+        output['smin'] = -length/2.0
+        output['smax'] = (length/2.0)+(options.fullmagdims[2]/options.steps)
+        output['sstep'] = options.fullmagdims[2]/options.steps
 
         # calculate all magnet values
         types = create_type_list_antisymetric_ppm(options.periods)
