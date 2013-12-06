@@ -132,8 +132,7 @@ def generate_B_array_from_arrays(x, z, s, magdims,V1):
             for ss in range(len(s)):
                 testpoint=np.array([x[xx],z[zz],s[ss]])
                 B=wrapCalcB(testpoint, magdims, V1)
-                #TODO Remove the transpose here as it is a test
-                result[xx,zz,ss,:,:] = np.transpose(np.array(B))
+                result[xx,zz,ss,:,:] = np.array(B)
     return result
 
 
