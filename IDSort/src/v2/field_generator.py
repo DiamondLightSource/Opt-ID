@@ -16,7 +16,7 @@ def load_lookup(filename, beam):
     return f[beam]
 
 
-def generate_per_magnet_array(info, magnetlist):
+def generate_per_magnet_array(info, magnetlist, magnets):
     pos = {}
     pos['VV'] = 0;
     pos['VE'] = 0;
@@ -29,7 +29,7 @@ def generate_per_magnet_array(info, magnetlist):
     for beam in info['beams']:
         magvalues = []
         for mag in beam['mags']:
-            magarray = magnetlist.get_magnet_vals(mag['type'], pos[mag['type']])
+            magarray = magnetlist.get_magnet_vals(mag['type'], pos[mag['type']], magnets)
             pos[mag['type']] += 1
             magvalues.append(magarray)
         beams[beam['name']] = np.transpose(np.vstack(magvalues))
@@ -104,12 +104,12 @@ if __name__ == "__main__" :
     f2 = open('test.json', 'r')
     info = json.load(f2)
 
-    magarrays = generate_per_magnet_array(info, maglist)
+    magarrays = generate_per_magnet_array(info, maglist, mags)
     per_mag_field = generate_per_magnet_b_field(magarrays, f1)
     per_beam_field = generate_per_beam_b_field(per_mag_field)
     total_id_field = generate_id_field(per_beam_field)
     
-    ref_magarrays = generate_per_magnet_array(info, ref_maglist)
+    ref_magarrays = generate_per_magnet_array(info, ref_maglist, ref_mags)
     ref_per_mag_field = generate_per_magnet_b_field(ref_magarrays, f1)
     ref_per_beam_field = generate_per_beam_b_field(ref_per_mag_field)
     ref_total_id_field = generate_id_field(ref_per_beam_field)
