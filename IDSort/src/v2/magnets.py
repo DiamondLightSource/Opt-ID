@@ -5,6 +5,7 @@ Created on 5 Dec 2013
 '''
 import numpy as np
 import random
+import cPickle
 
 
 class Magnets(object):
@@ -37,6 +38,16 @@ class Magnets(object):
             magnets['%03i' % (i)] = np.array(vector)
         self.magnet_sets[name] = magnets
         self.magnet_flip[name] = np.array(flip_vector)
+    
+    def save(self, filename):
+        fp = open(filename, 'w')
+        cPickle.dump((self.magnet_sets, self.magnet_flip, self.mean_field), fp)
+        fp.close()
+    
+    def load(self, filename):
+        fp = open(filename, 'r')
+        (self.magnet_sets, self.magnet_flip, self.mean_field) = cPickle.load(fp)
+        fp.close()
 
 
 class MagLists():
@@ -45,7 +56,6 @@ class MagLists():
     '''
     
     def __init__(self, magnets):
-        self.magnets = magnets
         self.magnet_lists = {}
         for magnet_set in magnets.magnet_sets.keys():
             mags = []
@@ -75,25 +85,31 @@ class MagLists():
         L = self.magnet_lists[name]
         L[a], L[b] = L[b], L[a]
     
-    def get_magnet_vals(self, name, number):
+    def get_magnet_vals(self, name, number, magnets):
         magnet = self.magnet_lists[name][number]
-        magdata = self.magnets.magnet_sets[name][magnet[0]]
+        magdata = magnets.magnet_sets[name][magnet[0]]
         if magnet[1] < 0:
-            magdata = magdata*self.magnets.magnet_flip[name]
+            magdata = magdata*magnets.magnet_flip[name]
         return magdata
+    
+    def mutate(self, number_of_mutations):
+        for i in range(number_of_mutations):
+            #TODO add some mutation code in here for ease
+            pass
+
 
 
 if __name__ == "__main__" :
     mags = Magnets()
-    #mags.add_magnet_set('HH', "../../data/I23H.sim")
-    #mags.add_magnet_set('HE', "../../data/I23HEA.sim")
-    #mags.add_magnet_set('VV', "../../data/I23V.sim")
-    #mags.add_magnet_set('VE', "../../data/I23VE.sim")
+    mags.add_magnet_set('HH', "/home/ssg37927/ID/Opt-ID/IDSort/data/I23H.sim", (-1.,1.,-1.))
+    mags.add_magnet_set('HE', "/home/ssg37927/ID/Opt-ID/IDSort/data/I23HEA.sim", (-1.,1.,-1.))
+    mags.add_magnet_set('VV', "/home/ssg37927/ID/Opt-ID/IDSort/data/I23V.sim", (-1.,-1.,1.))
+    mags.add_magnet_set('VE', "/home/ssg37927/ID/Opt-ID/IDSort/data/I23VE.sim", (-1.,-1.,1.))
     
-    mags.add_perfect_magnet_set('HH', 20 , (0.,0.,1.), (-1.,1.,-1.))
-    mags.add_perfect_magnet_set('HE', 5 , (0.,0.,1.), (-1.,1.,-1.))
-    mags.add_perfect_magnet_set('VV', 20 , (0.,1.,0.), (-1.,-1.,1.))
-    mags.add_perfect_magnet_set('VE', 5 , (0.,1.,0.), (-1.,-1.,1.))
+    #mags.add_perfect_magnet_set('HH', 20 , (0.,0.,1.), (-1.,1.,-1.))
+    #mags.add_perfect_magnet_set('HE', 5 , (0.,0.,1.), (-1.,1.,-1.))
+    #mags.add_perfect_magnet_set('VV', 20 , (0.,1.,0.), (-1.,-1.,1.))
+    #mags.add_perfect_magnet_set('VE', 5 , (0.,1.,0.), (-1.,-1.,1.))
     
     import pprint
     pprint.pprint(mags.magnet_sets)
