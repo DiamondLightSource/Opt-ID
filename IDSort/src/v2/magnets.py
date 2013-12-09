@@ -56,7 +56,6 @@ class MagLists():
     '''
     
     def __init__(self, magnets):
-        self.magnets = magnets
         self.magnet_lists = {}
         for magnet_set in magnets.magnet_sets.keys():
             mags = []
@@ -86,12 +85,18 @@ class MagLists():
         L = self.magnet_lists[name]
         L[a], L[b] = L[b], L[a]
     
-    def get_magnet_vals(self, name, number):
+    def get_magnet_vals(self, name, number, magnets):
         magnet = self.magnet_lists[name][number]
-        magdata = self.magnets.magnet_sets[name][magnet[0]]
+        magdata = magnets.magnet_sets[name][magnet[0]]
         if magnet[1] < 0:
-            magdata = magdata*self.magnets.magnet_flip[name]
+            magdata = magdata*magnets.magnet_flip[name]
         return magdata
+    
+    def mutate(self, number_of_mutations):
+        for i in range(number_of_mutations):
+            #TODO add some mutation code in here for ease
+            pass
+
 
 
 if __name__ == "__main__" :
