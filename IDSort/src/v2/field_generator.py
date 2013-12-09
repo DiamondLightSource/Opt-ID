@@ -52,6 +52,21 @@ def generate_per_beam_b_field(fields):
         beam_fields[beam] = np.sum(fields[beam],3)
     return beam_fields
 
+def generate_id_field(fields):
+    id_fields = np.zeros(fields.itervalues().next().shape)
+    for beam in fields.keys():
+        id_fields+=fields[beam]
+    return id_fields
+
+def generate_id_field_cost(field, ref_field):
+    cost=field-ref_field
+    cost=np.square(cost)
+    cost=np.sqrt(cost)
+    cost=np.sum(cost)
+    
+    return cost
+        
+
 if __name__ == "__main__" :
     mags = magnets.Magnets()
     ref_mags=magnets.Magnets()
@@ -79,11 +94,12 @@ if __name__ == "__main__" :
 #    mags.add_perfect_magnet_set('VE', 20 , (0.,1.,0.), (-1.,-1.,1.))
 
     maglist = magnets.MagLists(mags)
+    ref_maglist = magnets.MagLists(ref_mags)
 
     maglist.shuffle_all()
 
     import h5py
-    f1 = h5py.File('test.h5', 'r')
+    f1 = h5py.File('unit.h5', 'r')
 
     f2 = open('test.json', 'r')
     info = json.load(f2)
@@ -91,12 +107,28 @@ if __name__ == "__main__" :
     magarrays = generate_per_magnet_array(info, maglist)
     per_mag_field = generate_per_magnet_b_field(magarrays, f1)
     per_beam_field = generate_per_beam_b_field(per_mag_field)
+    total_id_field = generate_id_field(per_beam_field)
+    
+    ref_magarrays = generate_per_magnet_array(info, ref_maglist)
+    ref_per_mag_field = generate_per_magnet_b_field(ref_magarrays, f1)
+    ref_per_beam_field = generate_per_beam_b_field(ref_per_mag_field)
+    ref_total_id_field = generate_id_field(ref_per_beam_field)
+    
+    cost_total_id_field=generate_id_field_cost(total_id_field,ref_total_id_field)
 
     f1.close()
     f2.close()
 
-    f3 = h5py.File('perfect.h5', 'w')
+    f3 = h5py.File('real_data.h5', 'w')
     for name in per_mag_field.keys():
         f3.create_dataset("%s_per_magnet" % (name), data=per_mag_field[name])
         f3.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
+    f3.create_dataset('id_Bfield',data=total_id_field)
     f3.close()
+    
+    f4 = h5py.File('reference.h5', 'w')
+    for name in ref_per_mag_field.keys():
+        f4.create_dataset("%s_per_magnet" % (name), data=ref_per_mag_field[name])
+        f4.create_dataset("%s_per_beam" % (name), data=ref_per_beam_field[name])
+    f4.create_dataset('id_Bfield',data=ref_total_id_field)
+    f4.close()
