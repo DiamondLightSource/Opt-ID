@@ -14,6 +14,7 @@ class Magnets(object):
     def __init__(self):
         self.magnet_sets = {}
         self.magnet_flip = {}
+        self.mean_field = {}
 
     def add_magnet_set(self, name, filename, flip_vector):
         f = open(filename)
@@ -23,6 +24,12 @@ class Magnets(object):
             magnets[vals[0]] = np.array((float(vals[1]), float(vals[2]), float(vals[3])))
         self.magnet_sets[name] = magnets
         self.magnet_flip[name] = np.array(flip_vector)
+        
+        self.mean_field[name]=0.0
+        for magnet in self.magnet_sets[name]:
+            self.mean_field[name]+=np.linalg.norm(self.magnet_sets[name][magnet])
+        self.mean_field[name]=self.mean_field[name]/len(self.magnet_sets[name])
+        
 
     def add_perfect_magnet_set(self, name, number, vector, flip_vector):
         magnets = {}

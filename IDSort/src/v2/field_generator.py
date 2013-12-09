@@ -54,16 +54,29 @@ def generate_per_beam_b_field(fields):
 
 if __name__ == "__main__" :
     mags = magnets.Magnets()
+    ref_mags=magnets.Magnets()
 
-#     mags.add_magnet_set('HH', "../../data/I23H.sim", (-1.,1.,-1.))
-#     mags.add_magnet_set('HE', "../../data/I23HEA.sim", (-1.,1.,-1.))
-#     mags.add_magnet_set('VV', "../../data/I23V.sim", (-1.,-1.,1.))
-#     mags.add_magnet_set('VE', "../../data/I23VE.sim", (-1.,-1.,1.))
+    
 
-    mags.add_perfect_magnet_set('HH', 40 , (0.,0.,1.), (-1.,1.,-1.))
-    mags.add_perfect_magnet_set('HE', 20 , (0.,0.,1.), (-1.,1.,-1.))
-    mags.add_perfect_magnet_set('VV', 40 , (0.,1.,0.), (-1.,-1.,1.))
-    mags.add_perfect_magnet_set('VE', 20 , (0.,1.,0.), (-1.,-1.,1.))
+#    mags.add_magnet_set('HH', "../../data/I23H.sim", (-1.,1.,-1.))
+#    mags.add_magnet_set('HE', "../../data/I23HEA.sim", (-1.,1.,-1.))
+#    mags.add_magnet_set('VV', "../../data/I23V.sim", (-1.,-1.,1.))
+#    mags.add_magnet_set('VE', "../../data/I23VE.sim", (-1.,-1.,1.))
+    
+    mags.add_magnet_set('HH', "S:/Technical/IDs/Ed/Bash Sort/I23/I23H.sim", (-1.,1.,-1.))
+    mags.add_magnet_set('HE', "S:/Technical/IDs/Ed/Bash Sort/I23/I23HEA.sim", (-1.,1.,-1.))
+    mags.add_magnet_set('VV', "S:/Technical/IDs/Ed/Bash Sort/I23/I23V.sim", (-1.,-1.,1.))
+    mags.add_magnet_set('VE', "S:/Technical/IDs/Ed/Bash Sort/I23/I23VE.sim", (-1.,-1.,1.))
+    
+    ref_mags.add_perfect_magnet_set('HH', len(mags.magnet_sets['HH']) , (0.,0.,mags.mean_field['HH']), (-1.,1.,-1.))
+    ref_mags.add_perfect_magnet_set('HE', len(mags.magnet_sets['HE']) , (0.,0.,mags.mean_field['HE']), (-1.,1.,-1.))
+    ref_mags.add_perfect_magnet_set('VV', len(mags.magnet_sets['VV']) , (0.,1.,mags.mean_field['VV']), (-1.,-1.,1.))
+    ref_mags.add_perfect_magnet_set('VE', len(mags.magnet_sets['VE']) , (0.,1.,mags.mean_field['VE']), (-1.,-1.,1.))
+
+#    mags.add_perfect_magnet_set('HH', 40 , (0.,0.,1.), (-1.,1.,-1.))
+#    mags.add_perfect_magnet_set('HE', 20 , (0.,0.,1.), (-1.,1.,-1.))
+#    mags.add_perfect_magnet_set('VV', 40 , (0.,1.,0.), (-1.,-1.,1.))
+#    mags.add_perfect_magnet_set('VE', 20 , (0.,1.,0.), (-1.,-1.,1.))
 
     maglist = magnets.MagLists(mags)
 
