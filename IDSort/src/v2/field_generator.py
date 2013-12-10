@@ -36,7 +36,8 @@ def generate_per_magnet_array(info, magnetlist, magnets):
     return beams
 
 
-def generate_per_magnet_b_field(beam_arrays, lookup):
+def generate_per_magnet_b_field(info, maglist, mags, lookup):
+    beam_arrays = generate_per_magnet_array(info, maglist, mags)
     fields = {}
     for beam in beam_arrays.keys():
         data = lookup[beam][:, 1, :, :, :, :]
@@ -46,13 +47,15 @@ def generate_per_magnet_b_field(beam_arrays, lookup):
         fields[beam] = result2
     return fields
 
-def generate_per_beam_b_field(fields):
+def generate_per_beam_b_field(info, maglist, mags, f1):
+    fields = generate_per_magnet_b_field(info, maglist, mags, f1)
     beam_fields = {}
     for beam in fields.keys():
         beam_fields[beam] = np.sum(fields[beam],3)
     return beam_fields
 
-def generate_id_field(fields):
+def generate_id_field(info, maglist, mags, f1):
+    fields = generate_per_beam_b_field(info, maglist, mags, f1)
     id_fields = np.zeros(fields.itervalues().next().shape)
     for beam in fields.keys():
         id_fields+=fields[beam]
@@ -98,14 +101,16 @@ if __name__ == "__main__" :
     info = json.load(f2)
 
     magarrays = generate_per_magnet_array(info, maglist, mags)
-    per_mag_field = generate_per_magnet_b_field(magarrays, f1)
-    per_beam_field = generate_per_beam_b_field(per_mag_field)
-    total_id_field = generate_id_field(per_beam_field)
+    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
+    per_beam_field = generate_per_beam_b_field(info, maglist, mags, f1)
+    total_id_field = generate_id_field(info, maglist, mags, f1)
+    
     
     ref_magarrays = generate_per_magnet_array(info, ref_maglist, ref_mags)
-    ref_per_mag_field = generate_per_magnet_b_field(ref_magarrays, f1)
-    ref_per_beam_field = generate_per_beam_b_field(ref_per_mag_field)
-    ref_total_id_field = generate_id_field(ref_per_beam_field)
+    ref_per_mag_field = generate_per_magnet_b_field(info, ref_maglist, ref_mags, f1)
+    ref_per_beam_field = generate_per_beam_b_field(info, ref_maglist, ref_mags, f1)
+    ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, f1)
+    
     
     cost_total_id_field=generate_id_field_cost(total_id_field,ref_total_id_field)
 
