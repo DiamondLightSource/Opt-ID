@@ -19,8 +19,9 @@ if __name__ == "__main__":
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-f", "--fitness", dest="fitness", help="Set the target fitness", default=0.0, type="float")
     parser.add_option("-p", "--processing", dest="processing", help="Set the total number of processing units per file", default=5, type="int")
-    parser.add_option("-l", "--lookup", dest="lookup", help="Set the path to the lookup table", default='lookup.h5', type="string")
-    parser.add_option("-m", "--magnets", dest="magnets", help="Set the path to the magnet description file", default='magnets.mag', type="string")
+    parser.add_option("-i", "--info", dest="id_filename", help="Set the path to the id data", default='id.json', type="string")
+    parser.add_option("-l", "--lookup", dest="lookup_filename", help="Set the path to the lookup table", default='unit.h5', type="string")
+    parser.add_option("-m", "--magnets", dest="magnets_filename", help="Set the path to the magnet description file", default='magnets.mag', type="string")
     parser.add_option("-s", "--setup", dest="setup", help="set number of genomes to create in setup mode", default=-1, type='int')
     parser.add_option("--param_c", dest="c", help="Set the OPT-AI parameter c", default=10.0, type='float')
     parser.add_option("--param_e", dest="e", help="Set the OPT-AI parameter eStar", default=0.0, type='float')
@@ -30,7 +31,7 @@ if __name__ == "__main__":
 
     print("Loading magnets")
     mags = magnets.Magnets()
-    mags.load(options.magnets)
+    mags.load(options.magnets_filename)
 
     if options.setup > 0:
         print("Running setup")
@@ -38,7 +39,7 @@ if __name__ == "__main__":
             # create a fresh maglist
             maglist = magnets.MagLists(mags)
             maglist.shuffle_all()
-            genome = ID_BCell()
+            genome = ID_BCell(options.id_filename, options.lookup_filename, options.magnets_filename)
             genome.create(maglist)
             genome.save(args[0])
     
@@ -46,7 +47,7 @@ if __name__ == "__main__":
         print("Processing file %s" % (filename))
         
         # load the genome
-        genome = ID_BCell()
+        genome = ID_BCell(options.id_filename, options.lookup_filename, options.magnets_filename)
         genome.load(filename)
         
         # now we have to create the offspring

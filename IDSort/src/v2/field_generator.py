@@ -78,6 +78,24 @@ def generate_reference_magnets(mags):
         ref_mags.add_perfect_magnet_set(magtype, len(mags.magnet_sets[magtype]) , unit, mags.magnet_flip[magtype])
     return ref_mags
 
+def calculate_fitness(id_filename, lookup_filename, magnets_filename, maglist):
+    # TODO this will be slow, but should be optimizable with lookups
+    f1 = h5py.File(lookup_filename, 'r')
+    f2 = open(id_filename, 'r')
+    info = json.load(f2)
+    f2.close()
+
+    mags = magnets.Magnets()
+    mags.load(magnets_filename)
+
+    total_id_field = generate_id_field(info, maglist, mags, f1)
+
+    ref_mags=generate_reference_magnets(mags)
+    ref_maglist = magnets.MagLists(ref_mags)
+    ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, f1)
+    f1.close()
+    
+    return generate_id_field_cost(total_id_field,ref_total_id_field)
 
 if __name__ == "__main__" :
     mags = magnets.Magnets()
