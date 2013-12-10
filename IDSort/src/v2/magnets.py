@@ -94,8 +94,18 @@ class MagLists():
     
     def mutate(self, number_of_mutations):
         for i in range(number_of_mutations):
-            #TODO add some mutation code in here for ease
-            pass
+            # pick a list at random
+            key = random.choice(self.magnet_lists.keys())
+            end = len(self.magnet_lists[key])-1
+            # pick a flip or swap
+            if random.random() > 0.5 :
+                # swap
+                p1 = random.randint(0, end)
+                p2 = random.randint(0, end)
+                self.swap(key, p1, p2)
+            else :
+                p1 = random.randint(0, end)
+                self.flip(key , (p1,))
 
 
 
