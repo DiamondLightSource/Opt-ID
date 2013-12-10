@@ -10,6 +10,7 @@ import binascii
 import os
 import cPickle
 import random
+import copy
 
 
 class BCell(object):
@@ -36,11 +37,10 @@ class BCell(object):
         fp = open(filename, 'r')
         self.genome = cPickle.load(fp)
         fp.close()
-        params = os.path.split(filename).split('_')
-        self.fitness = params[0]
-        self.age = params[1]
+        params = os.path.split(filename)[1].split('_')
+        self.fitness = float(params[0])
+        self.age = int(params[1])
         self.uid = params[2]
-        raise Exception("create needs to be implemented")
 
     def generate_children(self, number_of_children, number_of_mutations):
         raise Exception("generate_children needs to be implemented")
@@ -58,7 +58,9 @@ class ID_BCell(BCell):
         self.age_bcell()
         children = []
         for i in range(number_of_children):
-            maglist = self.genome.deepcopy()
+            maglist = copy.deepcopy(self.genome)
             maglist.mutate(number_of_mutations)
-            child = ID_BCell(maglist)
+            child = ID_BCell()
+            child.create(maglist)
             children.append(child)
+        return children

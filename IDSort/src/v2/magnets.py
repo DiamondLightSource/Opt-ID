@@ -10,7 +10,7 @@ import cPickle
 
 class Magnets(object):
     '''
-    This calss deals with all the real magnet information
+    This class deals with all the real magnet information
     '''
     def __init__(self):
         self.magnet_sets = {}
@@ -101,10 +101,10 @@ class MagLists():
 
 if __name__ == "__main__" :
     mags = Magnets()
-    mags.add_magnet_set('HH', "/home/ssg37927/ID/Opt-ID/IDSort/data/I23H.sim", (-1.,1.,-1.))
-    mags.add_magnet_set('HE', "/home/ssg37927/ID/Opt-ID/IDSort/data/I23HEA.sim", (-1.,1.,-1.))
-    mags.add_magnet_set('VV', "/home/ssg37927/ID/Opt-ID/IDSort/data/I23V.sim", (-1.,-1.,1.))
-    mags.add_magnet_set('VE', "/home/ssg37927/ID/Opt-ID/IDSort/data/I23VE.sim", (-1.,-1.,1.))
+    mags.add_magnet_set('HH', "../../data/I23H.sim", (-1.,1.,-1.))
+    mags.add_magnet_set('HE', "../../data/I23HEA.sim", (-1.,1.,-1.))
+    mags.add_magnet_set('VV', "../../data/I23V.sim", (-1.,-1.,1.))
+    mags.add_magnet_set('VE', "../../data/I23VE.sim", (-1.,-1.,1.))
     
     #mags.add_perfect_magnet_set('HH', 20 , (0.,0.,1.), (-1.,1.,-1.))
     #mags.add_perfect_magnet_set('HE', 5 , (0.,0.,1.), (-1.,1.,-1.))
@@ -124,3 +124,5 @@ if __name__ == "__main__" :
     
     print "After swap"
     pprint.pprint(maglist.magnet_lists['HE'])
+    
+    mags.save('magnets.mag')
