@@ -59,4 +59,7 @@ if __name__ == "__main__":
         # now save the children into the new file
         for child in children:
             child.save(args[0])
+        
+        # and save the original
+        genome.save(args[0])
 
