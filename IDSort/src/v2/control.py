@@ -94,31 +94,34 @@ if __name__ == "__main__":
     parser.add_option("--param_c", dest="c", help="Set the OPT-AI parameter c", default=10.0, type='float')
     parser.add_option("--param_e", dest="e", help="Set the OPT-AI parameter eStar", default=0.0, type='float')
     parser.add_option("--param_scale", dest="scale", help="Set the OPT-AI parameter scale", default=10.0, type='float')
+    parser.add_option("-r", "--restart", dest="restart", help="Don't recreate initial data", action="store_true", default=False)
 
     (options, args) = parser.parse_args()
 
-    # start by creating the directory to put the initial population in 
-    print "Creating directories"
-    if os.path.exists(args[0]):
-        os.rmdir(args[0])
-    os.mkdir(args[0])
     epoch_path = os.path.join(args[0], 'epoch')
     next_epoch_path = os.path.join(args[0], 'nextepoch')
-    print "Creating directory %s" %(epoch_path)
-    if os.path.exists(epoch_path):
-        os.rmdir(epoch_path)
-    os.mkdir(epoch_path)
-    print "Creating directory %s" %(next_epoch_path)
-    if os.path.exists(next_epoch_path):
-        os.rmdir(next_epoch_path)
-    os.mkdir(next_epoch_path)
 
-    # make the initial population
-    command = "/home/ssg37927/ID/Opt-ID/IDSort/src/v2/Opt-ID.sh -s %i -i %s -l %s -m %s %s" %\
-        (options.setup, options.id_filename, options.lookup_filename,
-         options.magnets_filename, epoch_path)
+    # start by creating the directory to put the initial population in 
+    if not options.restart:
+        print "Creating directories"
+        if os.path.exists(args[0]):
+            os.rmdir(args[0])
+        os.mkdir(args[0])
+        print "Creating directory %s" %(epoch_path)
+        if os.path.exists(epoch_path):
+            os.rmdir(epoch_path)
+        os.mkdir(epoch_path)
+        print "Creating directory %s" %(next_epoch_path)
+        if os.path.exists(next_epoch_path):
+            os.rmdir(next_epoch_path)
+        os.mkdir(next_epoch_path)
 
-    run_batch(options.nodes, command)
+        # make the initial population
+        command = "/home/ssg37927/ID/Opt-ID/IDSort/src/v2/Opt-ID.sh -s %i -i %s -l %s -m %s %s" %\
+            (options.setup, options.id_filename, options.lookup_filename,
+             options.magnets_filename, epoch_path)
+
+        run_batch(options.nodes, command)
 
     # now run the processing
     for i in range(30):
@@ -134,6 +137,8 @@ if __name__ == "__main__":
             commands.append(command)
         
         run_commands(commands)
+        
+        time.sleep(5)
         
         # copy all the data back into the main epoc directory
         shutil.rmtree(epoch_path)
