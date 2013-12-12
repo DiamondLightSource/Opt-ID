@@ -55,39 +55,39 @@ def create_direction_list_antisymetric_ppm_top(nperiods):
     direction.append((-1, 1, -1))
     return direction
 
-def create_location_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap):
+def create_location_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap,interstice):
     V1 = []
-    length = (4*(nperiods-1)+1)*fullmagdims[2]+2*vemagdims[2]+2*hemagdims[2]
+    length = (4*(nperiods-1)+1)*fullmagdims[2]+2*vemagdims[2]+2*hemagdims[2]+4*nperiods*interstice
     x=-fullmagdims[0]/2.0
     z=mingap/2.0
     s=-length/2.0
     V1.append((x,z,s))
-    s+=vemagdims[2]
+    s+=(vemagdims[2]+interstice)
     V1.append((x,z,s))
-    s+=hemagdims[2]
+    s+=(hemagdims[2]+interstice)
     for i in range(2,(4*nperiods+1)-2,1):
         V1.append((x,z,s))
-        s+=fullmagdims[2]
+        s+=(fullmagdims[2]+interstice)
     V1.append((x,z,s))
-    s+=hemagdims[2]
+    s+=(hemagdims[2]+interstice)
     V1.append((x,z,s))
     return V1
 
-def create_location_list_antisymmetric_ppm_bottom(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap):
+def create_location_list_antisymmetric_ppm_bottom(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap,interstice):
     V1 = []
-    length = (4*(nperiods-1)+1)*fullmagdims[2]+2*vemagdims[2]+2*hemagdims[2]
+    length = (4*(nperiods-1)+1)*fullmagdims[2]+2*vemagdims[2]+2*hemagdims[2]+4*nperiods*interstice
     x=-fullmagdims[0]/2.0
     z=-fullmagdims[1]-mingap/2.0
     s=-length/2.0
     V1.append((x,z,s))
-    s+=vemagdims[2]
+    s+=(vemagdims[2]+interstice)
     V1.append((x,z,s))
-    s+=hemagdims[2]
+    s+=(hemagdims[2]+interstice)
     for i in range(2,(4*nperiods+1)-2,1):
         V1.append((x,z,s))
-        s+=fullmagdims[2]
+        s+=(fullmagdims[2]+interstice)
     V1.append((x,z,s))
-    s+=hemagdims[2]
+    s+=(hemagdims[2]+interstice)
     V1.append((x,z,s))
     return V1
 
@@ -95,10 +95,11 @@ if __name__ == "__main__":
     import optparse
     usage = "%prog [options] OutputFile"
     parser = optparse.OptionParser(usage=usage)
-    parser.add_option("-p", "--periods", dest="periods", help="Set the number of full periods for the Device", default=3, type="int")
-    parser.add_option("--fullmagdims", dest="fullmagdims", help="Set the number of full periods for the Device", nargs=3, default=(41., 16., 6.25), type="float")
-    parser.add_option("--vemagdims", dest="vemagdims", help="Set the number of full periods for the Device", nargs=3, default=(41., 16., 3.125), type="float")
-    parser.add_option("--hemagdims", dest="hemagdims", help="Set the number of full periods for the Device", nargs=3, default=(41., 16., 3.7), type="float")
+    parser.add_option("-p", "--periods", dest="periods", help="Set the number of full periods for the Device", default=4, type="int")
+    parser.add_option("--fullmagdims", dest="fullmagdims", help="Set the dimensions of the full magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 6.22), type="float")
+    parser.add_option("--vemagdims", dest="vemagdims", help="Set the dimensions of the VE magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 3.12), type="float")
+    parser.add_option("--hemagdims", dest="hemagdims", help="Set the dimensions of the HE magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 3.7), type="float")
+    parser.add_option("-i", dest="interstice", help="Set the dimensions of the slack between adjacent magnets (interstice) in mm", default=0.03, type="float")
     parser.add_option("-g", "--gap", dest="gap", help="Set the gap for the device to be created at", default=5.0, type="float")
     parser.add_option("-t", "--type", dest="type", help="Set the device type", type="string", default="PPM_AntiSymetric")
     parser.add_option("-v", "--verbose", dest="verbose", help="display debug information", action="store_true", default=False)
@@ -127,13 +128,14 @@ if __name__ == "__main__":
         output['smin'] = -length/2.0
         output['smax'] = (length/2.0)+(options.fullmagdims[2]/options.steps)
         output['sstep'] = options.fullmagdims[2]/options.steps
+        output['interstice'] = options.interstice
 
         # calculate all magnet values
         types = create_type_list_antisymetric_ppm(options.periods)
         top_directions = create_direction_list_antisymetric_ppm_top(options.periods)
         bottom_directions = create_direction_list_antisymetric_ppm_bottom(options.periods)
-        top_positions = create_location_list_antisymmetric_ppm_top(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap)
-        bottom_positions = create_location_list_antisymmetric_ppm_bottom(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap)
+        top_positions = create_location_list_antisymmetric_ppm_top(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
+        bottom_positions = create_location_list_antisymmetric_ppm_bottom(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
 
         # output beams
         output['beams'] = []
