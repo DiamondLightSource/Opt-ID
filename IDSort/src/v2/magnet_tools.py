@@ -6,107 +6,6 @@ Created on 16 Jan 2012
 
 import numpy as np
 
-def fortPMB_NEW(testpoint,m,i,magdims, V1):
-    '''This function Calculates the B-field in a single orientation according to the calling function
-    It's pretty much a carbon-copy of the FORTRAN code
-    
-    '''
-
-    B=0.0
-    
-    V2=V1+magdims
-    
-    
-    r1=np.zeros(3)
-    r2=np.zeros(3)
-    
-    for L in range(3):
-        r1[L]=testpoint[L]-V1[L]
-        r2[L]=testpoint[L]-V2[L]
-        
-    for j in range(3):
-        I1=0.
-        I2=0.
-        if j==i:
-            B=B
-        else:
-            k=3-i-j
-            r1i=r1[i]
-            r1j=r1[j]
-            r2i=r2[i]
-            r2j=r2[j]
-            if ((r1[k] > 0) and (r2[k] > 0 )) :
-                r1k=r1[k]
-                r2k=r2[k]
-            else :
-                r1k=-r2[k]
-                r2k=-r1[k]
-            
-            a1=np.sqrt(r2i*r2i+r2j*r2j+r2k*r2k)
-            a2=np.sqrt(r1i*r1i+r1j*r1j+r2k*r2k)
-            a3=np.sqrt(r1i*r1i+r2j*r2j+r1k*r1k)
-            a4=np.sqrt(r2i*r2i+r1j*r1j+r1k*r1k)
-            a5=np.sqrt(r1i*r1i+r2j*r2j+r2k*r2k)
-            a6=np.sqrt(r2i*r2i+r1j*r1j+r2k*r2k)
-            a7=np.sqrt(r2i*r2i+r2j*r2j+r1k*r1k)
-            a8=np.sqrt(r1i*r1i+r1j*r1j+r1k*r1k)
-            
-
-            b2=r1i*r2k/(r1j*a2)
-            b4=r2i*r1k/(r1j*a4)
-            b6=r2i*r2k/(r1j*a6)
-            b8=r1i*r1k/(r1j*a8)
-    
-            b1=r2i*r2k/(r2j*a1)
-            b3=r1i*r1k/(r2j*a3)
-            b5=r1i*r2k/(r2j*a5)
-            b7=r2i*r1k/(r2j*a7)
-    
-            I1=(np.arctan(b1)+np.arctan(b2)+np.arctan(b3)+np.arctan(b4)-np.arctan(b5)-np.arctan(b6)-np.arctan(b7)-np.arctan(b8))
-                
-
-            
-
-            c1=a1+r2k
-            c2=a2+r2k
-            c3=a3+r1k
-            c4=a4+r1k
-            c5=a5+r2k
-            c6=a6+r2k
-            c7=a7+r1k
-            c8=a8+r1k
-
-    
-            I2=(np.log(c1*c2*c3*c4/(c5*c6*c7*c8)))
-
-    
-            B=B-(m[i]*I1/(4*np.pi))
-            B=B-(m[j]*I2/(4*np.pi))
-
-    return B
-#TODO might be able to remove s_offset altogether
-#TODO not sure about mingap either 
-
-def wrapCalcB(testpoint, magdims,  V1):
-    '''This function takes the arguments 'testpoint' and 's_offset'
-    'testpoint' requires an array of floats of length 3 describing the [x,z,s] co-ordinates of the point under consideration
-    's_offset' requires a float that describes the s-direction offset of the magnet block
-    
-    This function calls the main field calculating function, and outputs a 3x3 matrix of the form
-    [[Bx(x), Bz(x), Bs(x)]
-     [Bx(z), Bz(z), Bs(z)]
-     [Bx(s), Bz(s), Bs(s)]].
-     
-     To calculate the real field component of any block need to get real data sum contributions such that
-     Bx=Bx(x)*Mx + Bx(z)*Mz + Bx(s)*Ms'''
-    B=np.zeros((3,3))
-    for i in range(3):
-        m=np.zeros(3)
-        m[i]=1
-        for j in range(3):
-            B[i][j]= fortPMB_NEW(testpoint,m,j, magdims, V1)
-    return B
-
 
 def generate_B_array(xmin, xmax, xstep, zmin, zmax, zstep, smin, smax, sstep, magdims, V1):
     '''
@@ -115,25 +14,6 @@ def generate_B_array(xmin, xmax, xstep, zmin, zmax, zstep, smin, smax, sstep, ma
     '''
     return generate_B_array_with_offsets(xmin, xmax, xstep, 0.0, zmin, zmax, zstep, 0.0, smin, smax, sstep, 0.0, magdims, V1)
 
-
-def generate_B_array_with_offsets(xmin, xmax, xstep, xoff, zmin, zmax, zstep, zoff, smin, smax, sstep, soff, magdims, V1):
-    x = np.arange(xmin, xmax, xstep)+xoff
-    z = np.arange(zmin, zmax, zstep)+zoff
-    s = np.arange(smin, smax, sstep)+soff
-    
-    return generate_B_array_from_arrays(x, z, s, magdims, V1)
-
-
-def generate_B_array_from_arrays(x, z, s, magdims,V1):
-    
-    result = np.zeros([len(x),len(z),len(s),3,3])
-    for xx in range(len(x)):
-        for zz in range(len(z)):
-            for ss in range(len(s)):
-                testpoint=np.array([x[xx],z[zz],s[ss]])
-                B=wrapCalcB(testpoint, magdims, V1)
-                result[xx,zz,ss,:,:] = np.array(B)
-    return result
 
 
 def generate_integral_array(xmin, xmax, xstep, xoff, zmin, zmax, zstep, zoff, smin, smax, sstep, soff, magdims, mingap):
@@ -291,7 +171,7 @@ def straightness(trajectories, nperiods):
     return (strx, strz)
 
 'Area for testing new B-Field calculation functions'
-def fortPMB_NEW2(testpoint,m,i,magdims, V1):
+def fortPMB_NEW(testpoint,m,i,magdims, V1):
     '''This function Calculates the B-field in a single orientation according to the calling function
     It's pretty much a carbon-copy of the FORTRAN code
     
@@ -301,13 +181,15 @@ def fortPMB_NEW2(testpoint,m,i,magdims, V1):
     
     V2=V1+magdims
     
+    r1=testpoint.copy()
+    r2=testpoint.copy()
     
-    r1=np.zeros(3)
-    r2=np.zeros(3)
+    for p in range(3):
+        r1[p]=r1[p]-V1[p]
+        r2[p]=r2[p]-V2[p]
     
-    for L in range(3):
-        r1[L]=testpoint[L]-V1[L]
-        r2[L]=testpoint[L]-V2[L]
+#    r1=testpoint-V1
+#    r2=testpoint-V2
         
     for j in range(3):
         I1=0.
@@ -320,7 +202,7 @@ def fortPMB_NEW2(testpoint,m,i,magdims, V1):
             r1j=r1[j]
             r2i=r2[i]
             r2j=r2[j]
-            if ((r1[k] > 0) and (r2[k] > 0 )) :
+            if ((r1[k].all() > 0) and (r2[k].all() > 0 )) :
                 r1k=r1[k]
                 r2k=r2[k]
             else :
@@ -372,7 +254,7 @@ def fortPMB_NEW2(testpoint,m,i,magdims, V1):
 #TODO might be able to remove s_offset altogether
 #TODO not sure about mingap either 
 
-def wrapCalcB2(testpoint, magdims,  V1):
+def wrapCalcB(testpoint, magdims,  V1):
     '''This function takes the arguments 'testpoint' and 's_offset'
     'testpoint' requires an array of floats of length 3 describing the [x,z,s] co-ordinates of the point under consideration
     's_offset' requires a float that describes the s-direction offset of the magnet block
@@ -384,36 +266,13 @@ def wrapCalcB2(testpoint, magdims,  V1):
      
      To calculate the real field component of any block need to get real data sum contributions such that
      Bx=Bx(x)*Mx + Bx(z)*Mz + Bx(s)*Ms'''
-    B=np.zeros((3,3))
+    B=np.zeros((testpoint.shape+(3,3))[1:])
     for i in range(3):
         m=np.zeros(3)
         m[i]=1
         for j in range(3):
-            B[i][j]= fortPMB_NEW(testpoint,m,j, magdims, V1)
+            B[:,:,:,i,j]= fortPMB_NEW(testpoint,m,j, magdims, V1)
     return B
-def generate_B_array2(xmin, xmax, xstep, zmin, zmax, zstep, smin, smax, sstep, magdims, V1):
-    '''
-    magdims = np.array([41.,16.,5.25])
-    mingap = 5.0
-    '''
-    return generate_B_array_with_offsets(xmin, xmax, xstep, 0.0, zmin, zmax, zstep, 0.0, smin, smax, sstep, 0.0, magdims, V1)
 
 
-def generate_B_array_with_offsets2(xmin, xmax, xstep, xoff, zmin, zmax, zstep, zoff, smin, smax, sstep, soff, magdims, V1):
-    x = np.arange(xmin, xmax, xstep)+xoff
-    z = np.arange(zmin, zmax, zstep)+zoff
-    s = np.arange(smin, smax, sstep)+soff
-    
-    return generate_B_array_from_arrays(x, z, s, magdims, V1)
 
-
-def generate_B_array_from_arrays2(x, z, s, magdims,V1):
-    
-    result = np.zeros([len(x),len(z),len(s),3,3])
-    for xx in range(len(x)):
-        for zz in range(len(z)):
-            for ss in range(len(s)):
-                testpoint=np.array([x[xx],z[zz],s[ss]])
-                B=wrapCalcB(testpoint, magdims, V1)
-                result[xx,zz,ss,:,:] = np.array(B)
-    return result

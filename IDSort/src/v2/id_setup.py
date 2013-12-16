@@ -95,7 +95,7 @@ if __name__ == "__main__":
     import optparse
     usage = "%prog [options] OutputFile"
     parser = optparse.OptionParser(usage=usage)
-    parser.add_option("-p", "--periods", dest="periods", help="Set the number of full periods for the Device", default=4, type="int")
+    parser.add_option("-p", "--periods", dest="periods", help="Set the number of full periods for the Device", default=1, type="int")
     parser.add_option("--fullmagdims", dest="fullmagdims", help="Set the dimensions of the full magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 6.22), type="float")
     parser.add_option("--vemagdims", dest="vemagdims", help="Set the dimensions of the VE magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 3.12), type="float")
     parser.add_option("--hemagdims", dest="hemagdims", help="Set the dimensions of the HE magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 3.7), type="float")
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     parser.add_option("-t", "--type", dest="type", help="Set the device type", type="string", default="PPM_AntiSymetric")
     parser.add_option("-v", "--verbose", dest="verbose", help="display debug information", action="store_true", default=False)
     parser.add_option("-n", "--name", dest="name", help="PPM name", default="PPM Name", type="string")
-    parser.add_option("-x", "--xstartstopstep", dest="x", help="X start stop and step", nargs=3, default=(-40.0, 41., 2.5), type="float")
+    parser.add_option("-x", "--xstartstopstep", dest="x", help="X start stop and step", nargs=3, default=(-40.0, 41., 20.0), type="float")
     parser.add_option("-z", "--zstartstopstep", dest="z", help="Z start stop and step", nargs=3, default=(-0.15, 0.17, 0.15), type="float")
     parser.add_option("-s", "--stepsperperiod", dest="steps", help="Number of steps in S per magnet", default=12, type="float")
 
@@ -124,7 +124,7 @@ if __name__ == "__main__":
         output['zmin'] = options.z[0]
         output['zmax'] = options.z[1]
         output['zstep'] = options.z[2]
-        length = options.fullmagdims[2]*(options.periods+16)
+        length = options.fullmagdims[2]*4*(options.periods+16)
         output['smin'] = -length/2.0
         output['smax'] = (length/2.0)+(options.fullmagdims[2]/options.steps)
         output['sstep'] = options.fullmagdims[2]/options.steps
