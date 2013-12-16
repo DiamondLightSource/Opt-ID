@@ -26,7 +26,8 @@ if __name__ == "__main__":
     parser.add_option("--param_c", dest="c", help="Set the OPT-AI parameter c", default=10.0, type='float')
     parser.add_option("--param_e", dest="e", help="Set the OPT-AI parameter eStar", default=0.0, type='float')
     parser.add_option("--param_scale", dest="scale", help="Set the OPT-AI parameter scale", default=10.0, type='float')
-
+    parser.add_option("-b", "--build", dest="build", help="Build output for input files", action="store_true", default=False)
+    
     (options, args) = parser.parse_args()
 
     print("Loading magnets")
@@ -59,4 +60,7 @@ if __name__ == "__main__":
         # now save the children into the new file
         for child in children:
             child.save(args[0])
+        
+        # and save the original
+        genome.save(args[0])
 

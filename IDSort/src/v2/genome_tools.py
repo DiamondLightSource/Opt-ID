@@ -40,7 +40,7 @@ class BCell(object):
         params = os.path.split(filename)[1].split('_')
         self.fitness = float(params[0])
         self.age = int(params[1])
-        self.uid = params[2]
+        self.uid = params[2].split('.')[0]
 
     def generate_children(self, number_of_children, number_of_mutations):
         raise Exception("generate_children needs to be implemented")
