@@ -1,7 +1,10 @@
+import os
 import magnets
 import genome_tools
 import random
 from genome_tools import ID_BCell
+import field_generator as fg
+import sys
 
 E_STAR = 0.0
 M_STAR = 1.0
@@ -19,9 +22,9 @@ if __name__ == "__main__":
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-f", "--fitness", dest="fitness", help="Set the target fitness", default=0.0, type="float")
     parser.add_option("-p", "--processing", dest="processing", help="Set the total number of processing units per file", default=5, type="int")
-    parser.add_option("-i", "--info", dest="id_filename", help="Set the path to the id data", default='id.json', type="string")
-    parser.add_option("-l", "--lookup", dest="lookup_filename", help="Set the path to the lookup table", default='unit.h5', type="string")
-    parser.add_option("-m", "--magnets", dest="magnets_filename", help="Set the path to the magnet description file", default='magnets.mag', type="string")
+    parser.add_option("-i", "--info", dest="id_filename", help="Set the path to the id data", default='/dls/tmp/ssg37927/id/lookup/id.json', type="string")
+    parser.add_option("-l", "--lookup", dest="lookup_filename", help="Set the path to the lookup table", default='/dls/tmp/ssg37927/id/lookup/unit.h5', type="string")
+    parser.add_option("-m", "--magnets", dest="magnets_filename", help="Set the path to the magnet description file", default='/dls/tmp/ssg37927/id/lookup/magnets.mag', type="string")
     parser.add_option("-s", "--setup", dest="setup", help="set number of genomes to create in setup mode", default=-1, type='int')
     parser.add_option("--param_c", dest="c", help="Set the OPT-AI parameter c", default=10.0, type='float')
     parser.add_option("--param_e", dest="e", help="Set the OPT-AI parameter eStar", default=0.0, type='float')
@@ -33,6 +36,18 @@ if __name__ == "__main__":
     print("Loading magnets")
     mags = magnets.Magnets()
     mags.load(options.magnets_filename)
+
+    if options.build:
+        for filename in args[1::]:
+            print("Processing file %s" % (filename))
+            # load the genome
+            genome = ID_BCell(options.id_filename, options.lookup_filename, options.magnets_filename)
+            genome.load(filename)
+            
+            outfile = os.path.join(args[0], os.path.split(filename)[1]+'.h5')
+            fg.output_fields(outfile, genome.id_filename, genome.lookup_filename, 
+                              genome.magnets_filename, genome.genome);
+        sys.exit(0)
 
     if options.setup > 0:
         print("Running setup")

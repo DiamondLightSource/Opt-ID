@@ -90,12 +90,33 @@ def calculate_fitness(id_filename, lookup_filename, magnets_filename, maglist):
 
     total_id_field = generate_id_field(info, maglist, mags, f1)
 
-    ref_mags=generate_reference_magnets(mags)
+    ref_mags = generate_reference_magnets(mags)
     ref_maglist = magnets.MagLists(ref_mags)
     ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, f1)
     f1.close()
-    
-    return generate_id_field_cost(total_id_field,ref_total_id_field)
+
+    return generate_id_field_cost(total_id_field, ref_total_id_field)
+
+
+def output_fields(filename, id_filename, lookup_filename, magnets_filename, maglist):
+    f1 = h5py.File(lookup_filename, 'r')
+    f2 = open(id_filename, 'r')
+    info = json.load(f2)
+    f2.close()
+
+    mags = magnets.Magnets()
+    mags.load(magnets_filename)
+
+    f = h5py.File(filename, 'w')
+    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
+    per_beam_field = generate_per_beam_b_field(info, maglist, mags, f1)
+    total_id_field = generate_id_field(info, maglist, mags, f1)
+    for name in per_mag_field.keys():
+        f.create_dataset("%s_per_magnet" % (name), data=per_mag_field[name])
+        f.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
+    f.create_dataset('id_Bfield', data=total_id_field)
+    f.close()
+
 
 if __name__ == "__main__" :
     mags = magnets.Magnets()

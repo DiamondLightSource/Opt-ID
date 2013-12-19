@@ -95,6 +95,7 @@ if __name__ == "__main__":
     parser.add_option("--param_e", dest="e", help="Set the OPT-AI parameter eStar", default=0.0, type='float')
     parser.add_option("--param_scale", dest="scale", help="Set the OPT-AI parameter scale", default=10.0, type='float')
     parser.add_option("-r", "--restart", dest="restart", help="Don't recreate initial data", action="store_true", default=False)
+    parser.add_option("--iterations", dest="iterations", help="Number of Iterations to run", default=10, type='int')
 
     (options, args) = parser.parse_args()
 
@@ -124,7 +125,7 @@ if __name__ == "__main__":
         run_batch(options.nodes, command)
 
     # now run the processing
-    for i in range(30):
+    for i in range(options.iterations):
         files = get_file_list(epoch_path, options.nodes, options.setup, options.max_age)
     
         commands = []
@@ -138,6 +139,7 @@ if __name__ == "__main__":
         
         run_commands(commands)
         
+        print("Iteration %i complete" % (i))
         time.sleep(5)
         
         # copy all the data back into the main epoc directory
