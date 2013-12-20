@@ -66,14 +66,6 @@ parser.add_option("--iterations", dest="iterations", help="Number of Iterations 
 rank = MPI.COMM_WORLD.rank  # The process ID (integer 0-3 for 4-process run)
 size = MPI.COMM_WORLD.size  # The number of processes in the job.
 
-# Print a little report of what we have loaded
-if (rank == 0):
-    logging.debug("mpi5py loaded: \n\t", MPI)
-    logging.debug("h5py loaded:   \n\t", h5py)
-    logging.debug("zmq loaded:    \n\t", zmq)
-
-MPI.COMM_WORLD.barrier()
-
 # get the hostname
 ip = socket.gethostbyname(socket.gethostname())
 
