@@ -111,10 +111,10 @@ class MagLists():
 
 if __name__ == "__main__" :
     mags = Magnets()
-    mags.add_magnet_set('HH', "../../data/I23H.sim", (-1.,-1.,1.))
-    mags.add_magnet_set('HE', "../../data/I23HEA.sim", (-1.,-1.,1.))
-    mags.add_magnet_set('VV', "../../data/I23V.sim", (-1.,1.,-1.))
-    mags.add_magnet_set('VE', "../../data/I23VE.sim", (-1.,1.,-1.))
+    mags.add_magnet_set('HH', "../../data/J13H.sim", (-1.,-1.,1.))
+    mags.add_magnet_set('HE', "../../data/J13HEA.sim", (-1.,-1.,1.))
+    mags.add_magnet_set('VV', "../../data/J13V.sim", (-1.,1.,-1.))
+    mags.add_magnet_set('VE', "../../data/J13VE.sim", (-1.,1.,-1.))
     
     #mags.add_perfect_magnet_set('HH', 20 , (0.,0.,1.), (-1.,1.,-1.))
     #mags.add_perfect_magnet_set('HE', 5 , (0.,0.,1.), (-1.,1.,-1.))

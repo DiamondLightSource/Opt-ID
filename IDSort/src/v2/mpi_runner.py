@@ -51,9 +51,9 @@ parser.add_option("-f", "--fitness", dest="fitness", help="Set the target fitnes
 parser.add_option("-p", "--processing", dest="processing", help="Set the total number of processing units per file", default=5, type="int")
 parser.add_option("-n", "--numnodes", dest="nodes", help="Set the total number of nodes to use", default=10, type="int")
 parser.add_option("-s", "--setup", dest="setup", help="set number of genomes to create in setup mode", default=5, type='int')
-parser.add_option("-i", "--info", dest="id_filename", help="Set the path to the id data", default='/dls/tmp/ssg37927/id/lookup/id.json', type="string")
-parser.add_option("-l", "--lookup", dest="lookup_filename", help="Set the path to the lookup table", default='/dls/tmp/ssg37927/id/lookup/unit.h5', type="string")
-parser.add_option("-m", "--magnets", dest="magnets_filename", help="Set the path to the magnet description file", default='/dls/tmp/ssg37927/id/lookup/magnets.mag', type="string")
+parser.add_option("-i", "--info", dest="id_filename", help="Set the path to the id data", default='/dls/science/groups/das/ID/I13j/id.json', type="string")
+parser.add_option("-l", "--lookup", dest="lookup_filename", help="Set the path to the lookup table", default='/dls/science/groups/das/ID/I13j/unit.h5', type="string")
+parser.add_option("-m", "--magnets", dest="magnets_filename", help="Set the path to the magnet description file", default='/dls/science/groups/das/ID/I13j/magnets.mag', type="string")
 parser.add_option("-a", "--maxage", dest="max_age", help="Set the maximum age of a genome", default=10, type='int')
 parser.add_option("--param_c", dest="c", help="Set the OPT-AI parameter c", default=10.0, type='float')
 parser.add_option("--param_e", dest="e", help="Set the OPT-AI parameter eStar", default=0.0, type='float')
@@ -106,7 +106,7 @@ newpop.sort(key=lambda x: x.fitness)
 newpop = newpop[options.setup*rank:options.setup*(rank+1)]
 
 for genome in newpop:
-    logging.debug("genome fitness is %f" % (genome.fitness))
+    logging.debug("genome fitness: %10.8f   Age : %2i   Mutations : %4i" % (genome.fitness, genome.age, genome.mutations))
 
 # now run the processing
 for i in range(options.iterations):
@@ -150,7 +150,7 @@ for i in range(options.iterations):
         newpop[0].save(args[0])
     
     for genome in newpop:
-        logging.debug("genome fitness is %f" % (genome.fitness))
+        logging.debug("genome fitness: %10.8f   Age : %2i   Mutations : %4i" % (genome.fitness, genome.age, genome.mutations))
         
 
 # gather the population

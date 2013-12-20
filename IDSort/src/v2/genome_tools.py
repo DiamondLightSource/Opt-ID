@@ -53,6 +53,7 @@ class ID_BCell(BCell):
         self.id_filename = id_filename
         self.lookup_filename = lookup_filename
         self.magnets_filename = magnets_filename
+        self.mutations = 0
 
     def create(self, maglist):
         self.genome = maglist
@@ -66,6 +67,7 @@ class ID_BCell(BCell):
             maglist = copy.deepcopy(self.genome)
             maglist.mutate(number_of_mutations)
             child = ID_BCell(self.id_filename, self.lookup_filename, self.magnets_filename)
+            child.mutations = number_of_mutations
             child.create(maglist)
             children.append(child)
         return children
