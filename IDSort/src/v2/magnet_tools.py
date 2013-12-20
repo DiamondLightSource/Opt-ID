@@ -270,8 +270,10 @@ def wrapCalcB(testpoint, magdims,  V1):
     for i in range(3):
         m=np.zeros(3)
         m[i]=1
-        for j in range(3):
+        for j in range(i,3):
             B[:,:,:,i,j]= fortPMB_NEW(testpoint,m,j, magdims, V1)
+            if i!=j:
+                B[:,:,:,j,i]=B[:,:,:,i,j]
     return B
 
 

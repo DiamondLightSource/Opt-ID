@@ -37,8 +37,9 @@ if __name__ == "__main__":
         count = 0
         print("Processing beam %02i" % (b))
         datashape = (testpoints.shape[1], testpoints.shape[2], testpoints.shape[3], 3, 3, len(data['beams'][b]['mags']))
+        chunkshape = (testpoints.shape[1], testpoints.shape[2], testpoints.shape[3], 3, 3, 1)
         print ("datashape is : " + str(datashape))
-        ds = outfile.create_dataset(data['beams'][b]['name'], shape=datashape, dtype=np.float64)
+        ds = outfile.create_dataset(data['beams'][b]['name'], shape=datashape, dtype=np.float64, chunks=chunkshape)
 
         start_time=time.time()
         for mag in data['beams'][b]['mags']:
