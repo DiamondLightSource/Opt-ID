@@ -48,26 +48,23 @@ class BCell(object):
 
 class ID_BCell(BCell):
 
-    def __init__(self, id_filename, lookup_filename, magnets_filename):
+    def __init__(self):
         BCell.__init__(self)
-        self.id_filename = id_filename
-        self.lookup_filename = lookup_filename
-        self.magnets_filename = magnets_filename
         self.mutations = 0
 
-    def create(self, maglist):
+    def create(self, info, lookup, magnets, maglist, ref_total_id_field):
         self.genome = maglist
-        self.fitness = fg.calculate_fitness(self.id_filename, self.lookup_filename, self.magnets_filename, self.genome)
+        self.fitness = fg.calculate_cached_fitness(info, lookup, magnets, maglist, ref_total_id_field)
 
-    def generate_children(self, number_of_children, number_of_mutations):
+    def generate_children(self, number_of_children, number_of_mutations, info, lookup, magnets, ref_total_id_field):
         # first age, as we are now creating children
         self.age_bcell()
         children = []
         for i in range(number_of_children):
             maglist = copy.deepcopy(self.genome)
             maglist.mutate(number_of_mutations)
-            child = ID_BCell(self.id_filename, self.lookup_filename, self.magnets_filename)
+            child = ID_BCell()
             child.mutations = number_of_mutations
-            child.create(maglist)
+            child.create(info, lookup, magnets, maglist, ref_total_id_field)
             children.append(child)
         return children

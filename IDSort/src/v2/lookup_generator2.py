@@ -31,13 +31,13 @@ if __name__ == "__main__":
     
     testpoints=np.mgrid[data['xmin']:data['xmax']:data['xstep'],data['zmin']:data['zmax']:data['zstep'],data['smin']:data['smax']:data['sstep']]
     
-    outfile = h5py.File(args[2], 'w')
+    outfile = h5py.File(args[1], 'w')
     
     for b in range(len(data['beams'])):
         count = 0
         print("Processing beam %02i" % (b))
         datashape = (testpoints.shape[1], testpoints.shape[2], testpoints.shape[3], 3, 3, len(data['beams'][b]['mags']))
-        chunkshape = (testpoints.shape[1], testpoints.shape[2], testpoints.shape[3], 3, 3, 1)
+        chunkshape = (testpoints.shape[1], 1, testpoints.shape[3], 3, 3, 1)
         print ("datashape is : " + str(datashape))
         ds = outfile.create_dataset(data['beams'][b]['name'], shape=datashape, dtype=np.float64, chunks=chunkshape)
 

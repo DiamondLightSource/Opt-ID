@@ -18,4 +18,4 @@ $MPIRUN -np ${processes} \
         --hostfile ${UNIQHOSTS} \
         --wd /dls/tmp/ssg37927/id/logs \
         --tag-output \
-        $PYTHON /home/ssg37927/ID/Opt-ID/IDSort/src/v2/mpi_runner.py $@
+        $PYTHON -m cProfile -s time /home/ssg37927/ID/Opt-ID/IDSort/src/v2/mpi_runner.py $@

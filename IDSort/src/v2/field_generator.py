@@ -35,24 +35,25 @@ def generate_per_magnet_array(info, magnetlist, magnets):
         beams[beam['name']] = np.transpose(np.vstack(magvalues))
     return beams
 
+def generate_sub_array(beam_array, eval_list, lookup, beam):
+    # This sum is calculated like this to avoid memory errors
+    result = np.sum(lookup[beam][:, 1, :, :, :, eval_list[0]] * beam_array[:,eval_list[0]], 3)
+    for m in eval_list[1:]:
+        result += np.sum(lookup[beam][:, 1, :, :, :, m] * beam_array[:,m], 3)
+    return result
 
-def generate_per_magnet_b_field(info, maglist, mags, lookup):
+def generate_per_beam_b_field(info, maglist, mags, lookup):
     beam_arrays = generate_per_magnet_array(info, maglist, mags)
     fields = {}
     for beam in beam_arrays.keys():
-        data = lookup[beam][:, 1, :, :, :, :]
         beam_array = beam_arrays[beam]
-        result = data * beam_array
-        result2 = np.sum(result, 3)
-        fields[beam] = result2
+        # This sum is calculated like this to avoid memory errors
+        result = np.sum(lookup[beam][:, 1, :, :, :, 0] * beam_array[:,0], 3)
+        for m in range(1, lookup[beam].shape[5]):
+            result += np.sum(lookup[beam][:, 1, :, :, :, m] * beam_array[:,m], 3)
+        fields[beam] = result
     return fields
 
-def generate_per_beam_b_field(info, maglist, mags, f1):
-    fields = generate_per_magnet_b_field(info, maglist, mags, f1)
-    beam_fields = {}
-    for beam in fields.keys():
-        beam_fields[beam] = np.sum(fields[beam],3)
-    return beam_fields
 
 def generate_id_field(info, maglist, mags, f1):
     fields = generate_per_beam_b_field(info, maglist, mags, f1)
@@ -78,9 +79,15 @@ def generate_reference_magnets(mags):
         ref_mags.add_perfect_magnet_set(magtype, len(mags.magnet_sets[magtype]) , unit, mags.magnet_flip[magtype])
     return ref_mags
 
+
+def calculate_cached_fitness(info, lookup, magnets, maglist, ref_total_id_field):
+    total_id_field = generate_id_field(info, maglist, magnets, lookup)
+    return generate_id_field_cost(total_id_field, ref_total_id_field)
+
+
 def calculate_fitness(id_filename, lookup_filename, magnets_filename, maglist):
     # TODO this will be slow, but should be optimizable with lookups
-    f1 = h5py.File(lookup_filename, 'r')
+    lookup = h5py.File(lookup_filename, 'r')
     f2 = open(id_filename, 'r')
     info = json.load(f2)
     f2.close()
@@ -88,14 +95,14 @@ def calculate_fitness(id_filename, lookup_filename, magnets_filename, maglist):
     mags = magnets.Magnets()
     mags.load(magnets_filename)
 
-    total_id_field = generate_id_field(info, maglist, mags, f1)
-
     ref_mags = generate_reference_magnets(mags)
     ref_maglist = magnets.MagLists(ref_mags)
-    ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, f1)
-    f1.close()
+    ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, lookup)
 
-    return generate_id_field_cost(total_id_field, ref_total_id_field)
+    result = calculate_cached_fitness(info, lookup, magnets, maglist, ref_total_id_field)
+    lookup.close()
+
+    return result
 
 
 def output_fields(filename, id_filename, lookup_filename, magnets_filename, maglist):

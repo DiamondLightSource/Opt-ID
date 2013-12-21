@@ -34,6 +34,8 @@ import magnets
 from genome_tools import ID_BCell
 import field_generator as fg
 
+import json
+
 import random
 
 def mutations(c, e_star, fitness, scale):
@@ -52,7 +54,7 @@ parser.add_option("-p", "--processing", dest="processing", help="Set the total n
 parser.add_option("-n", "--numnodes", dest="nodes", help="Set the total number of nodes to use", default=10, type="int")
 parser.add_option("-s", "--setup", dest="setup", help="set number of genomes to create in setup mode", default=5, type='int')
 parser.add_option("-i", "--info", dest="id_filename", help="Set the path to the id data", default='/dls/science/groups/das/ID/I13j/id.json', type="string")
-parser.add_option("-l", "--lookup", dest="lookup_filename", help="Set the path to the lookup table", default='/dls/science/groups/das/ID/I13j/unit.h5', type="string")
+parser.add_option("-l", "--lookup", dest="lookup_filename", help="Set the path to the lookup table", default='/dls/science/groups/das/ID/I13j/unit_chunks.h5', type="string")
 parser.add_option("-m", "--magnets", dest="magnets_filename", help="Set the path to the magnet description file", default='/dls/science/groups/das/ID/I13j/magnets.mag', type="string")
 parser.add_option("-a", "--maxage", dest="max_age", help="Set the maximum age of a genome", default=10, type='int')
 parser.add_option("--param_c", dest="c", help="Set the OPT-AI parameter c", default=10.0, type='float')
@@ -71,10 +73,19 @@ ip = socket.gethostbyname(socket.gethostname())
 
 logging.debug("Process %d ip address is : %s" % (rank, ip))
 
+lookup = h5py.File(options.lookup_filename, 'r')
+f2 = open(options.id_filename, 'r')
+info = json.load(f2)
+f2.close()
 
 logging.debug("Loading magnets")
 mags = magnets.Magnets()
 mags.load(options.magnets_filename)
+
+ref_mags = fg.generate_reference_magnets(mags)
+ref_maglist = magnets.MagLists(ref_mags)
+ref_total_id_field = fg.generate_id_field(info, ref_maglist, ref_mags, lookup)
+
 
 #epoch_path = os.path.join(args[0], 'epoch')
 #next_epoch_path = os.path.join(args[0], 'nextepoch')
@@ -86,8 +97,8 @@ for i in range(options.setup):
     # create a fresh maglist
     maglist = magnets.MagLists(mags)
     maglist.shuffle_all()
-    genome = ID_BCell(options.id_filename, options.lookup_filename, options.magnets_filename)
-    genome.create(maglist)
+    genome = ID_BCell()
+    genome.create(info, lookup, mags, maglist, ref_total_id_field)
     population.append(genome)
 
 # gather the population
@@ -108,6 +119,10 @@ newpop = newpop[options.setup*rank:options.setup*(rank+1)]
 for genome in newpop:
     logging.debug("genome fitness: %10.8f   Age : %2i   Mutations : %4i" % (genome.fitness, genome.age, genome.mutations))
 
+#Checkpoint best solution
+if rank == 0:
+    newpop[0].save(args[0])
+
 # now run the processing
 for i in range(options.iterations):
     
@@ -121,7 +136,7 @@ for i in range(options.iterations):
         # TODO this is for the moment
         number_of_children = options.setup
         number_of_mutations = mutations(options.c, options.e, genome.fitness, options.scale)
-        children = genome.generate_children(number_of_children, number_of_mutations)
+        children = genome.generate_children(number_of_children, number_of_mutations, info, lookup, mags, ref_total_id_field)
         
         # now save the children into the new file
         for child in children:
@@ -171,3 +186,5 @@ newpop = newpop[options.setup*rank:options.setup*(rank+1)]
 #Checkpoint best solution
 if rank == 0:
     newpop[0].save(args[0])
+
+lookup.close()
