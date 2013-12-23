@@ -73,10 +73,19 @@ ip = socket.gethostbyname(socket.gethostname())
 
 logging.debug("Process %d ip address is : %s" % (rank, ip))
 
-lookup = h5py.File(options.lookup_filename, 'r')
+
+
 f2 = open(options.id_filename, 'r')
 info = json.load(f2)
 f2.close()
+
+logging.debug("Loading Lookup")
+f1 = h5py.File(options.lookup_filename, 'r')
+lookup = {}
+for beam in info['beams']:
+    logging.debug("Loading beam %s" %(beam['name']))
+    lookup[beam['name']] = f1[beam['name']][...]
+f1.close()
 
 logging.debug("Loading magnets")
 mags = magnets.Magnets()
@@ -187,4 +196,3 @@ newpop = newpop[options.setup*rank:options.setup*(rank+1)]
 if rank == 0:
     newpop[0].save(args[0])
 
-lookup.close()
