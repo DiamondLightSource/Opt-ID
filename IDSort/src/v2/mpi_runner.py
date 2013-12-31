@@ -10,6 +10,11 @@
 # /dls_sw/prod/tools/RHEL6-x86_64/openmpi/1-6-5/prefix/bin/mpirun -np 5 dls-python parallel-hdf5-demo.py
 #
 
+
+# rn this with the following command
+# qsub -pe openmpi 80 -q low.q -l release=rhel6 /home/ssg37927/ID/Opt-ID/IDSort/src/v2/mpijob.sh --iterations 100
+#
+#
 # First to pick up the DLS controls environment and versioned libraries
 from pkg_resources import require
 require('mpi4py==1.3.1')
@@ -35,6 +40,8 @@ from genome_tools import ID_BCell
 import field_generator as fg
 
 import json
+
+import os
 
 import random
 
@@ -74,7 +81,6 @@ ip = socket.gethostbyname(socket.gethostname())
 logging.debug("Process %d ip address is : %s" % (rank, ip))
 
 
-
 f2 = open(options.id_filename, 'r')
 info = json.load(f2)
 f2.close()
@@ -87,6 +93,8 @@ for beam in info['beams']:
     lookup[beam['name']] = f1[beam['name']][...]
 f1.close()
 
+MPI.COMM_WORLD.Barrier()
+
 logging.debug("Loading magnets")
 mags = magnets.Magnets()
 mags.load(options.magnets_filename)
@@ -95,12 +103,28 @@ ref_mags = fg.generate_reference_magnets(mags)
 ref_maglist = magnets.MagLists(ref_mags)
 ref_total_id_field = fg.generate_id_field(info, ref_maglist, ref_mags, lookup)
 
+MPI.COMM_WORLD.Barrier()
 
 #epoch_path = os.path.join(args[0], 'epoch')
 #next_epoch_path = os.path.join(args[0], 'nextepoch')
 # start by creating the directory to put the initial population in 
 
 population = []
+estar = options.e
+
+
+if options.restart and (rank == 0) :
+    for filename in os.listdir(args[0]):
+        fullpath = os.path.join(args[0],filename)
+        try :
+            logging.debug("Trying to load %s" % (fullpath))
+            genome = ID_BCell()
+            genome.load(fullpath)
+            population.append(genome)
+            logging.debug("Loaded %s" % (fullpath))
+        except :
+            logging.debug("Failed to load %s" % (fullpath))
+
 # make the initial population
 for i in range(options.setup):
     # create a fresh maglist
@@ -116,6 +140,8 @@ for i in range(size):
     trans.append(population)
 
 allpop = MPI.COMM_WORLD.alltoall(trans) 
+
+MPI.COMM_WORLD.Barrier()
 
 newpop = []
 for pop in allpop:
@@ -135,6 +161,7 @@ if rank == 0:
 # now run the processing
 for i in range(options.iterations):
     
+    MPI.COMM_WORLD.Barrier()
     logging.debug("Starting itteration %i" % (i))
 
     nextpop = []
@@ -143,8 +170,9 @@ for i in range(options.iterations):
                 
         # now we have to create the offspring
         # TODO this is for the moment
+        logging.debug("Generating children for %s" % (genome.uid))
         number_of_children = options.setup
-        number_of_mutations = mutations(options.c, options.e, genome.fitness, options.scale)
+        number_of_mutations = mutations(options.c, estar, genome.fitness, options.scale)
         children = genome.generate_children(number_of_children, number_of_mutations, info, lookup, mags, ref_total_id_field)
         
         # now save the children into the new file
@@ -166,6 +194,9 @@ for i in range(options.iterations):
         newpop += pop
     
     newpop.sort(key=lambda x: x.fitness)
+
+    estar = newpop[0].fitness * 0.99
+    logging.debug("new estar is %f" % (estar) )
     
     newpop = newpop[options.setup*rank:options.setup*(rank+1)]
     
@@ -175,7 +206,10 @@ for i in range(options.iterations):
     
     for genome in newpop:
         logging.debug("genome fitness: %10.8f   Age : %2i   Mutations : %4i" % (genome.fitness, genome.age, genome.mutations))
-        
+    
+    MPI.COMM_WORLD.Barrier()
+
+MPI.COMM_WORLD.Barrier()
 
 # gather the population
 trans = []

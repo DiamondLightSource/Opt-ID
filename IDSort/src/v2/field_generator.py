@@ -10,6 +10,8 @@ import json
 
 import magnets
 
+import threading
+
 
 def load_lookup(filename, beam):
     f = h5py.File(filename, 'r')
@@ -35,22 +37,38 @@ def generate_per_magnet_array(info, magnetlist, magnets):
         beams[beam['name']] = np.transpose(np.vstack(magvalues))
     return beams
 
-def generate_sub_array(beam_array, eval_list, lookup, beam):
+def generate_sub_array(beam_array, eval_list, lookup, beam, results):
     # This sum is calculated like this to avoid memory errors
-    result = np.sum(lookup[beam][:, 1, :, :, :, eval_list[0]] * beam_array[:,eval_list[0]], 3)
+    result = np.sum(lookup[beam][:, 0, :, :, :, eval_list[0]] * beam_array[:,eval_list[0]], 3)
     for m in eval_list[1:]:
-        result += np.sum(lookup[beam][:, 1, :, :, :, m] * beam_array[:,m], 3)
-    return result
+        result += np.sum(lookup[beam][:, 0, :, :, :, m] * beam_array[:,m], 3)
+    results.append(result)
 
 def generate_per_beam_b_field(info, maglist, mags, lookup):
     beam_arrays = generate_per_magnet_array(info, maglist, mags)
+    procs = 8
     fields = {}
     for beam in beam_arrays.keys():
         beam_array = beam_arrays[beam]
+        indexes = range(1, lookup[beam].shape[5])
+        length = len(indexes)/(procs-1)
+        chunks=[indexes[x:x+length] for x in xrange(0, len(indexes), length)]
+        results = []
+        pp = []
+        for i in range(len(chunks)):
+            chunk = chunks[i]
+            pp1 = threading.Thread(name='ProcThread-%02i'%(i), target=generate_sub_array, args = (beam_array, chunk, lookup, beam, results))
+            pp1.daemon = True
+            pp1.start()
+            pp.append(pp1)
+        
+        for pp1 in pp:
+            pp1.join()
+        
         # This sum is calculated like this to avoid memory errors
-        result = np.sum(lookup[beam][:, 1, :, :, :, 0] * beam_array[:,0], 3)
-        for m in range(1, lookup[beam].shape[5]):
-            result += np.sum(lookup[beam][:, 1, :, :, :, m] * beam_array[:,m], 3)
+        result = results[0]
+        for m in range(1, len(results)):
+            result += results[m]
         fields[beam] = result
     return fields
 
