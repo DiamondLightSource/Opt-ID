@@ -31,7 +31,7 @@ if __name__ == "__main__":
     
     testpoints=np.mgrid[data['xmin']:data['xmax']:data['xstep'],data['zmin']:data['zmax']:data['zstep'],data['smin']:data['smax']:data['sstep']]
     
-    outfile = h5py.File(args[2], 'w')
+    outfile = h5py.File(args[1], 'w')
     
     for b in range(len(data['beams'])):
         count = 0

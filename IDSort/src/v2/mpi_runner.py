@@ -10,6 +10,11 @@
 # /dls_sw/prod/tools/RHEL6-x86_64/openmpi/1-6-5/prefix/bin/mpirun -np 5 dls-python parallel-hdf5-demo.py
 #
 
+
+# rn this with the following command
+# qsub -pe openmpi 80 -q low.q -l release=rhel6 /home/ssg37927/ID/Opt-ID/IDSort/src/v2/mpijob.sh --iterations 100
+#
+#
 # First to pick up the DLS controls environment and versioned libraries
 from pkg_resources import require
 require('mpi4py==1.3.1')
@@ -34,6 +39,10 @@ import magnets
 from genome_tools import ID_BCell
 import field_generator as fg
 
+import json
+
+import os
+
 import random
 
 def mutations(c, e_star, fitness, scale):
@@ -51,9 +60,9 @@ parser.add_option("-f", "--fitness", dest="fitness", help="Set the target fitnes
 parser.add_option("-p", "--processing", dest="processing", help="Set the total number of processing units per file", default=5, type="int")
 parser.add_option("-n", "--numnodes", dest="nodes", help="Set the total number of nodes to use", default=10, type="int")
 parser.add_option("-s", "--setup", dest="setup", help="set number of genomes to create in setup mode", default=5, type='int')
-parser.add_option("-i", "--info", dest="id_filename", help="Set the path to the id data", default='/dls/tmp/ssg37927/id/lookup/id.json', type="string")
-parser.add_option("-l", "--lookup", dest="lookup_filename", help="Set the path to the lookup table", default='/dls/tmp/ssg37927/id/lookup/unit.h5', type="string")
-parser.add_option("-m", "--magnets", dest="magnets_filename", help="Set the path to the magnet description file", default='/dls/tmp/ssg37927/id/lookup/magnets.mag', type="string")
+parser.add_option("-i", "--info", dest="id_filename", help="Set the path to the id data", default='/dls/science/groups/das/ID/I13j/id.json', type="string")
+parser.add_option("-l", "--lookup", dest="lookup_filename", help="Set the path to the lookup table", default='/dls/science/groups/das/ID/I13j/unit_chunks.h5', type="string")
+parser.add_option("-m", "--magnets", dest="magnets_filename", help="Set the path to the magnet description file", default='/dls/science/groups/das/ID/I13j/magnets.mag', type="string")
 parser.add_option("-a", "--maxage", dest="max_age", help="Set the maximum age of a genome", default=10, type='int')
 parser.add_option("--param_c", dest="c", help="Set the OPT-AI parameter c", default=10.0, type='float')
 parser.add_option("--param_e", dest="e", help="Set the OPT-AI parameter eStar", default=0.0, type='float')
@@ -66,36 +75,63 @@ parser.add_option("--iterations", dest="iterations", help="Number of Iterations 
 rank = MPI.COMM_WORLD.rank  # The process ID (integer 0-3 for 4-process run)
 size = MPI.COMM_WORLD.size  # The number of processes in the job.
 
-# Print a little report of what we have loaded
-if (rank == 0):
-    logging.debug("mpi5py loaded: \n\t", MPI)
-    logging.debug("h5py loaded:   \n\t", h5py)
-    logging.debug("zmq loaded:    \n\t", zmq)
-
-MPI.COMM_WORLD.barrier()
-
 # get the hostname
 ip = socket.gethostbyname(socket.gethostname())
 
 logging.debug("Process %d ip address is : %s" % (rank, ip))
 
 
+f2 = open(options.id_filename, 'r')
+info = json.load(f2)
+f2.close()
+
+logging.debug("Loading Lookup")
+f1 = h5py.File(options.lookup_filename, 'r')
+lookup = {}
+for beam in info['beams']:
+    logging.debug("Loading beam %s" %(beam['name']))
+    lookup[beam['name']] = f1[beam['name']][...]
+f1.close()
+
+MPI.COMM_WORLD.Barrier()
+
 logging.debug("Loading magnets")
 mags = magnets.Magnets()
 mags.load(options.magnets_filename)
+
+ref_mags = fg.generate_reference_magnets(mags)
+ref_maglist = magnets.MagLists(ref_mags)
+ref_total_id_field = fg.generate_id_field(info, ref_maglist, ref_mags, lookup)
+
+MPI.COMM_WORLD.Barrier()
 
 #epoch_path = os.path.join(args[0], 'epoch')
 #next_epoch_path = os.path.join(args[0], 'nextepoch')
 # start by creating the directory to put the initial population in 
 
 population = []
+estar = options.e
+
+
+if options.restart and (rank == 0) :
+    for filename in os.listdir(args[0]):
+        fullpath = os.path.join(args[0],filename)
+        try :
+            logging.debug("Trying to load %s" % (fullpath))
+            genome = ID_BCell()
+            genome.load(fullpath)
+            population.append(genome)
+            logging.debug("Loaded %s" % (fullpath))
+        except :
+            logging.debug("Failed to load %s" % (fullpath))
+
 # make the initial population
 for i in range(options.setup):
     # create a fresh maglist
     maglist = magnets.MagLists(mags)
     maglist.shuffle_all()
-    genome = ID_BCell(options.id_filename, options.lookup_filename, options.magnets_filename)
-    genome.create(maglist)
+    genome = ID_BCell()
+    genome.create(info, lookup, mags, maglist, ref_total_id_field)
     population.append(genome)
 
 # gather the population
@@ -104,6 +140,8 @@ for i in range(size):
     trans.append(population)
 
 allpop = MPI.COMM_WORLD.alltoall(trans) 
+
+MPI.COMM_WORLD.Barrier()
 
 newpop = []
 for pop in allpop:
@@ -114,11 +152,16 @@ newpop.sort(key=lambda x: x.fitness)
 newpop = newpop[options.setup*rank:options.setup*(rank+1)]
 
 for genome in newpop:
-    logging.debug("genome fitness is %f" % (genome.fitness))
+    logging.debug("genome fitness: %10.8f   Age : %2i   Mutations : %4i" % (genome.fitness, genome.age, genome.mutations))
+
+#Checkpoint best solution
+if rank == 0:
+    newpop[0].save(args[0])
 
 # now run the processing
 for i in range(options.iterations):
     
+    MPI.COMM_WORLD.Barrier()
     logging.debug("Starting itteration %i" % (i))
 
     nextpop = []
@@ -127,9 +170,10 @@ for i in range(options.iterations):
                 
         # now we have to create the offspring
         # TODO this is for the moment
+        logging.debug("Generating children for %s" % (genome.uid))
         number_of_children = options.setup
-        number_of_mutations = mutations(options.c, options.e, genome.fitness, options.scale)
-        children = genome.generate_children(number_of_children, number_of_mutations)
+        number_of_mutations = mutations(options.c, estar, genome.fitness, options.scale)
+        children = genome.generate_children(number_of_children, number_of_mutations, info, lookup, mags, ref_total_id_field)
         
         # now save the children into the new file
         for child in children:
@@ -150,6 +194,9 @@ for i in range(options.iterations):
         newpop += pop
     
     newpop.sort(key=lambda x: x.fitness)
+
+    estar = newpop[0].fitness * 0.99
+    logging.debug("new estar is %f" % (estar) )
     
     newpop = newpop[options.setup*rank:options.setup*(rank+1)]
     
@@ -158,8 +205,11 @@ for i in range(options.iterations):
         newpop[0].save(args[0])
     
     for genome in newpop:
-        logging.debug("genome fitness is %f" % (genome.fitness))
-        
+        logging.debug("genome fitness: %10.8f   Age : %2i   Mutations : %4i" % (genome.fitness, genome.age, genome.mutations))
+    
+    MPI.COMM_WORLD.Barrier()
+
+MPI.COMM_WORLD.Barrier()
 
 # gather the population
 trans = []
@@ -179,3 +229,4 @@ newpop = newpop[options.setup*rank:options.setup*(rank+1)]
 #Checkpoint best solution
 if rank == 0:
     newpop[0].save(args[0])
+
