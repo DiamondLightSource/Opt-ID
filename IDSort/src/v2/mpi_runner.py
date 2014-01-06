@@ -147,6 +147,20 @@ newpop = []
 for pop in allpop:
     newpop += pop
 
+# Need to deal with replicas and old genomes
+popdict = {}
+for genome in newpop:
+    if genome.fitness in popdict.keys():
+        if popdict[genome.fitness].age < genome.age:
+            popdict[genome.fitness] = genome
+    else :
+        popdict[genome.fitness] = genome
+
+newpop = []
+for genome in popdict.values():
+    if genome.age < options.max_age:
+        newpop.append(genome)
+
 newpop.sort(key=lambda x: x.fitness)
 
 newpop = newpop[options.setup*rank:options.setup*(rank+1)]
