@@ -57,7 +57,7 @@ def create_direction_list_antisymetric_ppm_top(nperiods):
 
 def create_location_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap,interstice):
     V1 = []
-    length = (4*(nperiods-1)+1)*fullmagdims[2]+2*vemagdims[2]+2*hemagdims[2]+4*nperiods*interstice
+    length = (4*(nperiods-1)+1)*(fullmagdims[2]+interstice)+2*(vemagdims[2]+interstice)+2*(hemagdims[2]+interstice)-interstice
     x=-fullmagdims[0]/2.0
     z=mingap/2.0
     s=-length/2.0
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     parser.add_option("-p", "--periods", dest="periods", help="Set the number of full periods for the Device", default=108, type="int")
     parser.add_option("--fullmagdims", dest="fullmagdims", help="Set the dimensions of the full magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 6.22), type="float")
     parser.add_option("--vemagdims", dest="vemagdims", help="Set the dimensions of the VE magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 3.12), type="float")
-    parser.add_option("--hemagdims", dest="hemagdims", help="Set the dimensions of the HE magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 3.7), type="float")
+    parser.add_option("--hemagdims", dest="hemagdims", help="Set the dimensions of the HE magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 3.3), type="float")
     parser.add_option("-i", dest="interstice", help="Set the dimensions of the slack between adjacent magnets (interstice) in mm", default=0.03, type="float")
     parser.add_option("-g", "--gap", dest="gap", help="Set the gap for the device to be created at", default=6.15, type="float")
     parser.add_option("-t", "--type", dest="type", help="Set the device type", type="string", default="PPM_AntiSymetric")
@@ -124,7 +124,7 @@ if __name__ == "__main__":
         output['zmin'] = options.z[0]
         output['zmax'] = options.z[1]
         output['zstep'] = options.z[2]
-        length = options.fullmagdims[2]*4*(options.periods+16)
+        length = (options.fullmagdims[2]+options.interstice)*4*(options.periods+16)
         output['smin'] = -length/2.0
         output['smax'] = (length/2.0)+(options.fullmagdims[2]/options.steps)
         output['sstep'] = options.fullmagdims[2]/options.steps

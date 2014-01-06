@@ -121,10 +121,10 @@ def output_fields(filename, id_filename, lookup_filename, magnets_filename, magl
 if __name__ == "__main__" :
     mags = magnets.Magnets()
     
-    mags.add_magnet_set('HH', "S:/Technical/IDs/Ed/Bash Sort/I23/I23H.sim", (-1.,1.,-1.))
-    mags.add_magnet_set('HE', "S:/Technical/IDs/Ed/Bash Sort/I23/I23HEA.sim", (-1.,1.,-1.))
-    mags.add_magnet_set('VV', "S:/Technical/IDs/Ed/Bash Sort/I23/I23V.sim", (-1.,-1.,1.))
-    mags.add_magnet_set('VE', "S:/Technical/IDs/Ed/Bash Sort/I23/I23VE.sim", (-1.,-1.,1.))
+    mags.add_magnet_set('HH', "S:/Technical/IDs/Ed/Bash Sort/I13j/J13H.sim", (-1.,1.,-1.))
+    mags.add_magnet_set('HE', "S:/Technical/IDs/Ed/Bash Sort/I13j/J13HEB.sim", (-1.,1.,-1.))
+    mags.add_magnet_set('VV', "S:/Technical/IDs/Ed/Bash Sort/I13j/J13V.sim", (-1.,-1.,1.))
+    mags.add_magnet_set('VE', "S:/Technical/IDs/Ed/Bash Sort/I13j/J13VE.sim", (-1.,-1.,1.))
 
     ref_mags=generate_reference_magnets(mags)
 
@@ -134,9 +134,9 @@ if __name__ == "__main__" :
     maglist.shuffle_all()
 
     import h5py
-    f1 = h5py.File('unit.h5', 'r')
+    f1 = h5py.File('unit_array.h5', 'r')
 
-    f2 = open('id.json', 'r')
+    f2 = open('I13j.json', 'r')
     info = json.load(f2)
 
     magarrays = generate_per_magnet_array(info, maglist, mags)
