@@ -26,25 +26,25 @@ if __name__ == "__main__":
     data = json.load(fp)
     fp.close()
 
-    # create calculation arrays
-    x = np.arange(data['xmin'], data['xmax'], data['xstep'])
-    z = np.arange(data['zmin'], data['zmax'], data['zstep'])
-    s = np.arange(data['smin'], data['smax'], data['sstep'])
-
+    # create calculation array
+    
+    testpoints=np.mgrid[data['xmin']:data['xmax']:data['xstep'],data['zmin']:data['zmax']:data['zstep'],data['smin']:data['smax']:data['sstep']]
+    
     outfile = h5py.File(args[1], 'w')
-
-    for b in range(len(data['beams'][0:1])):
+    
+    for b in range(len(data['beams'])):
         count = 0
         print("Processing beam %02i" % (b))
-        datashape = (len(x), len(z), len(s), 3, 3, len(data['beams'][b]['mags']))
+        datashape = (testpoints.shape[1], testpoints.shape[2], testpoints.shape[3], 3, 3, len(data['beams'][b]['mags']))
+        chunkshape = (testpoints.shape[1], testpoints.shape[2], testpoints.shape[3], 3, 3, 1)
         print ("datashape is : " + str(datashape))
-        ds = outfile.create_dataset(data['beams'][b]['name'], shape=datashape, dtype=np.float64)
+        ds = outfile.create_dataset(data['beams'][b]['name'], shape=datashape, dtype=np.float64, chunks=chunkshape)
 
-        for mag in data['beams'][b]['mags'][0:1]:
+        for mag in data['beams'][b]['mags']:
             print("processing beam %02i magnet %04i" % (b, count))
-            dataset = mt.generate_B_array_from_arrays(x, z, s, np.array(mag['dimensions']), np.array(mag['position']))
+            dataset = mt.wrapCalcB(testpoints, np.array(mag['dimensions']), np.array(mag['position']))
             ds[:, :, :, :, :, count] = dataset * np.array(mag['direction'])
             count += 1
-
+            
     outfile.close()
 
