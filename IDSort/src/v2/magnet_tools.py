@@ -80,12 +80,17 @@ def calculate_integral_component(mag_x, mag_z, mag_s, fintx, fintz, sintx, sintz
     return(firstix,firstiz,secondix,secondiz)
     
 
-def calculate_phase_error(nperiods, step, n_stp, n_s_stp, b_array):
+def calculate_phase_error(info, b_array):
     Energy = 3.0  #ideally needs to be tunable. Is a machine parameter. Would need a new Machine Class
     Const = (0.03/Energy)*1e-2  # appears to be defining 10^5eV...(Includes random 1e4 B factor)
     c=2.9911124e8 #The speed of light. For now.
     Mass =0.511e-3
     Gamma=Energy/Mass
+    
+    nperiods=info['periods']
+    step=info['sstep']
+    n_stp = (4*info['period_length']/step)
+    n_s_stp = (info['smax']-info['smin'])/step
     
     nskip=8
     

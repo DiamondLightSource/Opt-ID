@@ -104,9 +104,9 @@ if __name__ == "__main__":
     parser.add_option("-t", "--type", dest="type", help="Set the device type", type="string", default="PPM_AntiSymetric")
     parser.add_option("-v", "--verbose", dest="verbose", help="display debug information", action="store_true", default=False)
     parser.add_option("-n", "--name", dest="name", help="PPM name", default="J13", type="string")
-    parser.add_option("-x", "--xstartstopstep", dest="x", help="X start stop and step", nargs=3, default=(-40.0, 41., 20.0), type="float")
+    parser.add_option("-x", "--xstartstopstep", dest="x", help="X start stop and step", nargs=3, default=(0.0, 41., 200.0), type="float")
     parser.add_option("-z", "--zstartstopstep", dest="z", help="Z start stop and step", nargs=3, default=(0.0, 0.1, 0.1), type="float")
-    parser.add_option("-s", "--stepsperperiod", dest="steps", help="Number of steps in S per magnet", default=12, type="float")
+    parser.add_option("-s", "--stepsperperiod", dest="steps", help="Number of steps in S per magnet", default=5, type="float")
 
     (options, args) = parser.parse_args()
 
@@ -117,6 +117,7 @@ if __name__ == "__main__":
         output['number_of_beams'] = 2
         output['gap'] = options.gap
         output['periods'] = options.periods
+        output['period_length'] = 4*(options.interstice+options.fullmagdims[2])
         # TODO needs sorting out
         output['xmin'] = options.x[0]
         output['xmax'] = options.x[1]
@@ -126,8 +127,8 @@ if __name__ == "__main__":
         output['zstep'] = options.z[2]
         length = (options.fullmagdims[2]+options.interstice)*4*(options.periods+16)
         output['smin'] = -length/2.0
-        output['smax'] = (length/2.0)+(options.fullmagdims[2]/options.steps)
-        output['sstep'] = options.fullmagdims[2]/options.steps
+        output['smax'] = (length/2.0)+((options.fullmagdims[2]+options.interstice)/options.steps)
+        output['sstep'] = (options.fullmagdims[2]+options.interstice)/options.steps
         output['interstice'] = options.interstice
 
         # calculate all magnet values

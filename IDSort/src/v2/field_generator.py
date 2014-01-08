@@ -9,6 +9,7 @@ import h5py
 import json
 
 import magnets
+import magnet_tools as mt
 
 import threading
 
@@ -133,13 +134,17 @@ def output_fields(filename, id_filename, lookup_filename, magnets_filename, magl
     mags.load(magnets_filename)
 
     f = h5py.File(filename, 'w')
-    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
+#    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
     per_beam_field = generate_per_beam_b_field(info, maglist, mags, f1)
     total_id_field = generate_id_field(info, maglist, mags, f1)
-    for name in per_mag_field.keys():
-        f.create_dataset("%s_per_magnet" % (name), data=per_mag_field[name])
+    for name in per_beam_field.keys():
+#        f.create_dataset("%s_per_magnet" % (name), data=per_mag_field[name])
         f.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
     f.create_dataset('id_Bfield', data=total_id_field)
+    trajectory_information=mt.calculate_phase_error(info, total_id_field)
+    f.create_dataset('id_phase_error', data = trajectory_information[0])
+    f.create_dataset('id_trajectory', data = trajectory_information[1])
+    
     f.close()
 
 
@@ -157,21 +162,21 @@ if __name__ == "__main__" :
     ref_maglist = magnets.MagLists(ref_mags)
 
     maglist.shuffle_all()
+    
+    f1 = h5py.File('unit.h5', 'r')
 
-    import h5py
-    f1 = h5py.File('unit_array.h5', 'r')
-
-    f2 = open('I13j.json', 'r')
+    f2 = open('test.json', 'r')
     info = json.load(f2)
 
     magarrays = generate_per_magnet_array(info, maglist, mags)
-    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
+#    per_mag_field = generate_sub_array(beam_array, eval_list, lookup, beam, per_mag_field)
+#    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
     per_beam_field = generate_per_beam_b_field(info, maglist, mags, f1)
     total_id_field = generate_id_field(info, maglist, mags, f1)
     
     
     ref_magarrays = generate_per_magnet_array(info, ref_maglist, ref_mags)
-    ref_per_mag_field = generate_per_magnet_b_field(info, ref_maglist, ref_mags, f1)
+#    ref_per_mag_field = generate_per_magnet_b_field(info, ref_maglist, ref_mags, f1)
     ref_per_beam_field = generate_per_beam_b_field(info, ref_maglist, ref_mags, f1)
     ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, f1)
     
@@ -182,15 +187,15 @@ if __name__ == "__main__" :
     f2.close()
 
     f3 = h5py.File('real_data.h5', 'w')
-    for name in per_mag_field.keys():
-        f3.create_dataset("%s_per_magnet" % (name), data=per_mag_field[name])
+    for name in per_beam_field.keys():
+#        f3.create_dataset("%s_per_magnet" % (name), data=per_mag_field[name])
         f3.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
     f3.create_dataset('id_Bfield',data=total_id_field)
     f3.close()
     
     f4 = h5py.File('reference.h5', 'w')
-    for name in ref_per_mag_field.keys():
-        f4.create_dataset("%s_per_magnet" % (name), data=ref_per_mag_field[name])
+    for name in ref_per_beam_field.keys():
+#        f4.create_dataset("%s_per_magnet" % (name), data=ref_per_mag_field[name])
         f4.create_dataset("%s_per_beam" % (name), data=ref_per_beam_field[name])
     f4.create_dataset('id_Bfield',data=ref_total_id_field)
     f4.close()
