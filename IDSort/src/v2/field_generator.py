@@ -133,11 +133,11 @@ def output_fields(filename, id_filename, lookup_filename, magnets_filename, magl
     mags.load(magnets_filename)
 
     f = h5py.File(filename, 'w')
-    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
+    #per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
     per_beam_field = generate_per_beam_b_field(info, maglist, mags, f1)
     total_id_field = generate_id_field(info, maglist, mags, f1)
-    for name in per_mag_field.keys():
-        f.create_dataset("%s_per_magnet" % (name), data=per_mag_field[name])
+    for name in per_beam_field.keys():
+        #f.create_dataset("%s_per_magnet" % (name), data=per_mag_field[name])
         f.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
     f.create_dataset('id_Bfield', data=total_id_field)
     f.close()
