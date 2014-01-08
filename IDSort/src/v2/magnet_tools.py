@@ -87,9 +87,15 @@ def calculate_phase_error(info, b_array):
     Mass =0.511e-3
     Gamma=Energy/Mass
     
+    #quick hack for central trajectory only
+    i=b_array.shape[0]
+    i=(i+1)/2-1
+    b_array=b_array[i,:,:]
+    
+    
     nperiods=info['periods']
     step=info['sstep']
-    n_stp = (4*info['period_length']/step)
+    n_stp = (info['period_length']/step)
     n_s_stp = (info['smax']-info['smin'])/step
     
     nskip=8

@@ -173,12 +173,14 @@ if __name__ == "__main__" :
 #    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
     per_beam_field = generate_per_beam_b_field(info, maglist, mags, f1)
     total_id_field = generate_id_field(info, maglist, mags, f1)
+    trajectories = mt.calculate_phase_error(info,total_id_field)
     
     
     ref_magarrays = generate_per_magnet_array(info, ref_maglist, ref_mags)
 #    ref_per_mag_field = generate_per_magnet_b_field(info, ref_maglist, ref_mags, f1)
     ref_per_beam_field = generate_per_beam_b_field(info, ref_maglist, ref_mags, f1)
     ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, f1)
+    ref_trajectories = mt.calculate_phase_error(info,ref_total_id_field)
     
     
     cost_total_id_field=generate_id_field_cost(total_id_field,ref_total_id_field)
@@ -191,6 +193,8 @@ if __name__ == "__main__" :
 #        f3.create_dataset("%s_per_magnet" % (name), data=per_mag_field[name])
         f3.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
     f3.create_dataset('id_Bfield',data=total_id_field)
+    f3.create_dataset('id_phase_error',data=trajectories[0])
+    f3.create_dataset('id_trajectories',data=trajectories[1])
     f3.close()
     
     f4 = h5py.File('reference.h5', 'w')
@@ -198,4 +202,6 @@ if __name__ == "__main__" :
 #        f4.create_dataset("%s_per_magnet" % (name), data=ref_per_mag_field[name])
         f4.create_dataset("%s_per_beam" % (name), data=ref_per_beam_field[name])
     f4.create_dataset('id_Bfield',data=ref_total_id_field)
+    f4.create_dataset('id_phase_error',data=ref_trajectories[0])
+    f4.create_dataset('id_trajectories',data=ref_trajectories[1])
     f4.close()
