@@ -151,6 +151,8 @@ def output_fields(filename, id_filename, lookup_filename, magnets_filename, magl
         f.create_dataset("%s_per_beam_perfect" % (name), data=per_beam_field[name])
     f.create_dataset('id_Bfield_perfect', data=total_id_field)
     trajectory_information=mt.calculate_phase_error(info, total_id_field)
+    f.create_dataset('id_phase_error_perfect', data = trajectory_information[0])
+    f.create_dataset('id_trajectory_perfect', data = trajectory_information[1])
 
     f.close()
 
