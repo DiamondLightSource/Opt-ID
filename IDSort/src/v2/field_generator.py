@@ -132,19 +132,26 @@ def output_fields(filename, id_filename, lookup_filename, magnets_filename, magl
 
     mags = magnets.Magnets()
     mags.load(magnets_filename)
+    ref_mags=generate_reference_magnets(mags)
 
     f = h5py.File(filename, 'w')
-#    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
+    
     per_beam_field = generate_per_beam_b_field(info, maglist, mags, f1)
     total_id_field = generate_id_field(info, maglist, mags, f1)
     for name in per_beam_field.keys():
-#        f.create_dataset("%s_per_magnet" % (name), data=per_mag_field[name])
         f.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
     f.create_dataset('id_Bfield', data=total_id_field)
     trajectory_information=mt.calculate_phase_error(info, total_id_field)
     f.create_dataset('id_phase_error', data = trajectory_information[0])
     f.create_dataset('id_trajectory', data = trajectory_information[1])
     
+    per_beam_field = generate_per_beam_b_field(info, maglist, ref_mags, f1)
+    total_id_field = generate_id_field(info, maglist, ref_mags, f1)
+    for name in per_beam_field.keys():
+        f.create_dataset("%s_per_beam_perfect" % (name), data=per_beam_field[name])
+    f.create_dataset('id_Bfield_perfect', data=total_id_field)
+    trajectory_information=mt.calculate_phase_error(info, total_id_field)
+
     f.close()
 
 

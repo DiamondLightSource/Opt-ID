@@ -166,7 +166,7 @@ newpop.sort(key=lambda x: x.fitness)
 newpop = newpop[options.setup*rank:options.setup*(rank+1)]
 
 for genome in newpop:
-    logging.debug("genome fitness: %10.8f   Age : %2i   Mutations : %4i" % (genome.fitness, genome.age, genome.mutations))
+    logging.debug("genome fitness: %20.18f   Age : %2i   Mutations : %4i" % (genome.fitness, genome.age, genome.mutations))
 
 #Checkpoint best solution
 if rank == 0:
