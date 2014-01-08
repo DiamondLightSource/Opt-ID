@@ -51,7 +51,7 @@ def generate_per_beam_b_field(info, maglist, mags, lookup):
     fields = {}
     for beam in beam_arrays.keys():
         beam_array = beam_arrays[beam]
-        indexes = range(1, lookup[beam].shape[5])
+        indexes = range(0, lookup[beam].shape[5])
         length = len(indexes)/(procs-1)
         chunks=[indexes[x:x+length] for x in xrange(0, len(indexes), length)]
         results = []
