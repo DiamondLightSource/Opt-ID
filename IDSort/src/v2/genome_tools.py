@@ -52,9 +52,9 @@ class ID_BCell(BCell):
         BCell.__init__(self)
         self.mutations = 0
 
-    def create(self, info, lookup, magnets, maglist, ref_total_id_field):
+    def create(self, info, lookup, magnets, maglist, ref_trajectories):
         self.genome = maglist
-        self.fitness = fg.calculate_cached_fitness(info, lookup, magnets, maglist, ref_total_id_field)
+        self.fitness = fg.calculate_cached_trajectory_fitness(info, lookup, magnets, maglist, ref_trajectories)
 
     def generate_children(self, number_of_children, number_of_mutations, info, lookup, magnets, ref_total_id_field):
         # first age, as we are now creating children

@@ -38,6 +38,7 @@ logging.basicConfig(level=0,format=' %(asctime)s.%(msecs)03d %(threadName)-16s %
 import magnets
 from genome_tools import ID_BCell
 import field_generator as fg
+import magnet_tools as mt
 
 import json
 
@@ -102,6 +103,7 @@ mags.load(options.magnets_filename)
 ref_mags = fg.generate_reference_magnets(mags)
 ref_maglist = magnets.MagLists(ref_mags)
 ref_total_id_field = fg.generate_id_field(info, ref_maglist, ref_mags, lookup)
+pherr, ref_trajectories = mt.calculate_phase_error(info, ref_total_id_field)
 
 MPI.COMM_WORLD.Barrier()
 
@@ -131,7 +133,7 @@ for i in range(options.setup):
     maglist = magnets.MagLists(mags)
     maglist.shuffle_all()
     genome = ID_BCell()
-    genome.create(info, lookup, mags, maglist, ref_total_id_field)
+    genome.create(info, lookup, mags, maglist, ref_trajectories)
     population.append(genome)
 
 # gather the population

@@ -84,7 +84,7 @@ def generate_id_field(info, maglist, mags, f1):
 def generate_id_field_cost(field, ref_field):
     cost=field-ref_field
     cost=np.square(cost)
-    cost=np.sqrt(cost)
+    #cost=np.sqrt(cost)
     cost=np.sum(cost)
     
     return cost
@@ -102,6 +102,12 @@ def generate_reference_magnets(mags):
 def calculate_cached_fitness(info, lookup, magnets, maglist, ref_total_id_field):
     total_id_field = generate_id_field(info, maglist, magnets, lookup)
     return generate_id_field_cost(total_id_field, ref_total_id_field)
+
+
+def calculate_cached_trajectory_fitness(info, lookup, magnets, maglist, ref_trajectories):
+    total_id_field = generate_id_field(info, maglist, magnets, lookup)
+    pherr, test_array = mt.calculate_phase_error(info, total_id_field)
+    return generate_id_field_cost(test_array, ref_trajectories)
 
 
 def calculate_fitness(id_filename, lookup_filename, magnets_filename, maglist):
