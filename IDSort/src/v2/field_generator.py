@@ -40,9 +40,9 @@ def generate_per_magnet_array(info, magnetlist, magnets):
 
 def generate_sub_array(beam_array, eval_list, lookup, beam, results):
     # This sum is calculated like this to avoid memory errors
-    result = np.sum(lookup[beam][:, 0, :, :, :, eval_list[0]] * beam_array[:,eval_list[0]], 3)
+    result = np.sum(lookup[beam][:, :, :, :, :, eval_list[0]] * beam_array[:,eval_list[0]], 3)
     for m in eval_list[1:]:
-        result += np.sum(lookup[beam][:, 0, :, :, :, m] * beam_array[:,m], 3)
+        result += np.sum(lookup[beam][:, :, :, :, :, m] * beam_array[:,m], 3)
     results.append(result)
 
 def generate_per_beam_b_field(info, maglist, mags, lookup):
