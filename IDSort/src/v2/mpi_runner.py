@@ -152,11 +152,12 @@ for pop in allpop:
 # Need to deal with replicas and old genomes
 popdict = {}
 for genome in newpop:
-    if genome.fitness in popdict.keys():
-        if popdict[genome.fitness].age < genome.age:
-            popdict[genome.fitness] = genome
+    fitness_key = "%1.8E"%(genome.fitness)
+    if fitness_key in popdict.keys():
+        if popdict[fitness_key].age < genome.age:
+            popdict[fitness_key] = genome
     else :
-        popdict[genome.fitness] = genome
+        popdict[fitness_key] = genome
 
 newpop = []
 for genome in popdict.values():
@@ -168,7 +169,7 @@ newpop.sort(key=lambda x: x.fitness)
 newpop = newpop[options.setup*rank:options.setup*(rank+1)]
 
 for genome in newpop:
-    logging.debug("genome fitness: %20.18f   Age : %2i   Mutations : %4i" % (genome.fitness, genome.age, genome.mutations))
+    logging.debug("genome fitness: %1.8E   Age : %2i   Mutations : %4i" % (genome.fitness, genome.age, genome.mutations))
 
 #Checkpoint best solution
 if rank == 0:
@@ -189,7 +190,7 @@ for i in range(options.iterations):
         logging.debug("Generating children for %s" % (genome.uid))
         number_of_children = options.setup
         number_of_mutations = mutations(options.c, estar, genome.fitness, options.scale)
-        children = genome.generate_children(number_of_children, number_of_mutations, info, lookup, mags, ref_total_id_field)
+        children = genome.generate_children(number_of_children, number_of_mutations, info, lookup, mags, ref_trajectories)
         
         # now save the children into the new file
         for child in children:
@@ -209,6 +210,20 @@ for i in range(options.iterations):
     for pop in allpop:
         newpop += pop
     
+    popdict = {}
+    for genome in newpop:
+        fitness_key = "%1.8E"%(genome.fitness)
+        if fitness_key in popdict.keys():
+            if popdict[fitness_key].age < genome.age:
+                popdict[fitness_key] = genome
+        else :
+            popdict[fitness_key] = genome
+    
+    newpop = []
+    for genome in popdict.values():
+        if genome.age < options.max_age:
+            newpop.append(genome)
+    
     newpop.sort(key=lambda x: x.fitness)
 
     estar = newpop[0].fitness * 0.99
@@ -221,7 +236,7 @@ for i in range(options.iterations):
         newpop[0].save(args[0])
     
     for genome in newpop:
-        logging.debug("genome fitness: %10.8f   Age : %2i   Mutations : %4i" % (genome.fitness, genome.age, genome.mutations))
+        logging.debug("genome fitness: %1.8E   Age : %2i   Mutations : %4i" % (genome.fitness, genome.age, genome.mutations))
     
     MPI.COMM_WORLD.Barrier()
 
