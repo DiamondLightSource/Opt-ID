@@ -13,6 +13,8 @@ import magnet_tools as mt
 
 import threading
 
+import copy
+
 
 def load_lookup(filename, beam):
     f = h5py.File(filename, 'r')
@@ -37,6 +39,17 @@ def generate_per_magnet_array(info, magnetlist, magnets):
             magvalues.append(magarray)
         beams[beam['name']] = np.transpose(np.vstack(magvalues))
     return beams
+
+def compare_magnet_arrays(mag_array_a, mag_array_b, lookup):
+    difference_map = {}
+    for beam in mag_array_a.keys():
+        difference = mag_array_a[beam] - mag_array_b[beam]
+        diff_slice = (np.abs(difference).sum(0) > 0.)
+        field_diff = np.sum(lookup[beam][:, :, :, :, :, diff_slice] * difference[:,diff_slice], 3)
+        difference_map[beam] = field_diff.sum(4)
+    return difference_map
+
+
 
 def generate_sub_array(beam_array, eval_list, lookup, beam, results):
     # This sum is calculated like this to avoid memory errors
@@ -107,6 +120,10 @@ def calculate_cached_fitness(info, lookup, magnets, maglist, ref_total_id_field)
 def calculate_cached_trajectory_fitness(info, lookup, magnets, maglist, ref_trajectories):
     total_id_field = generate_id_field(info, maglist, magnets, lookup)
     pherr, test_array = mt.calculate_phase_error(info, total_id_field)
+    return (total_id_field, generate_id_field_cost(test_array, ref_trajectories))
+
+def calculate_trajectory_fitness_from_array(total_id_field, info, ref_trajectories):
+    pherr, test_array = mt.calculate_phase_error(info, total_id_field)
     return generate_id_field_cost(test_array, ref_trajectories)
 
 
@@ -164,59 +181,83 @@ def output_fields(filename, id_filename, lookup_filename, magnets_filename, magl
 
 
 if __name__ == "__main__" :
-    mags = magnets.Magnets()
     
-    mags.add_magnet_set('HH', "S:/Technical/IDs/Ed/Bash Sort/I13j/J13H.sim", (-1.,1.,-1.))
-    mags.add_magnet_set('HE', "S:/Technical/IDs/Ed/Bash Sort/I13j/J13HEB.sim", (-1.,1.,-1.))
-    mags.add_magnet_set('VV', "S:/Technical/IDs/Ed/Bash Sort/I13j/J13V.sim", (-1.,-1.,1.))
-    mags.add_magnet_set('VE', "S:/Technical/IDs/Ed/Bash Sort/I13j/J13VE.sim", (-1.,-1.,1.))
-
-    ref_mags=generate_reference_magnets(mags)
-
-    maglist = magnets.MagLists(mags)
-    ref_maglist = magnets.MagLists(ref_mags)
-
-    maglist.shuffle_all()
-    
-    f1 = h5py.File('unit.h5', 'r')
-
-    f2 = open('test.json', 'r')
+    f2 = open('/dls/science/groups/das/ID/I13j/id.json', 'r')
     info = json.load(f2)
-
-    magarrays = generate_per_magnet_array(info, maglist, mags)
-#    per_mag_field = generate_sub_array(beam_array, eval_list, lookup, beam, per_mag_field)
-#    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
-    per_beam_field = generate_per_beam_b_field(info, maglist, mags, f1)
-    total_id_field = generate_id_field(info, maglist, mags, f1)
-    trajectories = mt.calculate_phase_error(info,total_id_field)
-    
-    
-    ref_magarrays = generate_per_magnet_array(info, ref_maglist, ref_mags)
-#    ref_per_mag_field = generate_per_magnet_b_field(info, ref_maglist, ref_mags, f1)
-    ref_per_beam_field = generate_per_beam_b_field(info, ref_maglist, ref_mags, f1)
-    ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, f1)
-    ref_trajectories = mt.calculate_phase_error(info,ref_total_id_field)
-    
-    
-    cost_total_id_field=generate_id_field_cost(total_id_field,ref_total_id_field)
-
-    f1.close()
     f2.close()
 
-    f3 = h5py.File('real_data.h5', 'w')
-    for name in per_beam_field.keys():
-#        f3.create_dataset("%s_per_magnet" % (name), data=per_mag_field[name])
-        f3.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
-    f3.create_dataset('id_Bfield',data=total_id_field)
-    f3.create_dataset('id_phase_error',data=trajectories[0])
-    f3.create_dataset('id_trajectories',data=trajectories[1])
-    f3.close()
+    f1 = h5py.File('/dls/science/groups/das/ID/I13j/unit_chunks.h5', 'r')
+    lookup = {}
+    for beam in info['beams']:
+        lookup[beam['name']] = f1[beam['name']][...]
+    f1.close()
     
-    f4 = h5py.File('reference.h5', 'w')
-    for name in ref_per_beam_field.keys():
-#        f4.create_dataset("%s_per_magnet" % (name), data=ref_per_mag_field[name])
-        f4.create_dataset("%s_per_beam" % (name), data=ref_per_beam_field[name])
-    f4.create_dataset('id_Bfield',data=ref_total_id_field)
-    f4.create_dataset('id_phase_error',data=ref_trajectories[0])
-    f4.create_dataset('id_trajectories',data=ref_trajectories[1])
-    f4.close()
+
+    mags = magnets.Magnets()
+    mags.load('/dls/science/groups/das/ID/I13j/magnets.mag')
+    
+    ref_mags = generate_reference_magnets(mags)
+    ref_maglist = magnets.MagLists(ref_mags)
+    ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, lookup)
+    pherr, ref_trajectories = mt.calculate_phase_error(info, ref_total_id_field)
+
+    maglist = magnets.MagLists(mags)
+    maglist.shuffle_all()
+    original_bfield, maglist_fitness = calculate_cached_trajectory_fitness(info, lookup, mags, maglist, ref_trajectories)
+    
+    maglist2 =  copy.deepcopy(maglist)
+    maglist2.mutate(10)
+    
+    mag_array = generate_per_magnet_array(info, maglist, mags)
+    mag_array2 = generate_per_magnet_array(info, maglist2, mags)
+    
+    update = compare_magnet_arrays(mag_array, mag_array2, lookup)
+    updated_bfield = original_bfield
+    for beam in update.keys() :
+        if update[beam].size != 0:
+            updated_bfield = updated_bfield - update[beam]
+    
+    maglist2_fitness_estimate = calculate_trajectory_fitness_from_array(updated_bfield, info, ref_trajectories)
+    original_bfield, maglist2_fitness = calculate_cached_trajectory_fitness(info, lookup, mags, maglist2, ref_trajectories)
+    
+    print("Estimated fitness to real fitness %2.10e %2.10e"%(maglist2_fitness_estimate, maglist2_fitness))
+
+#     f1 = h5py.File('/dls/science/groups/das/ID/I13j/unit_chunks.h5', 'r')
+# 
+#     ref_mags=generate_reference_magnets(mags)
+#     ref_maglist = magnets.MagLists(ref_mags)
+#f1.close()
+# #    per_mag_field = generate_sub_array(beam_array, eval_list, lookup, beam, per_mag_field)
+# #    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
+#     per_beam_field = generate_per_beam_b_field(info, maglist, mags, f1)
+#     total_id_field = generate_id_field(info, maglist, mags, f1)
+#     trajectories = mt.calculate_phase_error(info,total_id_field)
+#     
+#     
+#     ref_magarrays = generate_per_magnet_array(info, ref_maglist, ref_mags)
+# #    ref_per_mag_field = generate_per_magnet_b_field(info, ref_maglist, ref_mags, f1)
+#     ref_per_beam_field = generate_per_beam_b_field(info, ref_maglist, ref_mags, f1)
+#     ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, f1)
+#     ref_trajectories = mt.calculate_phase_error(info,ref_total_id_field)
+#     
+#     
+#     cost_total_id_field=generate_id_field_cost(total_id_field,ref_total_id_field)
+# 
+
+#     f3 = h5py.File('real_data.h5', 'w')
+#     for name in per_beam_field.keys():
+# #        f3.create_dataset("%s_per_magnet" % (name), data=per_mag_field[name])
+#         f3.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
+#     f3.create_dataset('id_Bfield',data=total_id_field)
+#     f3.create_dataset('id_phase_error',data=trajectories[0])
+#     f3.create_dataset('id_trajectories',data=trajectories[1])
+#     f3.close()
+#     
+#     f4 = h5py.File('reference.h5', 'w')
+#     for name in ref_per_beam_field.keys():
+# #        f4.create_dataset("%s_per_magnet" % (name), data=ref_per_mag_field[name])
+#         f4.create_dataset("%s_per_beam" % (name), data=ref_per_beam_field[name])
+#     f4.create_dataset('id_Bfield',data=ref_total_id_field)
+#     f4.create_dataset('id_phase_error',data=ref_trajectories[0])
+#     f4.create_dataset('id_trajectories',data=ref_trajectories[1])
+#     f4.close()
