@@ -53,9 +53,10 @@ def compare_magnet_arrays(mag_array_a, mag_array_b, lookup):
 
 def generate_sub_array(beam_array, eval_list, lookup, beam, results):
     # This sum is calculated like this to avoid memory errors
-    result = np.sum(lookup[beam][:, :, :, :, :, eval_list[0]] * beam_array[:,eval_list[0]], 3)
+    result = np.sum(lookup[beam][:, :, :, :, :, eval_list[0]] * beam_array[:,eval_list[0]], 4)
     for m in eval_list[1:]:
-        result += np.sum(lookup[beam][:, :, :, :, :, m] * beam_array[:,m], 3)
+        tmp = np.sum(lookup[beam][:, :, :, :, :, m] * beam_array[:,m], 4)
+        result += tmp
     results.append(result)
 
 def generate_per_beam_b_field(info, maglist, mags, lookup):
@@ -64,8 +65,8 @@ def generate_per_beam_b_field(info, maglist, mags, lookup):
     fields = {}
     for beam in beam_arrays.keys():
         beam_array = beam_arrays[beam]
-        indexes = range(1, lookup[beam].shape[5])
-        length = len(indexes)/(procs-1)
+        indexes = range(lookup[beam].shape[5])
+        length = len(indexes)/procs
         chunks=[indexes[x:x+length] for x in xrange(0, len(indexes), length)]
         results = []
         pp = []
