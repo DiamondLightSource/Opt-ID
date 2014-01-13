@@ -39,6 +39,13 @@ class Magnets(object):
         self.magnet_sets[name] = magnets
         self.magnet_flip[name] = np.array(flip_vector)
     
+    def add_perfect_magnet_set_duplicate(self, name, mag_list, vector, flip_vector):
+        magnets = {}
+        for key in mag_list.keys():
+            magnets[key] = np.array(vector)
+        self.magnet_sets[name] = magnets
+        self.magnet_flip[name] = np.array(flip_vector)
+    
     def save(self, filename):
         fp = open(filename, 'w')
         cPickle.dump((self.magnet_sets, self.magnet_flip, self.mean_field), fp)

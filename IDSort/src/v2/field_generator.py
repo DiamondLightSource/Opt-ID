@@ -64,7 +64,7 @@ def generate_per_beam_b_field(info, maglist, mags, lookup):
     fields = {}
     for beam in beam_arrays.keys():
         beam_array = beam_arrays[beam]
-        indexes = range(0, lookup[beam].shape[5])
+        indexes = range(1, lookup[beam].shape[5])
         length = len(indexes)/(procs-1)
         chunks=[indexes[x:x+length] for x in xrange(0, len(indexes), length)]
         results = []
@@ -108,7 +108,8 @@ def generate_reference_magnets(mags):
         mag_dir = mags.magnet_sets[magtype].values()[0].argmax()
         unit = np.zeros(3)
         unit[mag_dir] = mags.mean_field[magtype]
-        ref_mags.add_perfect_magnet_set(magtype, len(mags.magnet_sets[magtype]) , unit, mags.magnet_flip[magtype])
+        #ref_mags.add_perfect_magnet_set(magtype, len(mags.magnet_sets[magtype]) , unit, mags.magnet_flip[magtype])
+        ref_mags.add_perfect_magnet_set_duplicate(magtype, mags.magnet_sets[magtype] , unit, mags.magnet_flip[magtype])
     return ref_mags
 
 
@@ -148,10 +149,14 @@ def calculate_fitness(id_filename, lookup_filename, magnets_filename, maglist):
 
 
 def output_fields(filename, id_filename, lookup_filename, magnets_filename, maglist):
-    f1 = h5py.File(lookup_filename, 'r')
     f2 = open(id_filename, 'r')
     info = json.load(f2)
     f2.close()
+    f1 = h5py.File(lookup_filename, 'r')
+    lookup = {}
+    for beam in info['beams']:
+        lookup[beam['name']] = f1[beam['name']][...]
+    f1.close()
 
     mags = magnets.Magnets()
     mags.load(magnets_filename)
@@ -159,8 +164,8 @@ def output_fields(filename, id_filename, lookup_filename, magnets_filename, magl
 
     f = h5py.File(filename, 'w')
     
-    per_beam_field = generate_per_beam_b_field(info, maglist, mags, f1)
-    total_id_field = generate_id_field(info, maglist, mags, f1)
+    per_beam_field = generate_per_beam_b_field(info, maglist, mags, lookup)
+    total_id_field = generate_id_field(info, maglist, mags, lookup)
     for name in per_beam_field.keys():
         f.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
     f.create_dataset('id_Bfield', data=total_id_field)
@@ -168,8 +173,8 @@ def output_fields(filename, id_filename, lookup_filename, magnets_filename, magl
     f.create_dataset('id_phase_error', data = trajectory_information[0])
     f.create_dataset('id_trajectory', data = trajectory_information[1])
     
-    per_beam_field = generate_per_beam_b_field(info, maglist, ref_mags, f1)
-    total_id_field = generate_id_field(info, maglist, ref_mags, f1)
+    per_beam_field = generate_per_beam_b_field(info, maglist, ref_mags, lookup)
+    total_id_field = generate_id_field(info, maglist, ref_mags, lookup)
     for name in per_beam_field.keys():
         f.create_dataset("%s_per_beam_perfect" % (name), data=per_beam_field[name])
     f.create_dataset('id_Bfield_perfect', data=total_id_field)
