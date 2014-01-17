@@ -45,7 +45,7 @@ def compare_magnet_arrays(mag_array_a, mag_array_b, lookup):
     for beam in mag_array_a.keys():
         difference = mag_array_a[beam] - mag_array_b[beam]
         diff_slice = (np.abs(difference).sum(0) > 0.)
-        field_diff = np.sum(lookup[beam][:, :, :, :, :, diff_slice] * difference[:,diff_slice], 3)
+        field_diff = np.sum(lookup[beam][:, :, :, :, :, diff_slice] * difference[:,diff_slice], 4)
         difference_map[beam] = field_diff.sum(4)
     return difference_map
 
@@ -99,7 +99,7 @@ def generate_id_field_cost(field, ref_field):
     cost=field-ref_field
     cost=np.square(cost)
     #cost=np.sqrt(cost)
-    cost=np.sum(cost)
+    cost=np.sum(cost[:,:,:,2:4])
     
     return cost
 
@@ -211,22 +211,28 @@ if __name__ == "__main__" :
     maglist.shuffle_all()
     original_bfield, maglist_fitness = calculate_cached_trajectory_fitness(info, lookup, mags, maglist, ref_trajectories)
     
-    maglist2 =  copy.deepcopy(maglist)
-    maglist2.mutate(10)
-    
     mag_array = generate_per_magnet_array(info, maglist, mags)
-    mag_array2 = generate_per_magnet_array(info, maglist2, mags)
     
-    update = compare_magnet_arrays(mag_array, mag_array2, lookup)
-    updated_bfield = original_bfield
-    for beam in update.keys() :
-        if update[beam].size != 0:
-            updated_bfield = updated_bfield - update[beam]
+    for i in range(10):
     
-    maglist2_fitness_estimate = calculate_trajectory_fitness_from_array(updated_bfield, info, ref_trajectories)
-    original_bfield, maglist2_fitness = calculate_cached_trajectory_fitness(info, lookup, mags, maglist2, ref_trajectories)
-    
-    print("Estimated fitness to real fitness %2.10e %2.10e"%(maglist2_fitness_estimate, maglist2_fitness))
+
+        maglist2 =  copy.deepcopy(maglist)
+        maglist2.mutate(1)
+        
+        mag_array2 = generate_per_magnet_array(info, maglist2, mags)
+        
+        update = compare_magnet_arrays(mag_array, mag_array2, lookup)
+        updated_bfield = original_bfield
+        for beam in update.keys() :
+            if update[beam].size != 0:
+                updated_bfield = updated_bfield - update[beam]
+        
+        maglist2_fitness_estimate = calculate_trajectory_fitness_from_array(updated_bfield, info, ref_trajectories)
+        new_bfield, maglist2_fitness = calculate_cached_trajectory_fitness(info, lookup, mags, maglist2, ref_trajectories)
+        
+        fitness_error = abs(maglist2_fitness_estimate - maglist2_fitness)
+        
+        print("Estimated fitness error is %2.10e %2.10e %2.10e"%(maglist2_fitness_estimate, maglist2_fitness, fitness_error))
 
 #     f1 = h5py.File('/dls/science/groups/das/ID/I13j/unit_chunks.h5', 'r')
 # 
