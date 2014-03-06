@@ -12,7 +12,7 @@ import cPickle
 import random
 import copy
 import logging
-
+import numpy as np
 
 class BCell(object):
 
@@ -57,16 +57,22 @@ class ID_BCell(BCell):
         self.genome = maglist
         field_unused, self.fitness = fg.calculate_cached_trajectory_fitness(info, lookup, magnets, maglist, ref_trajectories)
 
-    def generate_children(self, number_of_children, number_of_mutations, info, lookup, magnets, ref_trajectories):
+    def generate_children(self, number_of_children, number_of_mutations, info, lookup, magnets, ref_trajectories, real_bfield=None):
         # first age, as we are now creating children
         self.age_bcell()
         children = []
         
         # Generate the IDfiled for the parent, as we need to calculate it fully here.
-        original_bfield, calculated_fitness = fg.calculate_cached_trajectory_fitness(info, lookup, magnets, self.genome, ref_trajectories)
-        fitness_error = abs(self.fitness - calculated_fitness)
-        logging.debug("Estimated fitness to real fitness error %2.10e"%(fitness_error))
-        self.fitness = calculated_fitness
+        original_bfield = None
+        if real_bfield == None:
+            original_bfield, calculated_fitness = fg.calculate_cached_trajectory_fitness(info, lookup, magnets, self.genome, ref_trajectories)
+            fitness_error = abs(self.fitness - calculated_fitness)
+            logging.debug("Estimated fitness to real fitness error %2.10e"%(fitness_error))
+            self.fitness = calculated_fitness
+        else :
+            original_bfield = real_bfield
+            logging.debug("Using real bfield")
+            
         original_magnets = fg.generate_per_magnet_array(info, self.genome, magnets)
 
         for i in range(number_of_children):
@@ -77,11 +83,12 @@ class ID_BCell(BCell):
             child = ID_BCell()
             child.mutations = number_of_mutations
             child.genome = maglist
-            updated_bfield = original_bfield
+            updated_bfield = np.array(original_bfield)
             for beam in update.keys() :
                 if update[beam].size != 0:
                     updated_bfield = updated_bfield - update[beam]
             child.fitness = fg.calculate_trajectory_fitness_from_array(updated_bfield, info, ref_trajectories)
             #child.create(info, lookup, magnets, maglist, ref_total_id_field)
             children.append(child)
+            logging.debug("Child created with fitness : %f" % (child.fitness))
         return children

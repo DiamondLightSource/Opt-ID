@@ -126,15 +126,21 @@ if options.restart and (rank == 0) :
             logging.debug("Loaded %s" % (fullpath))
         except :
             logging.debug("Failed to load %s" % (fullpath))
-
-# make the initial population
-for i in range(options.setup):
-    # create a fresh maglist
-    maglist = magnets.MagLists(mags)
-    maglist.shuffle_all()
-    genome = ID_BCell()
-    genome.create(info, lookup, mags, maglist, ref_trajectories)
-    population.append(genome)
+    if len(population) < options.setup:
+        # Seed with children from first
+        children = population[0].generate_children(options.setup-len(population), 20, info, lookup, mags, ref_trajectories)
+        # now save the children into the new file
+        for child in children:
+            population.append(child)
+else :
+    # make the initial population
+    for i in range(options.setup):
+        # create a fresh maglist
+        maglist = magnets.MagLists(mags)
+        maglist.shuffle_all()
+        genome = ID_BCell()
+        genome.create(info, lookup, mags, maglist, ref_trajectories)
+        population.append(genome)
 
 # gather the population
 trans = []

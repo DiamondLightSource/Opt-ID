@@ -99,19 +99,18 @@ class MagLists():
             magdata = magdata*magnets.magnet_flip[name]
         return magdata
     
-    def mutate(self, number_of_mutations):
+    def mutate(self, number_of_mutations, available={'VE':range(12), 'HE':range(12), 'HH':range(506), 'VV':range(506)}):
         for i in range(number_of_mutations):
             # pick a list at random
-            key = random.choice(self.magnet_lists.keys())
-            end = len(self.magnet_lists[key])-1
+            key = random.choice(available.keys())
             # pick a flip or swap
             if random.random() > 0.5 :
                 # swap
-                p1 = random.randint(0, end)
-                p2 = random.randint(0, end)
+                p1 = random.choice(available[key])
+                p2 = random.choice(available[key])
                 self.swap(key, p1, p2)
             else :
-                p1 = random.randint(0, end)
+                p1 = random.choice(available[key])
                 self.flip(key , (p1,))
 
 
@@ -119,7 +118,7 @@ class MagLists():
 if __name__ == "__main__" :
     mags = Magnets()
     mags.add_magnet_set('HH', "/dls/science/groups/das/ID/I13j/J13H.sim", (-1.,-1.,1.))
-    mags.add_magnet_set('HE', "/dls/science/groups/das/ID/I13j/J13HEB.sim", (-1.,-1.,1.))
+    mags.add_magnet_set('HE', "/dls/science/groups/das/ID/I13j/J13HEC.sim", (-1.,-1.,1.))
     mags.add_magnet_set('VV', "/dls/science/groups/das/ID/I13j/J13V.sim", (-1.,1.,-1.))
     mags.add_magnet_set('VE', "/dls/science/groups/das/ID/I13j/J13VE.sim", (-1.,1.,-1.))
     
