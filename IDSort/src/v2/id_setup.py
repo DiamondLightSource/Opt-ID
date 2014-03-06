@@ -62,32 +62,32 @@ def create_location_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vema
     z=mingap/2.0
     s=-length/2.0
     V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    V1.append((x,z,s))
     s+=(hemagdims[2]+interstice)
-    for i in range(2,(4*nperiods+5)-2,1):
+    V1.append((x,z,s))
+    s+=(vemagdims[2]+interstice)
+    for i in range(2,(4*nperiods+1)-2,1):
         V1.append((x,z,s))
         s+=(fullmagdims[2]+interstice)
     V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
+    s+=(vemagdims[2]+interstice)
     V1.append((x,z,s))
     return V1
 
 def create_location_list_antisymmetric_ppm_bottom(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap,interstice):
     V1 = []
-    length = (4*(nperiods-1)+5)*fullmagdims[2]+2*vemagdims[2]+2*hemagdims[2]+4*nperiods*interstice
+    length = (4*(nperiods-1)+1)*(fullmagdims[2]+interstice)+2*(vemagdims[2]+interstice)+2*(hemagdims[2]+interstice)-interstice
     x=-fullmagdims[0]/2.0
     z=-fullmagdims[1]-mingap/2.0
     s=-length/2.0
     V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    V1.append((x,z,s))
     s+=(hemagdims[2]+interstice)
-    for i in range(2,(4*nperiods+5)-2,1):
+    V1.append((x,z,s))
+    s+=(vemagdims[2]+interstice)
+    for i in range(2,(4*nperiods+1)-2,1):
         V1.append((x,z,s))
         s+=(fullmagdims[2]+interstice)
     V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
+    s+=(vemagdims[2]+interstice)
     V1.append((x,z,s))
     return V1
 
@@ -98,14 +98,14 @@ if __name__ == "__main__":
     parser.add_option("-p", "--periods", dest="periods", help="Set the number of full periods for the Device", default=109, type="int")
     parser.add_option("--fullmagdims", dest="fullmagdims", help="Set the dimensions of the full magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 6.22), type="float")
     parser.add_option("--vemagdims", dest="vemagdims", help="Set the dimensions of the VE magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 3.12), type="float")
-    parser.add_option("--hemagdims", dest="hemagdims", help="Set the dimensions of the HE magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 3.3), type="float")
+    parser.add_option("--hemagdims", dest="hemagdims", help="Set the dimensions of the HE magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 4.0), type="float")
     parser.add_option("-i", dest="interstice", help="Set the dimensions of the slack between adjacent magnets (interstice) in mm", default=0.03, type="float")
     parser.add_option("-g", "--gap", dest="gap", help="Set the gap for the device to be created at", default=6.15, type="float")
     parser.add_option("-t", "--type", dest="type", help="Set the device type", type="string", default="PPM_AntiSymetric")
     parser.add_option("-v", "--verbose", dest="verbose", help="display debug information", action="store_true", default=False)
     parser.add_option("-n", "--name", dest="name", help="PPM name", default="J13", type="string")
-    parser.add_option("-x", "--xstartstopstep", dest="x", help="X start stop and step", nargs=3, default=(-20., 21., 10.0), type="float")
-    parser.add_option("-z", "--zstartstopstep", dest="z", help="Z start stop and step", nargs=3, default=(0.0, 0.1, 0.1), type="float")
+    parser.add_option("-x", "--xstartstopstep", dest="x", help="X start stop and step", nargs=3, default=(-5.0, 5.1, 2.5), type="float")
+    parser.add_option("-z", "--zstartstopstep", dest="z", help="Z start stop and step", nargs=3, default=(-0.0,.1, 0.1), type="float")
     parser.add_option("-s", "--stepsperperiod", dest="steps", help="Number of steps in S per magnet", default=5, type="float")
 
     (options, args) = parser.parse_args()
