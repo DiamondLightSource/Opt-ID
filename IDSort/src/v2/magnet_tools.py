@@ -5,6 +5,7 @@ Created on 16 Jan 2012
 '''
 
 import numpy as np
+import logging
 
 
 def generate_B_array(xmin, xmax, xstep, zmin, zmax, zstep, smin, smax, sstep, magdims, V1):
@@ -107,9 +108,10 @@ def calculate_phase_error(info, b_array):
 #    v2=np.zeros((4*nperiods-2*nskip))
     v2a=np.zeros((4*nperiods-2*nskip))
     
-    
+    logging.debug("Barray shape %s"%(str(b_array.shape)))
     
     trap_b_array = np.roll(b_array, 1, 0)
+    logging.debug("trap_b_array shape %s"%(str(trap_b_array.shape)))
     trap_b_array[:,:,0,:]=0.0
     trap_b_array = (trap_b_array+b_array)*step/2
     

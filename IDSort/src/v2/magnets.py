@@ -112,7 +112,18 @@ class MagLists():
             else :
                 p1 = random.choice(available[key])
                 self.flip(key , (p1,))
-
+    
+    def mutate_from_list(self, mutation_list):
+        for mutation in mutation_list:
+            if mutation[0] == 'S':
+                key = mutation[1]
+                p1 = mutation[2]
+                p2 = mutation[3]
+                self.swap(key, p1, p2)
+            else :
+                key = mutation[1]
+                p1 = mutation[2]
+                self.flip(key , (p1,))
 
 
 if __name__ == "__main__" :

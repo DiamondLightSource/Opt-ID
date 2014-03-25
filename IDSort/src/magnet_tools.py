@@ -5,6 +5,7 @@ Created on 16 Jan 2012
 '''
 
 import numpy as np
+import logging
 
 def fortPMB_NEW(testpoint,m,i,s_offset, magdims, mingap):
     '''This function Calculates the B-field in a single orientation according to the calling function
@@ -216,9 +217,10 @@ def calculate_phase_error(nperiods, step, n_stp, n_s_stp, b_array):
     v2=np.zeros((4*nperiods-2*nskip))
     v2a=np.zeros((4*nperiods-2*nskip))
     
-    
+    logging.debug("Barray shape %s"%(b_array.shape))
     
     trap_b_array = np.roll(b_array, 1, 0)
+    logging.debug("trap_b_array shape %s"%(trap_b_array.shape))
     trap_b_array[0,:]=0.0
     trap_b_array = (trap_b_array+b_array)*step/2
     
