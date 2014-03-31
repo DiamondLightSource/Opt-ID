@@ -288,15 +288,6 @@ def calculate_phase_error3(info, b_array):
     
     nskip=8
     
-    ph=np.zeros(n_s_stp)
-    ph2=np.zeros(n_s_stp)
-    
-    v1=np.zeros((4*nperiods-2*nskip))
-    v2=np.zeros((4*nperiods-2*nskip))
-    v2a=np.zeros((4*nperiods-2*nskip))
-    
-    
-    
     trap_b_array = np.roll(b_array, 1, 0)
     trap_b_array[0,:]=0.0
     trap_b_array = (trap_b_array+b_array)*step/2
