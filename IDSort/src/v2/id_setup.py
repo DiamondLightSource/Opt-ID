@@ -12,7 +12,7 @@ def create_type_list_antisymetric_ppm(nperiods):
     types.append('HE')
     types.append('VE')
 
-    start, stop = (2, (4*nperiods+1)-2)
+    start, stop = (2, (4*nperiods+5)-2)
 
     # now put in all the middle periods
     for i in range(start, stop):
@@ -32,7 +32,7 @@ def create_type_list_antisymetric_ppm(nperiods):
 
 def create_direction_list_antisymetric_ppm_bottom(nperiods):
     direction = []
-    for i in range(0, (4 * nperiods + 1) - 1, 4):
+    for i in range(0, (4 * nperiods + 5) - 1, 4):
         direction.append((1, 1, 1))
         direction.append((1, 1, 1))
         direction.append((-1, 1, -1))
@@ -45,7 +45,7 @@ def create_direction_list_antisymetric_ppm_bottom(nperiods):
 
 def create_direction_list_antisymetric_ppm_top(nperiods):
     direction = []
-    for i in range(0, (4 * nperiods + 1) - 1, 4):
+    for i in range(0, (4 * nperiods + 5) - 1, 4):
         direction.append((-1, 1, -1))
         direction.append((1, 1, 1))
         direction.append((1, 1, 1))
@@ -57,7 +57,7 @@ def create_direction_list_antisymetric_ppm_top(nperiods):
 
 def create_location_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap,interstice):
     V1 = []
-    length = (4*(nperiods-1)+1)*(fullmagdims[2]+interstice)+2*(vemagdims[2]+interstice)+2*(hemagdims[2]+interstice)-interstice
+    length = (4*(nperiods-1)+5)*(fullmagdims[2]+interstice)+2*(vemagdims[2]+interstice)+2*(hemagdims[2]+interstice)-interstice
     x=-fullmagdims[0]/2.0
     z=mingap/2.0
     s=-length/2.0
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     import optparse
     usage = "%prog [options] OutputFile"
     parser = optparse.OptionParser(usage=usage)
-    parser.add_option("-p", "--periods", dest="periods", help="Set the number of full periods for the Device", default=108, type="int")
+    parser.add_option("-p", "--periods", dest="periods", help="Set the number of full periods for the Device", default=109, type="int")
     parser.add_option("--fullmagdims", dest="fullmagdims", help="Set the dimensions of the full magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 6.22), type="float")
     parser.add_option("--vemagdims", dest="vemagdims", help="Set the dimensions of the VE magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 3.12), type="float")
     parser.add_option("--hemagdims", dest="hemagdims", help="Set the dimensions of the HE magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 4.0), type="float")
