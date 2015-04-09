@@ -57,7 +57,7 @@ def create_direction_list_antisymetric_ppm_top(nperiods):
 
 def create_location_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap,interstice):
     V1 = []
-    length = (4*(nperiods-1)+5)*(fullmagdims[2]+interstice)+2*(vemagdims[2]+interstice)+2*(hemagdims[2]+interstice)-interstice
+    length = (4*(nperiods)+1)*(fullmagdims[2]+interstice)+2*(vemagdims[2]+interstice)+2*(hemagdims[2]+interstice)-interstice
     x=-fullmagdims[0]/2.0
     z=mingap/2.0
     s=-length/2.0
@@ -65,7 +65,7 @@ def create_location_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vema
     s+=(hemagdims[2]+interstice)
     V1.append((x,z,s))
     s+=(vemagdims[2]+interstice)
-    for i in range(2,(4*nperiods+1)-2,1):
+    for i in range(2,(4*nperiods+5)-2,1):
         V1.append((x,z,s))
         s+=(fullmagdims[2]+interstice)
     V1.append((x,z,s))
@@ -75,7 +75,7 @@ def create_location_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vema
 
 def create_location_list_antisymmetric_ppm_bottom(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap,interstice):
     V1 = []
-    length = (4*(nperiods-1)+1)*(fullmagdims[2]+interstice)+2*(vemagdims[2]+interstice)+2*(hemagdims[2]+interstice)-interstice
+    length = (4*(nperiods)+1)*(fullmagdims[2]+interstice)+2*(vemagdims[2]+interstice)+2*(hemagdims[2]+interstice)-interstice
     x=-fullmagdims[0]/2.0
     z=-fullmagdims[1]-mingap/2.0
     s=-length/2.0
@@ -83,7 +83,7 @@ def create_location_list_antisymmetric_ppm_bottom(period, nperiods,fullmagdims,v
     s+=(hemagdims[2]+interstice)
     V1.append((x,z,s))
     s+=(vemagdims[2]+interstice)
-    for i in range(2,(4*nperiods+1)-2,1):
+    for i in range(2,(4*nperiods+5)-2,1):
         V1.append((x,z,s))
         s+=(fullmagdims[2]+interstice)
     V1.append((x,z,s))
