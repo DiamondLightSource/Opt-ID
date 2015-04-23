@@ -29,12 +29,16 @@ Need instructions for loading the right python PATH
 
   (Use 'myfilename.json' from earlier and choose your own 'mylookupfilename.h5'. Look at lookup_generator.py for meaning of tags)
   
-  5. module load global/cluster
+  5. mkdir mylogs
+  
+  6. module load global/cluster
   (This loads the cluster and gives access to qsub command)
   
-
-  [6. Open another terminal and type: 'module load global/cluster' and then 'qstat' This will let you watch the job on the cluster]
+  [7. Open another terminal and type: 'module load global/cluster' and then 'qstat' This will let you watch the job on the cluster]
   
-  7.
+  8. qsub -pe openmpi 24 -q medium.q -l release=rhel6 /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/mpijob_ed.sh --iterations 5 -l mylookupfilename.h5 -i myfilename.json -m mymagnets.mag -s 24 -r --param_c 1 mylogs
 
+  (Use 'myfilename.json', 'mymagnets.mag', and 'mylookupfilename.h5' from earlier and the 'mylogs' directory created in step 5.  Look at mpi_runner.py for meaning of tags. Genomes will be created in the mylogs directory with their cost as the first part of the filename - e.g. 4.62409644e-07_000_00bc026cfae7.genome is cost_generation_unique-id.genome)
+  
+  9.
   
