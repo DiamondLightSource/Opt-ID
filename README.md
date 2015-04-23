@@ -14,11 +14,19 @@ Everything except step 5 can be done in either Windows or Unix.
 Then what is needed is to actually run the sort, which is to be run on a cluster. using mpi_runner.py 
 
 ## Command line commands
+Need instructions for loading the right python PATH
+
   1. Manually create .sim files
   2. python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/id_setup.py -p 109 --fullmagdims 41. 16. 6.22 --vemagdims 41. 16. 3.12 --hemagdims 41. 16. 4.0 -i 0.03 -g 6.15 -t "PPM_AntiSymmetric" -n "J13" -x -5.0  5.1  2.5 -z -0.0 .1 0.1 -s 5 myfilename.json
 
   (Choose your own 'myfilename.json' and look at id_setup.py for meaning of tags)
   
-  3. python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/magnets.py -H '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13H.sim' --HE '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13HEA.sim' -V '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13V.sim' --VE '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13VE.sim' myfilename.mag
+  3. python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/magnets.py -H '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13H.sim' --HE '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13HEA.sim' -V '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13V.sim' --VE '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13VE.sim' mymagnets.mag
 
-  (Choose your own 'myfilename.mag' and look at magnets.py for meaning of tags)
+  (Choose your own 'mymagnets.mag' and look at magnets.py for meaning of tags)
+  
+  4. python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/lookup_generator.py -p 109 -r myfilename.json mylookupfilename.h5
+
+  (Use 'myfilename.json' from earlier and choose your own 'mylookupfilename.h5'. Look at lookup_generator.py for meaning of tags)
+  
+  5. 
