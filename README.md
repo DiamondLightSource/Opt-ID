@@ -29,4 +29,12 @@ Need instructions for loading the right python PATH
 
   (Use 'myfilename.json' from earlier and choose your own 'mylookupfilename.h5'. Look at lookup_generator.py for meaning of tags)
   
-  5. 
+  5. module load global/cluster
+  (This loads the cluster and gives access to qsub command)
+  
+
+  [6. Open another terminal and type: 'module load global/cluster' and then 'qstat' This will let you watch the job on the cluster]
+  
+  7.
+
+  
