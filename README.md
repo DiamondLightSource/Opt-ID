@@ -35,7 +35,7 @@ Then what is needed is to actually run the sort, which is to be run on a cluster
   6. module load global/cluster
   (This loads the cluster and gives access to qsub command)
   
-  [6a. Open another terminal and type: 'module load global/cluster' and then 'qstat' This will let you watch the job on the cluster]
+  [7a. Open another terminal and type: 'module load global/cluster' and then 'qstat' This will let you watch the job on the cluster]
   
   7. qsub -pe openmpi 24 -q medium.q -l release=rhel6 /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/mpijob_ed.sh --iterations 5 -l mylookupfilename.h5 -i myfilename.json -m mymagnets.mag -s 24 -r --param_c 1 mylogs
 
