@@ -7,7 +7,7 @@ Code for the Optimisation of ID's using Python and Opt-AI
   3. Run magnets.py - this creates the data files for the magnets - a .mag file. It requires the raw .sim input files.
   4. Run lookup_generator.py. This generates what we could call the ID operator that acts on the real magnet data to create a real ID field. It requires the .json file created by setup.py and it creates a .h5 file
   5. Run mpi_runner.py. This requires the .json file created from step 2, the .mag database created in step 3 and the .h5 lookup file created in step 5. This requires a cluster and must be done on a UNIX machine.
-  6. Run tmp_compare.py. This creates a human readable output .inp file (also suitable for analysis with old Fortran code) and an viewable .h5 file.
+  6. Run process_genome.py. This creates a human readable output .inp file (also suitable for analysis with old Fortran code) and a viewable .h5 file.
 
 Everything except step 5 can be done in either Windows or Unix.
 
