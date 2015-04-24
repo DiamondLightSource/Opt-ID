@@ -7,6 +7,8 @@ import h5py
 import json
 import magnet_tools as mt
 import numpy as np
+import field_generator as fg
+import magnets
 
 import cPickle as pickle
 
@@ -22,15 +24,17 @@ if __name__ == '__main__':
     pre_traj = mt.calculate_phase_error(info, B_pre)
     
     a=1'''
+
     
+    maglists = pickle.load( open( "/dls/tmp/gdy32713/id/logs/4.62409644e-07_000_00bc026cfae7.genome", "rb" ) )
     
-    maglists = pickle.load( open( "2.29512469e-08_000_43070d4126ff.genome", "rb" ) )
-    
-    f2 = open('id2.json', 'r')
+    f2 = open('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015test.json', 'r')
     info = json.load(f2)
     f2.close()
+        
+    f3 = open('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015setmag_start.inp','w')
     
-    f3 = open('setmag.inp','w')
+    #TODO make a proper function somewhere
     #generate idlist here
     a=0
     vv=0
@@ -73,4 +77,6 @@ if __name__ == '__main__':
         f3.write("\n")
     
     f3.close()
-    a=1
+    
+    fg.output_fields('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/4.62409644e-07_000_00bc026cfae7.h5', '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015test.json', '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015test.h5', '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/magnets.mag', maglists)
+    

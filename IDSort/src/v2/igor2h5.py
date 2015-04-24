@@ -18,7 +18,7 @@ c=2.9911124e8 #The speed of light. For now.
 Mass =0.511e-3
 Gamma=Energy/Mass
 
-f=h5py.File('S:\Technical\IDs\Ed\Studies\Catenary\cat_2_traj.h5','r')
+f=h5py.File('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015test.h5','r')
 
 Bfields=f['id_Bfield_perfect']
 

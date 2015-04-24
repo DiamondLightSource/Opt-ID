@@ -20,6 +20,7 @@ from pkg_resources import require
 require('mpi4py==1.3.1')
 require('h5py==2.2.0')
 require('numpy') # h5py need to be able to import numpy
+require('scipy')
 
 # Just to demonstrate that we have zmq in the environment as well
 require('pyzmq==13.1.0')

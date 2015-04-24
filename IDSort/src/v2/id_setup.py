@@ -2,6 +2,59 @@
 import json
 
 
+def create_type_list_symmetric_apple(nperiods):
+    # do the first end
+    types = []
+    start = 0
+    stop = 0
+    vertical = True
+
+    types.append('HE')
+    types.append('VE')
+    types.append('HE')
+
+    start, stop = (3, (4*nperiods+5)-3)
+
+    # now put in all the middle periods
+    for i in range(start, stop):
+        if vertical :
+            types.append('VV')
+            vertical = False
+        else :
+            types.append('HH')
+            vertical = True
+
+    # finally add in the other end
+    types.append('HE')
+    types.append('VE')
+    types.append('HE')
+
+    return types
+
+def create_direction_list_symmetric_apple_q1(nperiods):
+    direction = []
+    for i in range(0, (4 * nperiods + 5) - 1, 4):
+        direction.append((1, 1, 1))
+        direction.append((1, 1, 1))
+        direction.append((-1, -1, -1))
+        direction.append((-1, -1, 1))
+
+    # Append last element
+    direction.append((1, 1, 1))
+    return direction
+
+def create_direction_list_symmetric_apple_top(nperiods):
+    direction = []
+    for i in range(0, (4 * nperiods + 5) - 1, 4):
+        direction.append((-1, -1, -1))
+        direction.append((1, 1, 1))
+        direction.append((1, 1, 1))
+        direction.append((-1, -1, 1))
+
+    # Append last element
+    direction.append((-1, 1, -1))
+    return direction
+
 def create_type_list_antisymetric_ppm(nperiods):
     # do the first end
     types = []
@@ -101,7 +154,7 @@ if __name__ == "__main__":
     parser.add_option("--hemagdims", dest="hemagdims", help="Set the dimensions of the HE magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 4.0), type="float")
     parser.add_option("-i", dest="interstice", help="Set the dimensions of the slack between adjacent magnets (interstice) in mm", default=0.03, type="float")
     parser.add_option("-g", "--gap", dest="gap", help="Set the gap for the device to be created at", default=6.15, type="float")
-    parser.add_option("-t", "--type", dest="type", help="Set the device type", type="string", default="PPM_AntiSymetric")
+    parser.add_option("-t", "--type", dest="type", help="Set the device type", type="string", default="PPM_AntiSymmetric")
     parser.add_option("-v", "--verbose", dest="verbose", help="display debug information", action="store_true", default=False)
     parser.add_option("-n", "--name", dest="name", help="PPM name", default="J13", type="string")
     parser.add_option("-x", "--xstartstopstep", dest="x", help="X start stop and step", nargs=3, default=(-5.0, 5.1, 2.5), type="float")
@@ -110,7 +163,7 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
 
-    if options.type == 'PPM_AntiSymetric':
+    if options.type == 'PPM_AntiSymmetric':
         output = {}
         output['name'] = options.name
         output['type'] = options.type
@@ -147,6 +200,94 @@ if __name__ == "__main__":
         bottom_beam = {}
         bottom_beam['name'] = "Bottom Beam"
         bottom_beam['mags'] = []
+
+        # top beam
+        for i in range(len(types)):
+            mag = {}
+            mag['type'] = types[i]
+            mag['direction'] = top_directions[i]
+            mag['position'] = top_positions[i]
+            if types[i] == 'VV':
+                mag['dimensions'] = options.fullmagdims
+            elif types[i] == 'HH':
+                mag['dimensions'] = options.fullmagdims
+            elif types[i] == 'HE':
+                mag['dimensions'] = options.hemagdims
+            elif types[i] == 'VE':
+                mag['dimensions'] = options.vemagdims
+            top_beam['mags'].append(mag)
+
+        # bottom beam
+        for i in range(len(types)):
+            mag = {}
+            mag['type'] = types[i]
+            mag['direction'] = bottom_directions[i]
+            mag['position'] = bottom_positions[i]
+            if types[i] == 'VV':
+                mag['dimensions'] = options.fullmagdims
+            elif types[i] == 'HH':
+                mag['dimensions'] = options.fullmagdims
+            elif types[i] == 'HE':
+                mag['dimensions'] = options.hemagdims
+            elif types[i] == 'VE':
+                mag['dimensions'] = options.vemagdims
+            bottom_beam['mags'].append(mag)
+
+        output['beams'].append(top_beam)
+        output['beams'].append(bottom_beam)
+
+        fp = open(args[0], 'w')
+        json.dump(output, fp, indent=4)
+        fp.close()
+        
+        
+        
+    if options.type == 'APPLE_Symmetric':
+        output = {}
+        output['name'] = options.name
+        output['type'] = options.type
+        output['number_of_beams'] = 4
+        output['gap'] = options.gap
+        output['periods'] = options.periods
+        output['period_length'] = 4*(options.interstice+options.fullmagdims[2])
+        # TODO needs sorting out
+        output['xmin'] = options.x[0]
+        output['xmax'] = options.x[1]
+        output['xstep'] = options.x[2]
+        output['zmin'] = options.z[0]
+        output['zmax'] = options.z[1]
+        output['zstep'] = options.z[2]
+        length = (options.fullmagdims[2]+options.interstice)*4*(options.periods+16)
+        output['smin'] = -length/2.0
+        output['smax'] = (length/2.0)+((options.fullmagdims[2]+options.interstice)/options.steps)
+        output['sstep'] = (options.fullmagdims[2]+options.interstice)/options.steps
+        output['interstice'] = options.interstice
+
+        # calculate all magnet values
+#        types = create_type_list_symmetric_apple(options.periods)
+#        q1_directions = create_direction_list_symmetric_apple_q1(options.periods)
+#        q2_directions = create_direction_list_symmetric_apple_q2(options.periods)
+#        q3_directions = create_direction_list_symmetric_apple_q3(options.periods)
+#        q4_directions = create_direction_list_symmetric_apple_q4(options.periods)
+#        q1_positions = create_location_list_symmetric_apple_q1(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
+#        q2_positions = create_location_list_symmetric_apple_q2(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
+#        q3_positions = create_location_list_symmetric_apple_q3(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
+#        q4_positions = create_location_list_symmetric_apple_q4(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
+
+        # output beams
+        output['beams'] = []
+        q1_beam = {}
+        q1_beam['name'] = "Q1 Beam"
+        q1_beam['mags'] = []
+        q2_beam = {}
+        q2_beam['name'] = "Q2 Beam"
+        q2_beam['mags'] = []
+        q3_beam = {}
+        q3_beam['name'] = "Q3 Beam"
+        q3_beam['mags'] = []
+        q4_beam = {}
+        q4_beam['name'] = "Q4 Beam"
+        q4_beam['mags'] = []
 
         # top beam
         for i in range(len(types)):

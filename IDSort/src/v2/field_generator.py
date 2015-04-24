@@ -188,11 +188,11 @@ def output_fields(filename, id_filename, lookup_filename, magnets_filename, magl
 
 if __name__ == "__main__" :
     
-    f2 = open('/dls/science/groups/das/ID/I13j/id.json', 'r')
+    f2 = open('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015test.json', 'r')
     info = json.load(f2)
     f2.close()
 
-    f1 = h5py.File('/dls/science/groups/das/ID/I13j/unit_chunks.h5', 'r')
+    f1 = h5py.File('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015test.h5', 'r')
     lookup = {}
     for beam in info['beams']:
         lookup[beam['name']] = f1[beam['name']][...]
@@ -200,7 +200,7 @@ if __name__ == "__main__" :
     
 
     mags = magnets.Magnets()
-    mags.load('/dls/science/groups/das/ID/I13j/magnets.mag')
+    mags.load('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/magnets.mag')
     
     ref_mags = generate_reference_magnets(mags)
     ref_maglist = magnets.MagLists(ref_mags)
