@@ -14,7 +14,7 @@ Everything except step 5 can be done in either Windows or Unix.
 Then what is needed is to actually run the sort, which is to be run on a cluster. using mpi_runner.py 
 
 ## Command line commands
-Need instructions for loading the right python PATH
+  0. module load python/ana
 
   1. Manually create .sim files
   2. python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/id_setup.py -p 109 --fullmagdims 41. 16. 6.22 --vemagdims 41. 16. 3.12 --hemagdims 41. 16. 4.0 -i 0.03 -g 6.15 -t "PPM_AntiSymmetric" -n "J13" -x -5.0  5.1  2.5 -z -0.0 .1 0.1 -s 5 myfilename.json
