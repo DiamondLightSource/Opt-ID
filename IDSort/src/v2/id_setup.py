@@ -5,18 +5,14 @@ import json
 def create_type_list_symmetric_apple(nperiods):
     # do the first end
     types = []
-    start = 0
-    stop = 0
     vertical = True
 
     types.append('HE')
     types.append('VE')
     types.append('HE')
-
-    start, stop = (3, (4*nperiods+5)-3)
-
+    
     # now put in all the middle periods
-    for i in range(start, stop):
+    for i in range(3, (4 * nperiods - 1) - 3, 1):
         if vertical :
             types.append('VV')
             vertical = False
@@ -31,29 +27,163 @@ def create_type_list_symmetric_apple(nperiods):
 
     return types
 
-def create_direction_list_symmetric_apple_q1(nperiods):
+def create_direction_matrix_list_symmetric_apple_q1(nperiods):
     direction = []
-    for i in range(0, (4 * nperiods + 5) - 1, 4):
-        direction.append((1, 1, 1))
-        direction.append((1, 1, 1))
-        direction.append((-1, -1, -1))
-        direction.append((-1, -1, 1))
+    
+    direction = []
+    for i in range(0, (4 * nperiods - 1) - 3, 4):
+        direction.append(((0,1,0),(-1,0,0),(0,0,1)))
+        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+        direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
 
-    # Append last element
-    direction.append((1, 1, 1))
+    # Append last elements
+    direction.append(((0,1,0),(-1,0,0),(0,0,1)))
+    direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+    direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
     return direction
 
-def create_direction_list_symmetric_apple_top(nperiods):
+def create_direction_matrix_list_symmetric_apple_q2(nperiods):
     direction = []
-    for i in range(0, (4 * nperiods + 5) - 1, 4):
-        direction.append((-1, -1, -1))
-        direction.append((1, 1, 1))
-        direction.append((1, 1, 1))
-        direction.append((-1, -1, 1))
+    
+    direction = []
+    for i in range(0, (4 * nperiods - 1) - 3, 4):
+        direction.append(((1,0,0),(0,1,0),(0,0,1)))
+        direction.append(((1,0,0),(0,1,0),(0,0,1)))
+        direction.append(((0,1,0),(1,0,0),(0,0,-1)))
+        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
 
-    # Append last element
-    direction.append((-1, 1, -1))
+    # Append last elements
+    direction.append(((1,0,0),(0,1,0),(0,0,1)))
+    direction.append(((1,0,0),(0,1,0),(0,0,1)))
+    direction.append(((0,1,0),(1,0,0),(0,0,-1)))
     return direction
+
+def create_direction_matrix_list_symmetric_apple_q3(nperiods):
+    direction = []
+    
+    direction = []
+    for i in range(0, (4 * nperiods - 1) - 3, 4):
+        direction.append(((0,-1,0),(1,0,0),(0,0,1)))
+        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+        direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
+        direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
+
+    # Append last elements
+    direction.append(((0,-1,0),(1,0,0),(0,0,1)))
+    direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+    direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
+    return direction
+
+def create_direction_matrix_list_symmetric_apple_q4(nperiods):
+    direction = []
+    
+    direction = []
+    for i in range(0, (4 * nperiods - 1) - 3, 4):
+        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+        direction.append(((1,0,0),(0,1,0),(0,0,1)))
+        direction.append(((0,-1,0),(-1,0,0),(0,0,-1)))
+        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+
+    # Append last elements
+    direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+    direction.append(((1,0,0),(0,1,0),(0,0,1)))
+    direction.append(((0,-1,0),(-1,0,0),(0,0,-1)))
+    return direction
+
+def create_location_list_symmetric_apple_q1(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+    #locate most negative point of block on x,z,s axes
+    V1 = []
+    length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
+    x=-fullmagdims[0]-phasinggap/2.0
+    z=mingap/2.0
+    s=-length/2.0
+    V1.append((x,z,s))
+    s+=(hemagdims[2]+endgap)
+    V1.append((x,z,s))
+    s+=(vemagdims[2]+interstice)
+    V1.append((x,z,s))
+    s+=(hemagdims[2]+interstice)
+    for i in range(3,(4*nperiods-1)-3,1):
+        V1.append((x,z,s))
+        s+=(fullmagdims[2]+interstice)
+    V1.append((x,z,s))
+    s+=(hemagdims[2]+interstice)
+    V1.append((x,z,s))
+    s+=(vemagdims[2]+endgap)
+    V1.append((x,z,s))
+    return V1
+
+def create_location_list_symmetric_apple_q2(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+    #locate most negative point of block on x,z,s axes
+    V1 = []
+    length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
+    x=phasinggap/2.0
+    z=mingap/2.0
+    s=-length/2.0
+    V1.append((x,z,s))
+    s+=(hemagdims[2]+endgap)
+    V1.append((x,z,s))
+    s+=(vemagdims[2]+interstice)
+    V1.append((x,z,s))
+    s+=(hemagdims[2]+interstice)
+    for i in range(3,(4*nperiods-1)-3,1):
+        V1.append((x,z,s))
+        s+=(fullmagdims[2]+interstice)
+    V1.append((x,z,s))
+    s+=(hemagdims[2]+interstice)
+    V1.append((x,z,s))
+    s+=(vemagdims[2]+endgap)
+    V1.append((x,z,s))
+    return V1
+
+def create_location_list_symmetric_apple_q3(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+    #locate most negative point of block on x,z,s axes
+    V1 = []
+    length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
+    x=phasinggap/2.0
+    z=-fullmagdims[1]-mingap/2.0
+    s=-length/2.0
+    V1.append((x,z,s))
+    s+=(hemagdims[2]+endgap)
+    V1.append((x,z,s))
+    s+=(vemagdims[2]+interstice)
+    V1.append((x,z,s))
+    s+=(hemagdims[2]+interstice)
+    for i in range(3,(4*nperiods-1)-3,1):
+        V1.append((x,z,s))
+        s+=(fullmagdims[2]+interstice)
+    V1.append((x,z,s))
+    s+=(hemagdims[2]+interstice)
+    V1.append((x,z,s))
+    s+=(vemagdims[2]+endgap)
+    V1.append((x,z,s))
+    return V1
+
+def create_location_list_symmetric_apple_q4(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+    #locate most negative point of block on x,z,s axes
+    V1 = []
+    length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
+    x=-fullmagdims[0]-phasinggap/2.0
+    z=-fullmagdims[1]-mingap/2.0
+    s=-length/2.0
+    V1.append((x,z,s))
+    s+=(hemagdims[2]+endgap)
+    V1.append((x,z,s))
+    s+=(vemagdims[2]+interstice)
+    V1.append((x,z,s))
+    s+=(hemagdims[2]+interstice)
+    for i in range(3,(4*nperiods-1)-3,1):
+        V1.append((x,z,s))
+        s+=(fullmagdims[2]+interstice)
+    V1.append((x,z,s))
+    s+=(hemagdims[2]+interstice)
+    V1.append((x,z,s))
+    s+=(vemagdims[2]+endgap)
+    V1.append((x,z,s))
+    return V1
+
+
 
 def create_type_list_antisymetric_ppm(nperiods):
     # do the first end
@@ -95,6 +225,18 @@ def create_direction_list_antisymetric_ppm_bottom(nperiods):
     direction.append((1, 1, 1))
     return direction
 
+def create_direction_matrix_list_antisymetric_ppm_bottom(nperiods):
+    direction = []
+    for i in range(0, (4 * nperiods + 5) - 1, 4):
+        direction.append(((1,0,0),(0,1,0),(0,0,1)))
+        direction.append(((1,0,0),(0,1,0),(0,0,1)))
+        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+
+    # Append last element
+    direction.append(((1,0,0),(0,1,0),(0,0,1)))
+    return direction
+
 
 def create_direction_list_antisymetric_ppm_top(nperiods):
     direction = []
@@ -106,6 +248,18 @@ def create_direction_list_antisymetric_ppm_top(nperiods):
 
     # Append last element
     direction.append((-1, 1, -1))
+    return direction
+
+def create_direction_matrix_list_antisymetric_ppm_top(nperiods):
+    direction = []
+    for i in range(0, (4 * nperiods + 5) - 1, 4):
+        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+        direction.append(((1,0,0),(0,1,0),(0,0,1)))
+        direction.append(((1,0,0),(0,1,0),(0,0,1)))
+        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+
+    # Append last element
+    direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
     return direction
 
 def create_location_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap,interstice):
@@ -160,6 +314,10 @@ if __name__ == "__main__":
     parser.add_option("-x", "--xstartstopstep", dest="x", help="X start stop and step", nargs=3, default=(-5.0, 5.1, 2.5), type="float")
     parser.add_option("-z", "--zstartstopstep", dest="z", help="Z start stop and step", nargs=3, default=(-0.0,.1, 0.1), type="float")
     parser.add_option("-s", "--stepsperperiod", dest="steps", help="Number of steps in S per magnet", default=5, type="float")
+    parser.add_option("--endgapsym", dest="endgapsym", help="Symmetric devices require an end gap in the termination structure, set gap length in mm", default=5.1, type="float")
+    parser.add_option("--phasinggap", dest="phasinggap", help="Gap between Quadrants 1/2 and 3/4 that allow these axes to phase past each other; in mm. APPLES only", default=0.5, type="float")
+    parser.add_option("--clampcut", dest="clampcut", help="Square corners removed to allow magnets to be clamped, dimensioned in mm. APPLEs only", default = 5.0, type="float")
+    
 
     (options, args) = parser.parse_args()
 
@@ -188,6 +346,8 @@ if __name__ == "__main__":
         types = create_type_list_antisymetric_ppm(options.periods)
         top_directions = create_direction_list_antisymetric_ppm_top(options.periods)
         bottom_directions = create_direction_list_antisymetric_ppm_bottom(options.periods)
+        top_directions_matrix = create_direction_matrix_list_antisymetric_ppm_top(options.periods)
+        bottom_directions_matrix = create_direction_matrix_list_antisymetric_ppm_bottom(options.periods)
         top_positions = create_location_list_antisymmetric_ppm_top(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
         bottom_positions = create_location_list_antisymmetric_ppm_bottom(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
 
@@ -206,6 +366,7 @@ if __name__ == "__main__":
             mag = {}
             mag['type'] = types[i]
             mag['direction'] = top_directions[i]
+            mag['direction_matrix'] = top_directions_matrix[i]
             mag['position'] = top_positions[i]
             if types[i] == 'VV':
                 mag['dimensions'] = options.fullmagdims
@@ -222,6 +383,7 @@ if __name__ == "__main__":
             mag = {}
             mag['type'] = types[i]
             mag['direction'] = bottom_directions[i]
+            mag['direction_matrix'] = bottom_directions_matrix[i]
             mag['position'] = bottom_positions[i]
             if types[i] == 'VV':
                 mag['dimensions'] = options.fullmagdims
@@ -262,17 +424,20 @@ if __name__ == "__main__":
         output['smax'] = (length/2.0)+((options.fullmagdims[2]+options.interstice)/options.steps)
         output['sstep'] = (options.fullmagdims[2]+options.interstice)/options.steps
         output['interstice'] = options.interstice
+        output['end_gap'] = options.endgapsym
+        output['phasing_gap'] = options.phasinggap
+        output['clampcut'] = options.clampcut
 
         # calculate all magnet values
-#        types = create_type_list_symmetric_apple(options.periods)
-#        q1_directions = create_direction_list_symmetric_apple_q1(options.periods)
-#        q2_directions = create_direction_list_symmetric_apple_q2(options.periods)
-#        q3_directions = create_direction_list_symmetric_apple_q3(options.periods)
-#        q4_directions = create_direction_list_symmetric_apple_q4(options.periods)
-#        q1_positions = create_location_list_symmetric_apple_q1(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
-#        q2_positions = create_location_list_symmetric_apple_q2(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
-#        q3_positions = create_location_list_symmetric_apple_q3(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
-#        q4_positions = create_location_list_symmetric_apple_q4(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
+        types = create_type_list_symmetric_apple(options.periods)
+        q1_directions_matrix = create_direction_matrix_list_symmetric_apple_q1(options.periods)
+        q2_directions_matrix = create_direction_matrix_list_symmetric_apple_q2(options.periods)
+        q3_directions_matrix = create_direction_matrix_list_symmetric_apple_q3(options.periods)
+        q4_directions_matrix = create_direction_matrix_list_symmetric_apple_q4(options.periods)
+        q1_positions = create_location_list_symmetric_apple_q1(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice, options.endgapsym, options.phasinggap)
+        q2_positions = create_location_list_symmetric_apple_q2(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice, options.endgapsym, options.phasinggap)
+        q3_positions = create_location_list_symmetric_apple_q3(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice, options.endgapsym, options.phasinggap)
+        q4_positions = create_location_list_symmetric_apple_q4(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice, options.endgapsym, options.phasinggap)
 
         # output beams
         output['beams'] = []
@@ -289,12 +454,12 @@ if __name__ == "__main__":
         q4_beam['name'] = "Q4 Beam"
         q4_beam['mags'] = []
 
-        # top beam
+        # q1 beam
         for i in range(len(types)):
             mag = {}
             mag['type'] = types[i]
-            mag['direction'] = top_directions[i]
-            mag['position'] = top_positions[i]
+            mag['direction'] = q1_directions_matrix[i]
+            mag['position'] = q1_positions[i]
             if types[i] == 'VV':
                 mag['dimensions'] = options.fullmagdims
             elif types[i] == 'HH':
@@ -303,14 +468,14 @@ if __name__ == "__main__":
                 mag['dimensions'] = options.hemagdims
             elif types[i] == 'VE':
                 mag['dimensions'] = options.vemagdims
-            top_beam['mags'].append(mag)
-
-        # bottom beam
+            q1_beam['mags'].append(mag)
+            
+        # q2 beam
         for i in range(len(types)):
             mag = {}
             mag['type'] = types[i]
-            mag['direction'] = bottom_directions[i]
-            mag['position'] = bottom_positions[i]
+            mag['direction'] = q2_directions_matrix[i]
+            mag['position'] = q2_positions[i]
             if types[i] == 'VV':
                 mag['dimensions'] = options.fullmagdims
             elif types[i] == 'HH':
@@ -319,10 +484,46 @@ if __name__ == "__main__":
                 mag['dimensions'] = options.hemagdims
             elif types[i] == 'VE':
                 mag['dimensions'] = options.vemagdims
-            bottom_beam['mags'].append(mag)
+            q2_beam['mags'].append(mag)
+            
+        # q3 beam
+        for i in range(len(types)):
+            mag = {}
+            mag['type'] = types[i]
+            mag['direction'] = q3_directions_matrix[i]
+            mag['position'] = q3_positions[i]
+            if types[i] == 'VV':
+                mag['dimensions'] = options.fullmagdims
+            elif types[i] == 'HH':
+                mag['dimensions'] = options.fullmagdims
+            elif types[i] == 'HE':
+                mag['dimensions'] = options.hemagdims
+            elif types[i] == 'VE':
+                mag['dimensions'] = options.vemagdims
+            q3_beam['mags'].append(mag)
+            
+        # q4 beam
+        for i in range(len(types)):
+            mag = {}
+            mag['type'] = types[i]
+            mag['direction'] = q4_directions_matrix[i]
+            mag['position'] = q4_positions[i]
+            if types[i] == 'VV':
+                mag['dimensions'] = options.fullmagdims
+            elif types[i] == 'HH':
+                mag['dimensions'] = options.fullmagdims
+            elif types[i] == 'HE':
+                mag['dimensions'] = options.hemagdims
+            elif types[i] == 'VE':
+                mag['dimensions'] = options.vemagdims
+            q4_beam['mags'].append(mag)
 
-        output['beams'].append(top_beam)
-        output['beams'].append(bottom_beam)
+
+
+        output['beams'].append(q1_beam)
+        output['beams'].append(q2_beam)
+        output['beams'].append(q3_beam)
+        output['beams'].append(q4_beam)
 
         fp = open(args[0], 'w')
         json.dump(output, fp, indent=4)

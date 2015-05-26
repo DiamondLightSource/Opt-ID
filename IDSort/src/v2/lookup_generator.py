@@ -13,7 +13,7 @@ if __name__ == "__main__":
     import optparse
     usage = "%prog [options] ID_Description_File Output_filename"
     parser = optparse.OptionParser(usage=usage)
-    parser.add_option("-o", "--output", dest="output", help="Select the file to write the output to", default=None)
+#    parser.add_option("-o", "--output", dest="output", help="Select the file to write the output to", default=None)
     parser.add_option("-p", "--periods", dest="periods", help="Set the number of full periods for the Device", default=5, type="int")
     parser.add_option("-s", "--symmetric", dest="symmetric", help="Set the device to symmetric rather then Anti-symmetric", action="store_true", default=False)
     parser.add_option("-r", "--random", dest="random", help="Choose the magnets randomly instead of sequentialy", action="store_true", default=False)
