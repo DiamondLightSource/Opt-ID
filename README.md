@@ -7,38 +7,41 @@ Code for the Optimisation of ID's using Python and Opt-AI
   3. Run magnets.py - this creates the data files for the magnets - a .mag file. It requires the raw .sim input files.
   4. Run lookup_generator.py. This generates what we could call the ID operator that acts on the real magnet data to create a real ID field. It requires the .json file created by setup.py and it creates a .h5 file
   5. Run mpi_runner.py. This requires the .json file created from step 2, the .mag database created in step 3 and the .h5 lookup file created in step 5. This requires a cluster and must be done on a UNIX machine.
-  6. Run tmp_compare.py. This creates a human readable output .inp file (also suitable for analysis with old Fortran code) and an viewable .h5 file.
+  6. Run process_genome.py. This creates a human readable output .inp file (also suitable for analysis with old Fortran code) and a viewable .h5 file.
 
 Everything except step 5 can be done in either Windows or Unix.
 
 Then what is needed is to actually run the sort, which is to be run on a cluster. using mpi_runner.py 
 
 ## Command line commands
-Need instructions for loading the right python PATH
+  0. module load python/ana
 
   1. Manually create .sim files
+  
   2. python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/id_setup.py -p 109 --fullmagdims 41. 16. 6.22 --vemagdims 41. 16. 3.12 --hemagdims 41. 16. 4.0 -i 0.03 -g 6.15 -t "PPM_AntiSymmetric" -n "J13" -x -5.0  5.1  2.5 -z -0.0 .1 0.1 -s 5 myfilename.json
 
-  (Choose your own 'myfilename.json' and look at id_setup.py for meaning of tags)
+  (Choose your own 'myfilename.json' and type 'python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/id_setup.py -h' for meaning of tags)
   
   3. python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/magnets.py -H '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13H.sim' --HE '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13HEA.sim' -V '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13V.sim' --VE '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13VE.sim' mymagnets.mag
 
-  (Choose your own 'mymagnets.mag' and look at magnets.py for meaning of tags)
+  (Choose your own 'mymagnets.mag' and type 'python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/magnets.py -h' for meaning of tags)
   
   4. python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/lookup_generator.py -p 109 -r myfilename.json mylookupfilename.h5
 
-  (Use 'myfilename.json' from earlier and choose your own 'mylookupfilename.h5'. Look at lookup_generator.py for meaning of tags)
+  (Use 'myfilename.json' from earlier and choose your own 'mylookupfilename.h5'. Type 'python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/lookup_generator.py -h' for meaning of tags)
   
   5. mkdir mylogs
   
   6. module load global/cluster
   (This loads the cluster and gives access to qsub command)
   
-  [7. Open another terminal and type: 'module load global/cluster' and then 'qstat' This will let you watch the job on the cluster]
+  [7a. Open another terminal and type: 'module load global/cluster' and then 'qstat' This will let you watch the job on the cluster]
   
-  8. qsub -pe openmpi 24 -q medium.q -l release=rhel6 /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/mpijob_ed.sh --iterations 5 -l mylookupfilename.h5 -i myfilename.json -m mymagnets.mag -s 24 -r --param_c 1 mylogs
+  7. qsub -pe openmpi 24 -q medium.q -l release=rhel6 /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/mpijob_ed.sh --iterations 5 -l mylookupfilename.h5 -i myfilename.json -m mymagnets.mag -s 24 -r --param_c 1 mylogs
 
-  (Use 'myfilename.json', 'mymagnets.mag', and 'mylookupfilename.h5' from earlier and the 'mylogs' directory created in step 5.  Look at mpi_runner.py for meaning of tags. Genomes will be created in the mylogs directory with their cost as the first part of the filename - e.g. 4.62409644e-07_000_00bc026cfae7.genome is cost_generation_unique-id.genome)
+  (Use 'myfilename.json', 'mymagnets.mag', and 'mylookupfilename.h5' from earlier and the 'mylogs' directory created in step 5.   Type 'python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/mpi_runner.py -h' for meaning of tags. Genomes will be created in the mylogs directory with their cost as the first part of the filename - e.g. 4.62409644e-07_000_00bc026cfae7.genome is cost_generation_unique-id.genome)
   
-  9.
+  8. python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/process_genome.py -a -r -i myfilename.json -m mymagnets.mag -t mylookupfilename.h5 mylogs/4.62409644e-07_000_00bc026cfae7.genome
+
+  (Use 'myfilename.json', 'mymagnets.mag', and 'mylookupfilename.h5' from earlier, and the genome of interest within 'mylogs', e.g. 'mylogs/4.62409644e-07_000_00bc026cfae7.genome'. Multiple genomes can be analysed at once, just add extra file locations to the end of the command.  Type 'python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/process_genome.py -h' for meaning of tags.)
   
