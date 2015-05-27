@@ -470,26 +470,3 @@ def wrapCalcB(testpoint, magdims,  V1):
             if i!=j:
                 B[:,:,:,j,i]=B[:,:,:,i,j]
     return B
-
-def wrapCalcAPPLEB(testpoint, magdims,  V1):
-    '''This function takes the arguments 'testpoint' and 's_offset'
-    'testpoint' requires an array of floats of length 3 describing the [x,z,s] co-ordinates of the point under consideration
-    's_offset' requires a float that describes the s-direction offset of the magnet block
-    
-    This function calls the main field calculating function, and outputs a 3x3 matrix of the form
-    [[Bx(x), Bz(x), Bs(x)]
-     [Bx(z), Bz(z), Bs(z)]
-     [Bx(s), Bz(s), Bs(s)]].
-     
-     To calculate the real field component of any block need to get real data sum contributions such that
-     Bx=Bx(x)*Mx + Bx(z)*Mz + Bx(s)*Ms'''
-    B=np.zeros((testpoint.shape+(3,3))[1:])
-    for i in range(3):
-        m=np.zeros(3)
-        m[i]=1
-        for j in range(i,3):
-            B[:,:,:,i,j]= fortPMB_NEW(testpoint,m,j, magdims, V1)
-            if i!=j:
-                B[:,:,:,j,i]=B[:,:,:,i,j]
-    return B
-
