@@ -22,6 +22,7 @@ class Magnets(object):
         magnets = {}
         for line in f:
             vals = line.split()
+            print vals[0]
             magnets[vals[0]] = np.array((float(vals[1]), float(vals[2]), float(vals[3])))
         self.magnet_sets[name] = magnets
         self.magnet_flip[name] = np.array(flip_vector)
@@ -92,11 +93,11 @@ class MagLists():
         L = self.magnet_lists[name]
         L[a], L[b] = L[b], L[a]
     
-    def get_magnet_vals(self, name, number, magnets):
+    def get_magnet_vals(self, name, number, magnets, flip):
         magnet = self.magnet_lists[name][number]
         magdata = magnets.magnet_sets[name][magnet[0]]
         if magnet[1] < 0:
-            magdata = magdata*magnets.magnet_flip[name]
+            magdata = magdata.dot(flip)
         return magdata
     
     def mutate(self, number_of_mutations, available={'VE':range(12), 'HE':range(12), 'HH':range(506), 'VV':range(506)}):

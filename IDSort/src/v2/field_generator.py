@@ -34,7 +34,7 @@ def generate_per_magnet_array(info, magnetlist, magnets):
     for beam in info['beams']:
         magvalues = []
         for mag in beam['mags']:
-            magarray = magnetlist.get_magnet_vals(mag['type'], pos[mag['type']], magnets)
+            magarray = magnetlist.get_magnet_vals(mag['type'], pos[mag['type']], magnets, mag['flip_matrix'])
             pos[mag['type']] += 1
             magvalues.append(magarray)
         beams[beam['name']] = np.transpose(np.vstack(magvalues))
@@ -187,12 +187,19 @@ def output_fields(filename, id_filename, lookup_filename, magnets_filename, magl
 
 
 if __name__ == "__main__" :
+    import optparse
+    usage = "%prog ID_Description_File Lookup_File Magnets_File"
     
-    f2 = open('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015test.json', 'r')
+    parser = optparse.OptionParser(usage=usage)
+    (options, args) = parser.parse_args()
+    
+    #f2 = open('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015test.json', 'r')
+    f2 = open(args[0], 'r')
     info = json.load(f2)
     f2.close()
 
-    f1 = h5py.File('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015test.h5', 'r')
+    #f1 = h5py.File('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015test.h5', 'r')
+    f1 = h5py.File(args[1], 'r')
     lookup = {}
     for beam in info['beams']:
         lookup[beam['name']] = f1[beam['name']][...]
@@ -200,7 +207,8 @@ if __name__ == "__main__" :
     
 
     mags = magnets.Magnets()
-    mags.load('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/magnets.mag')
+    #mags.load('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/magnets.mag')
+    mags.load(args[2])
     
     ref_mags = generate_reference_magnets(mags)
     ref_maglist = magnets.MagLists(ref_mags)
@@ -213,7 +221,7 @@ if __name__ == "__main__" :
     
     mag_array = generate_per_magnet_array(info, maglist, mags)
     
-    for i in range(10):
+    for i in range(2):
     
 
         maglist2 =  copy.deepcopy(maglist)

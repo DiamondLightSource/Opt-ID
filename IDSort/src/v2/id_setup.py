@@ -538,8 +538,9 @@ if __name__ == "__main__":
         for i in range(len(types)):
             mag = {}
             mag['type'] = types[i]
-            mag['direction'] = q1_directions_matrix[i]
+            mag['direction_matrix'] = q1_directions_matrix[i]
             mag['position'] = q1_positions[i]
+            mag['flip_matrix'] = q1_flip_matrix[i]
             if types[i] == 'VV':
                 mag['dimensions'] = options.fullmagdims
             elif types[i] == 'HH':
@@ -554,8 +555,9 @@ if __name__ == "__main__":
         for i in range(len(types)):
             mag = {}
             mag['type'] = types[i]
-            mag['direction'] = q2_directions_matrix[i]
+            mag['direction_matrix'] = q2_directions_matrix[i]
             mag['position'] = q2_positions[i]
+            mag['flip_matrix'] = q2_flip_matrix[i]
             if types[i] == 'VV':
                 mag['dimensions'] = options.fullmagdims
             elif types[i] == 'HH':
@@ -570,8 +572,9 @@ if __name__ == "__main__":
         for i in range(len(types)):
             mag = {}
             mag['type'] = types[i]
-            mag['direction'] = q3_directions_matrix[i]
+            mag['direction_matrix'] = q3_directions_matrix[i]
             mag['position'] = q3_positions[i]
+            mag['flip_matrix'] = q3_flip_matrix[i]
             if types[i] == 'VV':
                 mag['dimensions'] = options.fullmagdims
             elif types[i] == 'HH':
@@ -586,8 +589,9 @@ if __name__ == "__main__":
         for i in range(len(types)):
             mag = {}
             mag['type'] = types[i]
-            mag['direction'] = q4_directions_matrix[i]
+            mag['direction_matrix'] = q4_directions_matrix[i]
             mag['position'] = q4_positions[i]
+            mag['flip_matrix'] = q4_flip_matrix[i]
             if types[i] == 'VV':
                 mag['dimensions'] = options.fullmagdims
             elif types[i] == 'HH':
