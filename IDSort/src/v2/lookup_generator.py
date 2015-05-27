@@ -43,7 +43,7 @@ if __name__ == "__main__":
         for mag in data['beams'][b]['mags']:
             print("processing beam %02i magnet %04i" % (b, count))
             dataset = mt.wrapCalcB(testpoints, np.array(mag['dimensions']), np.array(mag['position']))
-            ds[:, :, :, :, :, count] = dataset * np.array(mag['direction'])
+            ds[:, :, :, :, :, count] = dataset.dot(np.array(mag['direction_matrix']))
             count += 1
             
     outfile.close()
