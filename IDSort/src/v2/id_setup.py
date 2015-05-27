@@ -29,8 +29,6 @@ def create_type_list_symmetric_apple(nperiods):
 
 def create_direction_matrix_list_symmetric_apple_q1(nperiods):
     direction = []
-    
-    direction = []
     for i in range(0, (4 * nperiods - 1) - 3, 4):
         direction.append(((0,1,0),(-1,0,0),(0,0,1)))
         direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
@@ -44,8 +42,6 @@ def create_direction_matrix_list_symmetric_apple_q1(nperiods):
     return direction
 
 def create_direction_matrix_list_symmetric_apple_q2(nperiods):
-    direction = []
-    
     direction = []
     for i in range(0, (4 * nperiods - 1) - 3, 4):
         direction.append(((1,0,0),(0,1,0),(0,0,1)))
@@ -61,8 +57,6 @@ def create_direction_matrix_list_symmetric_apple_q2(nperiods):
 
 def create_direction_matrix_list_symmetric_apple_q3(nperiods):
     direction = []
-    
-    direction = []
     for i in range(0, (4 * nperiods - 1) - 3, 4):
         direction.append(((0,-1,0),(1,0,0),(0,0,1)))
         direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
@@ -77,8 +71,6 @@ def create_direction_matrix_list_symmetric_apple_q3(nperiods):
 
 def create_direction_matrix_list_symmetric_apple_q4(nperiods):
     direction = []
-    
-    direction = []
     for i in range(0, (4 * nperiods - 1) - 3, 4):
         direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
         direction.append(((1,0,0),(0,1,0),(0,0,1)))
@@ -91,6 +83,66 @@ def create_direction_matrix_list_symmetric_apple_q4(nperiods):
     direction.append(((0,-1,0),(-1,0,0),(0,0,-1)))
     return direction
 
+def create_flip_matrix_list_symmetric_apple_q1(nperiods):
+    flip = []
+    for i in range(0, (4 * nperiods - 1) - 3, 4):
+        flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+        flip.append(((1,0,0),(0,1,0),(0,0,1)))
+        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
+        flip.append(((1,0,0),(0,1,0),(0,0,1)))
+    
+    # Append last elements
+    
+    flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+    flip.append(((1,0,0),(0,1,0),(0,0,1)))
+    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
+    return flip
+
+def create_flip_matrix_list_symmetric_apple_q2(nperiods):
+    flip = []
+    for i in range(0, (4 * nperiods - 1) - 3, 4):
+        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
+        flip.append(((1,0,0),(0,1,0),(0,0,1)))
+        flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+        flip.append(((1,0,0),(0,1,0),(0,0,1)))
+    
+    # Append last elements
+    
+    flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+    flip.append(((1,0,0),(0,1,0),(0,0,1)))
+    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
+    return flip
+
+def create_flip_matrix_list_symmetric_apple_q3(nperiods):
+    flip = []
+    for i in range(0, (4 * nperiods - 1) - 3, 4):
+        flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+        flip.append(((1,0,0),(0,1,0),(0,0,1)))
+        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
+        flip.append(((1,0,0),(0,1,0),(0,0,1)))
+    
+    # Append last elements
+    
+    flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+    flip.append(((1,0,0),(0,1,0),(0,0,1)))
+    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
+    return flip
+
+def create_flip_matrix_list_symmetric_apple_q4(nperiods):
+    flip = []
+    for i in range(0, (4 * nperiods - 1) - 3, 4):
+        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
+        flip.append(((1,0,0),(0,1,0),(0,0,1)))
+        flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+        flip.append(((1,0,0),(0,1,0),(0,0,1)))
+    
+    # Append last elements
+    
+    flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+    flip.append(((1,0,0),(0,1,0),(0,0,1)))
+    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
+    return flip
+    
 def create_location_list_symmetric_apple_q1(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
     #locate most negative point of block on x,z,s axes
     V1 = []
@@ -237,6 +289,15 @@ def create_direction_matrix_list_antisymetric_ppm_bottom(nperiods):
     direction.append(((1,0,0),(0,1,0),(0,0,1)))
     return direction
 
+def create_flip_matrix_antisymmetric_ppm_bottom(nperiods):
+    flip = []
+    for i in range(0, (4 * nperiods + 5) - 1, 2):
+        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
+        flip.append(((-1,0,0),(0,1,0),(0,0,-1)))
+    
+    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
+    return flip
+
 
 def create_direction_list_antisymetric_ppm_top(nperiods):
     direction = []
@@ -261,6 +322,15 @@ def create_direction_matrix_list_antisymetric_ppm_top(nperiods):
     # Append last element
     direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
     return direction
+
+def create_flip_matrix_antisymmetric_ppm_top(nperiods):
+    flip = []
+    for i in range(0, (4 * nperiods + 5) - 1, 2):
+        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
+        flip.append(((-1,0,0),(0,1,0),(0,0,-1)))
+    
+    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
+    return flip
 
 def create_location_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap,interstice):
     V1 = []
@@ -350,13 +420,15 @@ if __name__ == "__main__":
         bottom_directions_matrix = create_direction_matrix_list_antisymetric_ppm_bottom(options.periods)
         top_positions = create_location_list_antisymmetric_ppm_top(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
         bottom_positions = create_location_list_antisymmetric_ppm_bottom(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
+        top_flip_matrix = create_flip_matrix_antisymmetric_ppm_top(options.periods)
+        bottom_flip_matrix = create_flip_matrix_antisymmetric_ppm_bottom(options.periods)
 
         # output beams
         output['beams'] = []
         top_beam = {}
         top_beam['name'] = "Top Beam"
         top_beam['mags'] = []
-        bottom_beam = {}
+        
         bottom_beam = {}
         bottom_beam['name'] = "Bottom Beam"
         bottom_beam['mags'] = []
@@ -368,6 +440,7 @@ if __name__ == "__main__":
             mag['direction'] = top_directions[i]
             mag['direction_matrix'] = top_directions_matrix[i]
             mag['position'] = top_positions[i]
+            mag['flip_matrix'] = top_flip_matrix[i]
             if types[i] == 'VV':
                 mag['dimensions'] = options.fullmagdims
             elif types[i] == 'HH':
@@ -385,6 +458,7 @@ if __name__ == "__main__":
             mag['direction'] = bottom_directions[i]
             mag['direction_matrix'] = bottom_directions_matrix[i]
             mag['position'] = bottom_positions[i]
+            mag['flip_matrix'] = bottom_flip_matrix[i]
             if types[i] == 'VV':
                 mag['dimensions'] = options.fullmagdims
             elif types[i] == 'HH':
@@ -434,11 +508,17 @@ if __name__ == "__main__":
         q2_directions_matrix = create_direction_matrix_list_symmetric_apple_q2(options.periods)
         q3_directions_matrix = create_direction_matrix_list_symmetric_apple_q3(options.periods)
         q4_directions_matrix = create_direction_matrix_list_symmetric_apple_q4(options.periods)
+
         q1_positions = create_location_list_symmetric_apple_q1(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice, options.endgapsym, options.phasinggap)
         q2_positions = create_location_list_symmetric_apple_q2(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice, options.endgapsym, options.phasinggap)
         q3_positions = create_location_list_symmetric_apple_q3(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice, options.endgapsym, options.phasinggap)
         q4_positions = create_location_list_symmetric_apple_q4(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice, options.endgapsym, options.phasinggap)
 
+        q1_flip_matrix = create_flip_matrix_list_symmetric_apple_q1(options.periods)
+        q2_flip_matrix = create_flip_matrix_list_symmetric_apple_q2(options.periods)
+        q3_flip_matrix = create_flip_matrix_list_symmetric_apple_q3(options.periods)
+        q4_flip_matrix = create_flip_matrix_list_symmetric_apple_q4(options.periods)
+        
         # output beams
         output['beams'] = []
         q1_beam = {}
