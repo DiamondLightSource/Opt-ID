@@ -70,8 +70,8 @@ if __name__ == "__main__":
                 if b%2==1:
                     c1pos = np.array(mag['position'])+np.array([mag['dimensions'][0]-data['clampcut'], 0.0, 0.0])
                     c2pos = np.array(mag['position'])+np.array([0.0 ,mag['dimensions'][1]-data['clampcut'], 0.0])
-                    datasetc1 = mt.wrapCalcB(testpoints, np.array([data['clampcut'],data['clampcut'],mag['dimensions'][2]]), np.array(mag['position']))
-                    datasetc2 = mt.wrapCalcB(testpoints, np.array([data['clampcut'],data['clampcut'],mag['dimensions'][2]]), np.array(mag['position']))
+                    datasetc1 = mt.wrapCalcB(testpoints, np.array([data['clampcut'],data['clampcut'],mag['dimensions'][2]]), c1pos)
+                    datasetc2 = mt.wrapCalcB(testpoints, np.array([data['clampcut'],data['clampcut'],mag['dimensions'][2]]), c2pos)
                 dataset=datasetblock-datasetc1-datasetc2
                 ds[:, :, :, :, :, count] = dataset.dot(np.array(mag['direction_matrix']))
                 count += 1
