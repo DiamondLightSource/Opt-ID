@@ -249,8 +249,9 @@ if __name__ == "__main__" :
 #f1.close()
 #    per_mag_field = generate_sub_array(beam_array, eval_list, lookup, beam, per_mag_field)
 #    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
-    per_beam_field = generate_per_beam_b_field(info, maglist, mags, lookup)
-    total_id_field = generate_id_field(info, maglist, mags, lookup)
+    maglist0 = magnets.MagLists(mags)
+    per_beam_field = generate_per_beam_b_field(info, maglist0, mags, lookup)
+    total_id_field = generate_id_field(info, maglist0, mags, lookup)
     pherr, trajectories = mt.calculate_phase_error(info,total_id_field)
 #     
 #     
