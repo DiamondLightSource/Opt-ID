@@ -31,13 +31,13 @@ def create_direction_matrix_list_symmetric_apple_q1(nperiods):
     direction = []
     for i in range(0, (4 * nperiods - 1) - 3, 4):
         direction.append(((0,1,0),(-1,0,0),(0,0,1)))
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
         direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
+        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
 
     # Append last elements
     direction.append(((0,1,0),(-1,0,0),(0,0,1)))
-    direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+    direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
     direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
     return direction
 
@@ -45,42 +45,44 @@ def create_direction_matrix_list_symmetric_apple_q2(nperiods):
     direction = []
     for i in range(0, (4 * nperiods - 1) - 3, 4):
         direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        direction.append(((0,1,0),(1,0,0),(0,0,-1)))
         direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+        direction.append(((0,1,0),(1,0,0),(0,0,-1)))
+        direction.append(((1,0,0),(0,1,0),(0,0,1)))
 
     # Append last elements
     direction.append(((1,0,0),(0,1,0),(0,0,1)))
-    direction.append(((1,0,0),(0,1,0),(0,0,1)))
+    direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
     direction.append(((0,1,0),(1,0,0),(0,0,-1)))
     return direction
 
 def create_direction_matrix_list_symmetric_apple_q3(nperiods):
     direction = []
     for i in range(0, (4 * nperiods - 1) - 3, 4):
+        direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
+        direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
         direction.append(((0,-1,0),(1,0,0),(0,0,1)))
         direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-        direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
-        direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
 
     # Append last elements
-    direction.append(((0,-1,0),(1,0,0),(0,0,1)))
-    direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
     direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
+    direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
+    direction.append(((0,-1,0),(1,0,0),(0,0,1)))
+
     return direction
 
 def create_direction_matrix_list_symmetric_apple_q4(nperiods):
     direction = []
     for i in range(0, (4 * nperiods - 1) - 3, 4):
-        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
         direction.append(((0,-1,0),(-1,0,0),(0,0,-1)))
         direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+        direction.append(((1,0,0),(0,1,0),(0,0,1)))
 
     # Append last elements
-    direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
-    direction.append(((1,0,0),(0,1,0),(0,0,1)))
     direction.append(((0,-1,0),(-1,0,0),(0,0,-1)))
+    direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+    direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+    
     return direction
 
 def create_flip_matrix_list_symmetric_apple_q1(nperiods):
@@ -116,28 +118,29 @@ def create_flip_matrix_list_symmetric_apple_q2(nperiods):
 def create_flip_matrix_list_symmetric_apple_q3(nperiods):
     flip = []
     for i in range(0, (4 * nperiods - 1) - 3, 4):
-        flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
-        flip.append(((1,0,0),(0,1,0),(0,0,1)))
         flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
         flip.append(((1,0,0),(0,1,0),(0,0,1)))
+        flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+        flip.append(((1,0,0),(0,1,0),(0,0,1)))
+
     
     # Append last elements
     
-    flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
-    flip.append(((1,0,0),(0,1,0),(0,0,1)))
     flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
+    flip.append(((1,0,0),(0,1,0),(0,0,1)))
+    flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+
     return flip
 
 def create_flip_matrix_list_symmetric_apple_q4(nperiods):
     flip = []
     for i in range(0, (4 * nperiods - 1) - 3, 4):
-        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        flip.append(((1,0,0),(0,1,0),(0,0,1)))
         flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+        flip.append(((1,0,0),(0,1,0),(0,0,1)))
+        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
         flip.append(((1,0,0),(0,1,0),(0,0,1)))
     
     # Append last elements
-    
     flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
     flip.append(((1,0,0),(0,1,0),(0,0,1)))
     flip.append(((-1,0,0),(0,-1,0),(0,0,1)))

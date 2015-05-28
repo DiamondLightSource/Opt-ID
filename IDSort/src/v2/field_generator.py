@@ -213,7 +213,7 @@ if __name__ == "__main__" :
     ref_mags = generate_reference_magnets(mags)
     ref_maglist = magnets.MagLists(ref_mags)
     ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, lookup)
-    pherr, ref_trajectories = mt.calculate_phase_error(info, ref_total_id_field)
+    ref_pherr, ref_trajectories = mt.calculate_phase_error(info, ref_total_id_field)
 
     maglist = magnets.MagLists(mags)
     maglist.shuffle_all()
@@ -247,11 +247,11 @@ if __name__ == "__main__" :
 #     ref_mags=generate_reference_magnets(mags)
 #     ref_maglist = magnets.MagLists(ref_mags)
 #f1.close()
-# #    per_mag_field = generate_sub_array(beam_array, eval_list, lookup, beam, per_mag_field)
-# #    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
-#     per_beam_field = generate_per_beam_b_field(info, maglist, mags, f1)
-#     total_id_field = generate_id_field(info, maglist, mags, f1)
-#     trajectories = mt.calculate_phase_error(info,total_id_field)
+#    per_mag_field = generate_sub_array(beam_array, eval_list, lookup, beam, per_mag_field)
+#    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
+    per_beam_field = generate_per_beam_b_field(info, maglist, mags, lookup)
+    total_id_field = generate_id_field(info, maglist, mags, lookup)
+    pherr, trajectories = mt.calculate_phase_error(info,total_id_field)
 #     
 #     
 #     ref_magarrays = generate_per_magnet_array(info, ref_maglist, ref_mags)
@@ -264,14 +264,14 @@ if __name__ == "__main__" :
 #     cost_total_id_field=generate_id_field_cost(total_id_field,ref_total_id_field)
 # 
 
-#     f3 = h5py.File('real_data.h5', 'w')
-#     for name in per_beam_field.keys():
+    f3 = h5py.File('real_data.h5', 'w')
+    for name in per_beam_field.keys():
 # #        f3.create_dataset("%s_per_magnet" % (name), data=per_mag_field[name])
-#         f3.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
-#     f3.create_dataset('id_Bfield',data=total_id_field)
-#     f3.create_dataset('id_phase_error',data=trajectories[0])
-#     f3.create_dataset('id_trajectories',data=trajectories[1])
-#     f3.close()
+        f3.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
+    f3.create_dataset('id_Bfield',data=total_id_field)
+    f3.create_dataset('id_phase_error',data=trajectories[0])
+    f3.create_dataset('id_trajectories',data=trajectories[1])
+    f3.close()
 #     
 #     f4 = h5py.File('reference.h5', 'w')
 #     for name in ref_per_beam_field.keys():
