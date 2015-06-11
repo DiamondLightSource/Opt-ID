@@ -95,7 +95,7 @@ def create_flip_matrix_list_symmetric_apple_q1(nperiods):
     
     # Append last elements
     
-    flip.append(((1,0,0),(0,1,0),(0,0,1)))
+    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
     flip.append(((1,0,0),(0,1,0),(0,0,1)))
     flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
     return flip
@@ -105,12 +105,12 @@ def create_flip_matrix_list_symmetric_apple_q2(nperiods):
     for i in range(0, (4 * nperiods - 1) - 3, 4):
         flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
         flip.append(((1,0,0),(0,1,0),(0,0,1)))
-        flip.append(((1,0,0),(0,1,0),(0,0,1)))
+        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
         flip.append(((1,0,0),(0,1,0),(0,0,1)))
     
     # Append last elements
     
-    flip.append(((1,0,0),(0,1,0),(0,0,1)))
+    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
     flip.append(((1,0,0),(0,1,0),(0,0,1)))
     flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
     return flip
@@ -120,7 +120,7 @@ def create_flip_matrix_list_symmetric_apple_q3(nperiods):
     for i in range(0, (4 * nperiods - 1) - 3, 4):
         flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
         flip.append(((1,0,0),(0,1,0),(0,0,1)))
-        flip.append(((1,0,0),(0,1,0),(0,0,1)))
+        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
         flip.append(((1,0,0),(0,1,0),(0,0,1)))
 
     
@@ -128,20 +128,20 @@ def create_flip_matrix_list_symmetric_apple_q3(nperiods):
     
     flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
     flip.append(((1,0,0),(0,1,0),(0,0,1)))
-    flip.append(((1,0,0),(0,1,0),(0,0,1)))
+    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
 
     return flip
 
 def create_flip_matrix_list_symmetric_apple_q4(nperiods):
     flip = []
     for i in range(0, (4 * nperiods - 1) - 3, 4):
-        flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
         flip.append(((1,0,0),(0,1,0),(0,0,1)))
         flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
         flip.append(((1,0,0),(0,1,0),(0,0,1)))
     
     # Append last elements
-    flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
     flip.append(((1,0,0),(0,1,0),(0,0,1)))
     flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
     return flip
