@@ -250,6 +250,7 @@ if __name__ == "__main__" :
 #    per_mag_field = generate_sub_array(beam_array, eval_list, lookup, beam, per_mag_field)
 #    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
     maglist0 = magnets.MagLists(mags)
+    maglist0.sort_all()
     per_beam_field = generate_per_beam_b_field(info, maglist0, mags, lookup)
     total_id_field = generate_id_field(info, maglist0, mags, lookup)
     pherr, trajectories = mt.calculate_phase_error(info,total_id_field)
@@ -271,8 +272,57 @@ if __name__ == "__main__" :
         f3.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
     f3.create_dataset('id_Bfield',data=total_id_field)
     f3.create_dataset('id_phase_error',data=trajectories[0])
-    f3.create_dataset('id_trajectories',data=trajectories[1])
+    f3.create_dataset('id_trajectories',data=trajectories[12])
     f3.close()
+    
+    f4 = open('I21_setmag.inp','w')
+    
+    if info['type']=='APPLE_Symmetric':
+        
+        #TODO make a proper function somewhere
+        #generate idlist here
+        a=0
+        vv=0
+        hh=0
+        ve=0
+        he=0
+        for b in range(len(info['beams'])):
+            a=0
+            for mag in info['beams'][b]['mags']:
+                if info['beams'][b]['mags'][a]['type']=='HE':mag_type=4
+                elif info['beams'][b]['mags'][a]['type']=='VE':mag_type=3
+                elif info['beams'][b]['mags'][a]['type']=='HH':mag_type=2
+                elif info['beams'][b]['mags'][a]['type']=='VV':mag_type=1
+                
+                if mag_type==1:
+                    mag_num=int(maglist0.magnet_lists['VV'][vv][0])
+                    mag_flip=maglist0.magnet_lists['VV'][vv][1]
+                    vv+=1
+                
+                if mag_type==2:
+                    mag_num=int(maglist0.magnet_lists['HH'][hh][0])
+                    mag_flip=maglist0.magnet_lists['HH'][hh][1]
+                    hh+=1
+                    
+                if mag_type==3:
+                    mag_num=int(maglist0.magnet_lists['VE'][ve][0])
+                    mag_flip=maglist0.magnet_lists['VE'][ve][1]
+                    ve+=1
+                    
+                if mag_type==4:
+                    mag_num=int(maglist0.magnet_lists['HE'][he][0])
+                    mag_flip=maglist0.magnet_lists['HE'][he][1]
+                    he+=1
+                
+                line= ("%5i %4i %4i %4i %4i %4i\n"%(b+1,a+1,mag_type,info['beams'][b]['mags'][a]['direction_matrix'][0][0]+info['beams'][b]['mags'][a]['direction_matrix'][0][1],mag_flip, mag_num))
+                f4.write(line)
+                
+                a+=1
+                
+            f4.write("\n")
+        
+        f4.close()
+    
 #     
 #     f4 = h5py.File('reference.h5', 'w')
 #     for name in ref_per_beam_field.keys():

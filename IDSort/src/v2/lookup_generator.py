@@ -62,18 +62,21 @@ if __name__ == "__main__":
     
             for mag in data['beams'][b]['mags']:
                 print("processing beam %02i magnet %04i" % (b, count))
+                
                 datasetblock = mt.wrapCalcB(testpoints, np.array(mag['dimensions']), np.array(mag['position']))
-                if b%2==0:
+                if b%2==1:
                     c2pos = np.array(mag['position'])+np.array([mag['dimensions'][0]-data['clampcut'],mag['dimensions'][1]-data['clampcut'],0.0])
                     datasetc1 = mt.wrapCalcB(testpoints, np.array([data['clampcut'],data['clampcut'],mag['dimensions'][2]]), np.array(mag['position']))
                     datasetc2 = mt.wrapCalcB(testpoints, np.array([data['clampcut'],data['clampcut'],mag['dimensions'][2]]), c2pos)
-                if b%2==1:
+                if b%2==0:
                     c1pos = np.array(mag['position'])+np.array([mag['dimensions'][0]-data['clampcut'], 0.0, 0.0])
                     c2pos = np.array(mag['position'])+np.array([0.0 ,mag['dimensions'][1]-data['clampcut'], 0.0])
                     datasetc1 = mt.wrapCalcB(testpoints, np.array([data['clampcut'],data['clampcut'],mag['dimensions'][2]]), c1pos)
                     datasetc2 = mt.wrapCalcB(testpoints, np.array([data['clampcut'],data['clampcut'],mag['dimensions'][2]]), c2pos)
                 dataset=datasetblock-datasetc1-datasetc2
+                
                 ds[:, :, :, :, :, count] = dataset.dot(np.array(mag['direction_matrix']))
+#                ds[:, :, :, :, :, count] = np.array(mag['direction_matrix']).dot(dataset)
                 count += 1
                 
         outfile.close()

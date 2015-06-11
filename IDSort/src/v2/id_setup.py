@@ -30,20 +30,6 @@ def create_type_list_symmetric_apple(nperiods):
 def create_direction_matrix_list_symmetric_apple_q1(nperiods):
     direction = []
     for i in range(0, (4 * nperiods - 1) - 3, 4):
-        direction.append(((0,1,0),(-1,0,0),(0,0,1)))
-        direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-
-    # Append last elements
-    direction.append(((0,1,0),(-1,0,0),(0,0,1)))
-    direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
-    direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-    return direction
-
-def create_direction_matrix_list_symmetric_apple_q2(nperiods):
-    direction = []
-    for i in range(0, (4 * nperiods - 1) - 3, 4):
         direction.append(((1,0,0),(0,1,0),(0,0,1)))
         direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
         direction.append(((0,1,0),(1,0,0),(0,0,-1)))
@@ -55,22 +41,21 @@ def create_direction_matrix_list_symmetric_apple_q2(nperiods):
     direction.append(((0,1,0),(1,0,0),(0,0,-1)))
     return direction
 
-def create_direction_matrix_list_symmetric_apple_q3(nperiods):
+def create_direction_matrix_list_symmetric_apple_q2(nperiods):
     direction = []
     for i in range(0, (4 * nperiods - 1) - 3, 4):
-        direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
-        direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
         direction.append(((0,-1,0),(1,0,0),(0,0,1)))
+        direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
+        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
         direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
 
     # Append last elements
-    direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
-    direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
     direction.append(((0,-1,0),(1,0,0),(0,0,1)))
-
+    direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
+    direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
     return direction
 
-def create_direction_matrix_list_symmetric_apple_q4(nperiods):
+def create_direction_matrix_list_symmetric_apple_q3(nperiods):
     direction = []
     for i in range(0, (4 * nperiods - 1) - 3, 4):
         direction.append(((0,-1,0),(-1,0,0),(0,0,-1)))
@@ -82,20 +67,35 @@ def create_direction_matrix_list_symmetric_apple_q4(nperiods):
     direction.append(((0,-1,0),(-1,0,0),(0,0,-1)))
     direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
     direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+
+    return direction
+
+def create_direction_matrix_list_symmetric_apple_q4(nperiods):
+    direction = []
+    for i in range(0, (4 * nperiods - 1) - 3, 4):
+        direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
+        direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
+        direction.append(((0,1,0),(-1,0,0),(0,0,1)))
+        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+
+    # Append last elements
+    direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
+    direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
+    direction.append(((0,1,0),(-1,0,0),(0,0,1)))
     
     return direction
 
 def create_flip_matrix_list_symmetric_apple_q1(nperiods):
     flip = []
     for i in range(0, (4 * nperiods - 1) - 3, 4):
-        flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
         flip.append(((1,0,0),(0,1,0),(0,0,1)))
         flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
         flip.append(((1,0,0),(0,1,0),(0,0,1)))
     
     # Append last elements
     
-    flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+    flip.append(((1,0,0),(0,1,0),(0,0,1)))
     flip.append(((1,0,0),(0,1,0),(0,0,1)))
     flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
     return flip
@@ -105,12 +105,12 @@ def create_flip_matrix_list_symmetric_apple_q2(nperiods):
     for i in range(0, (4 * nperiods - 1) - 3, 4):
         flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
         flip.append(((1,0,0),(0,1,0),(0,0,1)))
-        flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+        flip.append(((1,0,0),(0,1,0),(0,0,1)))
         flip.append(((1,0,0),(0,1,0),(0,0,1)))
     
     # Append last elements
     
-    flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+    flip.append(((1,0,0),(0,1,0),(0,0,1)))
     flip.append(((1,0,0),(0,1,0),(0,0,1)))
     flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
     return flip
@@ -120,7 +120,7 @@ def create_flip_matrix_list_symmetric_apple_q3(nperiods):
     for i in range(0, (4 * nperiods - 1) - 3, 4):
         flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
         flip.append(((1,0,0),(0,1,0),(0,0,1)))
-        flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+        flip.append(((1,0,0),(0,1,0),(0,0,1)))
         flip.append(((1,0,0),(0,1,0),(0,0,1)))
 
     
@@ -128,7 +128,7 @@ def create_flip_matrix_list_symmetric_apple_q3(nperiods):
     
     flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
     flip.append(((1,0,0),(0,1,0),(0,0,1)))
-    flip.append(((0,-1,0),(-1,0,0),(0,0,1)))
+    flip.append(((1,0,0),(0,1,0),(0,0,1)))
 
     return flip
 
@@ -146,7 +146,7 @@ def create_flip_matrix_list_symmetric_apple_q4(nperiods):
     flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
     return flip
     
-def create_location_list_symmetric_apple_q1(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+def create_location_list_symmetric_apple_q2(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
     #locate most negative point of block on x,z,s axes
     V1 = []
     length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
@@ -169,7 +169,7 @@ def create_location_list_symmetric_apple_q1(period, nperiods, fullmagdims, vemag
     V1.append((x,z,s))
     return V1
 
-def create_location_list_symmetric_apple_q2(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+def create_location_list_symmetric_apple_q1(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
     #locate most negative point of block on x,z,s axes
     V1 = []
     length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
@@ -192,7 +192,7 @@ def create_location_list_symmetric_apple_q2(period, nperiods, fullmagdims, vemag
     V1.append((x,z,s))
     return V1
 
-def create_location_list_symmetric_apple_q3(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+def create_location_list_symmetric_apple_q4(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
     #locate most negative point of block on x,z,s axes
     V1 = []
     length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
@@ -215,7 +215,7 @@ def create_location_list_symmetric_apple_q3(period, nperiods, fullmagdims, vemag
     V1.append((x,z,s))
     return V1
 
-def create_location_list_symmetric_apple_q4(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+def create_location_list_symmetric_apple_q3(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
     #locate most negative point of block on x,z,s axes
     V1 = []
     length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
@@ -387,7 +387,7 @@ if __name__ == "__main__":
     parser.add_option("-x", "--xstartstopstep", dest="x", help="X start stop and step", nargs=3, default=(-5.0, 5.1, 2.5), type="float")
     parser.add_option("-z", "--zstartstopstep", dest="z", help="Z start stop and step", nargs=3, default=(-0.0,.1, 0.1), type="float")
     parser.add_option("-s", "--stepsperperiod", dest="steps", help="Number of steps in S per magnet", default=5, type="float")
-    parser.add_option("--endgapsym", dest="endgapsym", help="Symmetric devices require an end gap in the termination structure, set gap length in mm", default=5.1, type="float")
+    parser.add_option("--endgapsym", dest="endgapsym", help="Symmetric devices require an end gap in the termination structure, set gap length in mm", default=5.0, type="float")
     parser.add_option("--phasinggap", dest="phasinggap", help="Gap between Quadrants 1/2 and 3/4 that allow these axes to phase past each other; in mm. APPLES only", default=0.5, type="float")
     parser.add_option("--clampcut", dest="clampcut", help="Square corners removed to allow magnets to be clamped, dimensioned in mm. APPLEs only", default = 5.0, type="float")
     
