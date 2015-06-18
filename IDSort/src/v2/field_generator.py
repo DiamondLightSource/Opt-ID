@@ -251,6 +251,7 @@ if __name__ == "__main__" :
 #    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
     maglist0 = magnets.MagLists(mags)
     maglist0.sort_all()
+    maglist0.flip('HH', (107,294,511,626))
     per_beam_field = generate_per_beam_b_field(info, maglist0, mags, lookup)
     total_id_field = generate_id_field(info, maglist0, mags, lookup)
     pherr, trajectories = mt.calculate_phase_error(info,total_id_field)
@@ -272,7 +273,7 @@ if __name__ == "__main__" :
         f3.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
     f3.create_dataset('id_Bfield',data=total_id_field)
     f3.create_dataset('id_phase_error',data=trajectories[0])
-    f3.create_dataset('id_trajectories',data=trajectories[12])
+    f3.create_dataset('id_trajectories',data=trajectories[2])
     f3.close()
     
     f4 = open('I21_setmag.inp','w')
