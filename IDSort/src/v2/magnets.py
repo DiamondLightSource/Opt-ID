@@ -166,4 +166,9 @@ if __name__ == "__main__" :
     print "After swap"
     pprint.pprint(maglist.magnet_lists['HE'])
     
+    maglist.flip('HH',(107,294,511,626))
+    
+    print "After flips"
+    pprint.pprint(maglist.magnet_lists['HH'])
+    
     mags.save(args[0])
