@@ -32,6 +32,49 @@ class Test(unittest.TestCase):
                 self.assertTrue(np.allclose((dataset * np.array(mag['direction'])), dataset.dot(np.array(mag['direction_matrix'])), rtol=1e-08, atol=1e-08))
                 count += 1
             
+            
+    def testAPPLEdata(self):
+        py=h5py.File('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/test/91period_real_data.h5', 'r')
+        
+        pb1 = py['id_Bfield']
+        pb=pb1.value[2,0]
+        
+        pyf=h5py.File('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/test/91period_4flip_real_data.h5', 'r')
+        
+        pb1f = pyf['id_Bfield']
+        pbf=pb1f.value[2,0]
+        
+        pb1t = py['id_trajectories']
+        pbt = pb1t.value[0]
+        
+        pb1tf = pyf['id_trajectories']
+        pbtf = pb1tf.value[0]
+        
+        fs=np.loadtxt('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/test/bxy.dat')
+        fs/=10000.0
+        fst = np.loadtxt('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/test/traj.dat')
+        
+        fsf=np.loadtxt('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/test/bxyflip.dat')
+        fsf/=10000.0
+        fstf = np.loadtxt('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/test/traj.dat')
+        
+        f1 = h5py.File('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/test/compare.h5','w')
+        
+        f1.create_dataset('Python Sort', data = pb)
+        f1.create_dataset('Python Flip Sort', data = pbf)
+        f1.create_dataset('Fortran Sort', data=fs)
+        f1.create_dataset('Fortran Flip Sort', data=fsf)
+        f1.create_dataset('Python Trajectory', data = pbt)
+        f1.create_dataset('Python Flip Trajectory', data = pbtf)
+        f1.create_dataset('Fortran Trajectory', data=fst)
+        f1.create_dataset('Fortran Flip Trajectory', data=fstf)
+        
+        f1.close()
+        
+        a=1
+        
+        self.assertTrue(a,0,'not done yet')
+        
 
 
 if __name__ == "__main__":
