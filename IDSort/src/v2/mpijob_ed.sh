@@ -1,6 +1,11 @@
 #!/bin/bash
-MPIRUN=/dls_sw/prod/tools/RHEL6-x86_64/openmpi/1-6-5/prefix/bin/mpirun
-PYTHON=/dls_sw/prod/tools/RHEL6-x86_64/defaults/bin/dls-python
+module load global/cluster
+module load python/ana
+source activate mpi2
+module load openmpi/1.6.5
+
+#MPIRUN=/dls_sw/prod/tools/RHEL6-x86_64/openmpi/1-6-5/prefix/bin/mpirun
+#PYTHON=/dls_sw/prod/tools/RHEL6-x86_64/defaults/bin/dls-python
 wdir=/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2
 
 UNIQHOSTS=${TMPDIR}/machines-u
@@ -14,8 +19,9 @@ processes=`bc <<< "$uniqslots"`
 
 echo "Processes running are : ${processes}"
 
-$MPIRUN -np ${processes} \
+mpirun -np ${processes} \
+        -x LD_LIBRARY_PATH \
         --hostfile ${UNIQHOSTS} \
-        --wd /dls/tmp/gdy32713/id/logs \
+        --wd /dls/tmp/gdy32713/I21sort \
         --tag-output \
-        $PYTHON /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/mpi_runner.py $@
+        python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/mpi_runner.py $@

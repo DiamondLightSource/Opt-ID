@@ -60,7 +60,7 @@ class Magnets(object):
 
 class MagLists():
     '''
-    This class deals with the ordering and speification of several lists
+    This class deals with the ordering and specification of several lists
     '''
     
     def __init__(self, magnets):
@@ -100,7 +100,7 @@ class MagLists():
             magdata = magdata.dot(flip)
         return magdata
     
-    def mutate(self, number_of_mutations, available={'VE':range(12), 'HE':range(12), 'HH':range(506), 'VV':range(506)}):
+    def mutate(self, number_of_mutations, available={'VE':range(32), 'HE':range(64), 'HH':range(820), 'VV':range(820)}):
         for i in range(number_of_mutations):
             # pick a list at random
             key = random.choice(available.keys())
