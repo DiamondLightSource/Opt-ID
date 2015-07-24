@@ -10,3 +10,4 @@ python $DIR/IDSort/src/v2/magnets.py \
     -V $SIMS/I21V.sim \
     --VE $SIMS/I21VE.sim \
     $DIR/IDSort/data_I21/I21magnets.mag
+

@@ -7,4 +7,5 @@ python $DIR/IDSort/src/v2/lookup_generator.py \
     -p 91 \
     -r \
     $DIR/IDSort/data_I21/I21.json \
-    /scratch/I21lookup_a.h5
+    /scratch/I21lookup_a.h
+
