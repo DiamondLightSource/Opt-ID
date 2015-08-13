@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            category="uk.ac.diamond.scisoft.analysis.rcp"
+            class="uk.ac.diamond.optid.views.IdDescForm"
+            id="uk.ac.diamond.optid.idDescForm"
+            name="ID Description Form"
+            restorable="true">
+      </view>
+   </extension>
 
 </plugin>
