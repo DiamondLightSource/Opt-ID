@@ -23,52 +23,11 @@ public class IdDescForm extends ViewPart {
 		mainComposite.setLayout(new GridLayout(1, false));
 		mainComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
+		// Create groups for each category of inputs
 		setupIdParams(mainComposite);
-		
 		setupMagnetDims(mainComposite);
-		
 		setupCalParams(mainComposite);
-	}
-
-	private void setupCalParams(Composite parent) {
-		// Group - Calculation Parameters
-		Group grpCalParams = new Group(parent, SWT.NONE);
-		grpCalParams.setText("Calculation Parameters");
-		grpCalParams.setLayout(new GridLayout(1, false));
-		grpCalParams.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		
-		// Composite - X & Y Container
-		Composite comp1 = new Composite(grpCalParams, SWT.NONE);
-		comp1.setLayout(new GridLayout(4, false));
-		comp1.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		
-		// X Start-Stop-Step
-		(new Label(comp1, SWT.NONE)).setText("X");
-		Text txtXStart = new Text(comp1, SWT.SINGLE | SWT.BORDER);
-		Text txtXStop = new Text(comp1, SWT.SINGLE | SWT.BORDER);
-		Text txtXStep = new Text(comp1, SWT.SINGLE | SWT.BORDER);
-		txtXStart.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		txtXStop.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		txtXStep.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
-		// Y Start-Stop-Step
-		(new Label(comp1, SWT.NONE)).setText("Y");
-		Text txtYStart = new Text(comp1, SWT.SINGLE | SWT.BORDER);
-		Text txtYStop = new Text(comp1, SWT.SINGLE | SWT.BORDER);
-		Text txtYStep = new Text(comp1, SWT.SINGLE | SWT.BORDER);
-		txtYStart.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		txtYStop.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		txtYStep.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
-		// Composite - Steps in S Container
-		Composite comp2 = new Composite(grpCalParams, SWT.NONE);
-		comp2.setLayout(new GridLayout(2, false));
-		comp2.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-
-		// HE magnet dimensions
-		(new Label(comp2, SWT.NONE)).setText("Steps in S");
-		Text txtStepsS = new Text(comp2, SWT.SINGLE | SWT.BORDER);
-		txtStepsS.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		setupAppleSymOnlyParams(mainComposite);
 	}
 
 	private void setupIdParams(Composite parent) {
@@ -141,6 +100,70 @@ public class IdDescForm extends ViewPart {
 		txtHeMagZ.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 	}
 
+	private void setupCalParams(Composite parent) {
+		// Group - Calculation Parameters
+		Group grpCalParams = new Group(parent, SWT.NONE);
+		grpCalParams.setText("Calculation Parameters");
+		grpCalParams.setLayout(new GridLayout(1, false));
+		grpCalParams.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+		
+		// Composite - X & Y Container
+		Composite comp1 = new Composite(grpCalParams, SWT.NONE);
+		comp1.setLayout(new GridLayout(4, false));
+		comp1.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+		
+		// X Start-Stop-Step
+		(new Label(comp1, SWT.NONE)).setText("X");
+		Text txtXStart = new Text(comp1, SWT.SINGLE | SWT.BORDER);
+		Text txtXStop = new Text(comp1, SWT.SINGLE | SWT.BORDER);
+		Text txtXStep = new Text(comp1, SWT.SINGLE | SWT.BORDER);
+		txtXStart.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		txtXStop.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		txtXStep.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		
+		// Y Start-Stop-Step
+		(new Label(comp1, SWT.NONE)).setText("Y");
+		Text txtYStart = new Text(comp1, SWT.SINGLE | SWT.BORDER);
+		Text txtYStop = new Text(comp1, SWT.SINGLE | SWT.BORDER);
+		Text txtYStep = new Text(comp1, SWT.SINGLE | SWT.BORDER);
+		txtYStart.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		txtYStop.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		txtYStep.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		
+		// Composite - Steps in S Container
+		Composite comp2 = new Composite(grpCalParams, SWT.NONE);
+		comp2.setLayout(new GridLayout(2, false));
+		comp2.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+
+		// Steps in S
+		(new Label(comp2, SWT.NONE)).setText("Steps in S");
+		Text txtStepsS = new Text(comp2, SWT.SINGLE | SWT.BORDER);
+		txtStepsS.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+	}
+	
+	private void setupAppleSymOnlyParams(Composite parent) {
+		// Group - Apple Symmetric only parameters
+		Group grpAppleSymOnly = new Group(parent, SWT.NONE);
+		grpAppleSymOnly.setText("APPLE Symmetric only");
+		grpAppleSymOnly.setLayout(new GridLayout(2, false));
+		grpAppleSymOnly.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+		
+		// Text (float) Field - End gap
+		(new Label(grpAppleSymOnly, SWT.NONE)).setText("End gap");
+		Text txtEndGap = new Text(grpAppleSymOnly, SWT.SINGLE | SWT.BORDER);
+		txtEndGap.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		
+		// Text (float) Field - Phasing gap
+		(new Label(grpAppleSymOnly, SWT.NONE)).setText("Phasing gap");
+		Text txtPhasingGap = new Text(grpAppleSymOnly, SWT.SINGLE | SWT.BORDER);
+		txtPhasingGap.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+		// Text (float) Field - Clamp cut
+		(new Label(grpAppleSymOnly, SWT.NONE)).setText("Clamp cut");
+		Text txtClampCut = new Text(grpAppleSymOnly, SWT.SINGLE | SWT.BORDER);
+		txtClampCut.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+	}
+	
 	@Override
 	public void setFocus() {
 		// TODO Auto-generated method stub
