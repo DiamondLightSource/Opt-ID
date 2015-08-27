@@ -4,12 +4,23 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            category="uk.ac.diamond.scisoft.analysis.rcp"
+            category="uk.ac.diamond.optid.idOptCategory"
             class="uk.ac.diamond.optid.views.IdDescForm"
             id="uk.ac.diamond.optid.idDescForm"
             name="ID Description Form"
             restorable="true">
       </view>
+      <view
+            category="uk.ac.diamond.optid.idOptCategory"
+            class="uk.ac.diamond.optid.views.MainView"
+            id="uk.ac.diamond.optid.mainView"
+            name="ID Optimisation"
+            restorable="true">
+      </view>
+      <category
+            id="uk.ac.diamond.optid.idOptCategory"
+            name="ID Optimisation">
+      </category>
    </extension>
    <extension
          point="org.eclipse.ui.perspectives">

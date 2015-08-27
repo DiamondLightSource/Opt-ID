@@ -16,7 +16,6 @@ import org.eclipse.ui.part.ViewPart;
 public class IdDescForm extends ViewPart {
 
 	public IdDescForm() {
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -170,8 +169,6 @@ public class IdDescForm extends ViewPart {
 	
 	@Override
 	public void setFocus() {
-		// TODO Auto-generated method stub
-
 	}
 
 }
