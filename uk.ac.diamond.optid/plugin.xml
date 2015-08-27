@@ -11,5 +11,37 @@
             restorable="true">
       </view>
    </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="uk.ac.diamond.optid.IdSortPerspective"
+            icon="icons/idSort_perspective.png"
+            id="uk.ac.diamond.optid.idSortPerspective"
+            name="ID Sorting">
+      </perspective>
+   </extension>
+   <extension
+         point="org.dawnsci.introRegister">
+      <introPageRegister
+            class="uk.ac.diamond.optid.IdSortPerspectiveLaunch"
+            description="Perform optimisation of IDs"
+            icon="icons/idSort_intro.png"
+            id="uk.ac.diamond.optid.idSortPerspectiveIntro"
+            name="ID Sorting">
+      </introPageRegister>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="uk.ac.diamond.optid.idSortPerspective">
+      </perspectiveExtension>
+   </extension>
+   <extension
+         point="org.eclipse.ui.intro.configExtension">
+      <configExtension
+            configId="org.dawnsci.intro.universalConfig"
+            content="intro/introContribution.xml">
+      </configExtension>
+   </extension>
 
 </plugin>

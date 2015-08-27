@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<introContent>
+  	<extensionContent id="idsort-perspective-extension" style="style.css" name="ID Sorting Perspective" path="perspectives/@">
+		<group id="idsort-perspective-group" style-id="content-group">
+       		<link label="ID Sorting" url="http://org.eclipse.ui.intro/runAction?pluginId=org.dawnsci.intro&amp;class=org.dawnsci.intro.actions.OpenPerspectiveAction&amp;name=uk.ac.diamond.optid.IdSortPerspectiveLaunch" id="idsort" style-id="content-link">
+          		<text>Opens perspective to perform optimisation of IDs</text>
+       		</link>
+       	</group>
+  	</extensionContent>
+</introContent>
