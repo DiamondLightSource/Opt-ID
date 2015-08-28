@@ -112,10 +112,25 @@ public class IdDescForm extends ViewPart {
 		grpCalParams.setLayout(new GridLayout(1, false));
 		grpCalParams.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		
-		// Composite - X & Y Container
+		// Composite - X & Z Container
 		Composite comp1 = new Composite(grpCalParams, SWT.NONE);
 		comp1.setLayout(new GridLayout(4, false));
 		comp1.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+		
+		// Start, Stop, Step labels
+		new Label(comp1, SWT.NONE); // Dummy label to skip 1st cell
+		Label lblColTitle;
+		lblColTitle = new Label(comp1, SWT.NONE);
+		lblColTitle.setText("Start");
+		lblColTitle.setLayoutData(new GridData(SWT.CENTER, SWT.FILL, true, false));
+		
+		lblColTitle = new Label(comp1, SWT.NONE);
+		lblColTitle.setText("Stop");
+		lblColTitle.setLayoutData(new GridData(SWT.CENTER, SWT.FILL, true, false));
+
+		lblColTitle = new Label(comp1, SWT.NONE);
+		lblColTitle.setText("Step");
+		lblColTitle.setLayoutData(new GridData(SWT.CENTER, SWT.FILL, true, false));
 		
 		// X Start-Stop-Step
 		(new Label(comp1, SWT.NONE)).setText("X");
@@ -126,14 +141,14 @@ public class IdDescForm extends ViewPart {
 		txtXStop.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		txtXStep.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
-		// Y Start-Stop-Step
-		(new Label(comp1, SWT.NONE)).setText("Y");
-		Text txtYStart = new Text(comp1, SWT.SINGLE | SWT.BORDER);
-		Text txtYStop = new Text(comp1, SWT.SINGLE | SWT.BORDER);
-		Text txtYStep = new Text(comp1, SWT.SINGLE | SWT.BORDER);
-		txtYStart.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		txtYStop.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		txtYStep.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		// Z Start-Stop-Step
+		(new Label(comp1, SWT.NONE)).setText("Z");
+		Text txtZStart = new Text(comp1, SWT.SINGLE | SWT.BORDER);
+		Text txtZStop = new Text(comp1, SWT.SINGLE | SWT.BORDER);
+		Text txtZStep = new Text(comp1, SWT.SINGLE | SWT.BORDER);
+		txtZStart.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		txtZStop.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		txtZStep.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
 		// Composite - Steps in S Container
 		Composite comp2 = new Composite(grpCalParams, SWT.NONE);
