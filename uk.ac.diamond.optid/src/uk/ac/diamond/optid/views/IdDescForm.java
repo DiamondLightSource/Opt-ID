@@ -72,37 +72,50 @@ public class IdDescForm extends ViewPart {
 		// Group - Magnet Dimensions
 		Group grpMagDims = new Group(parent, SWT.NONE);
 		grpMagDims.setText("Magnet Dimensions");
-		grpMagDims.setLayout(new GridLayout(1, false));
+		grpMagDims.setLayout(new GridLayout(4, false));
 		grpMagDims.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		
-		// Table
-		final Table table = new Table(grpMagDims, SWT.BORDER);
-		table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		table.setHeaderVisible(true);
-		table.setLinesVisible(true);
-		String[] colTitles = {"Magnet blocks", "x", "y", "z"};
+		// X, Z, S labels
+		new Label(grpMagDims, SWT.NONE); // Dummy label to skip 1st cell
+		Label lblColTitle;
+		lblColTitle = new Label(grpMagDims, SWT.NONE);
+		lblColTitle.setText("X");
+		lblColTitle.setLayoutData(new GridData(SWT.CENTER, SWT.FILL, true, false));
 		
-		for (int i = 0; i < colTitles.length; i++) {
-			TableColumn col = new TableColumn(table, SWT.NONE);
-			col.setText(colTitles[i]);
-			//col.setAlignment(SWT.LEFT);
-		}
-				
-		TableItem tblFullMag = new TableItem(table, SWT.NULL);
-		tblFullMag.setText("Full");
+		lblColTitle = new Label(grpMagDims, SWT.NONE);
+		lblColTitle.setText("Z");
+		lblColTitle.setLayoutData(new GridData(SWT.CENTER, SWT.FILL, true, false));
+
+		lblColTitle = new Label(grpMagDims, SWT.NONE);
+		lblColTitle.setText("S");
+		lblColTitle.setLayoutData(new GridData(SWT.CENTER, SWT.FILL, true, false));
 		
-		TableItem tblVeMag = new TableItem(table, SWT.NULL);
-		tblVeMag.setText("VE");
+		// Full magnet block
+		(new Label(grpMagDims, SWT.NONE)).setText("Full");
+		Text txtFullX = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		Text txtFullZ = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		Text txtFullS = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		txtFullX.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		txtFullZ.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		txtFullS.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
-		TableItem tblHeMag = new TableItem(table, SWT.NULL);
-		tblHeMag.setText("HE");
+		// VE magnet block
+		(new Label(grpMagDims, SWT.NONE)).setText("VE");
+		Text txtVeX = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		Text txtVeZ = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		Text txtVeS = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		txtVeX.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		txtVeZ.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		txtVeS.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
-		table.getColumn(0).pack();
-		
-		int colWidth = table.getColumn(0).getWidth() / 2;
-		table.getColumn(1).setWidth(colWidth);
-		table.getColumn(2).setWidth(colWidth);
-		table.getColumn(3).setWidth(colWidth);
+		// HE magnet block
+		(new Label(grpMagDims, SWT.NONE)).setText("HE");
+		Text txtHeX = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		Text txtHeZ = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		Text txtHeS = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		txtHeX.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		txtHeZ.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		txtHeS.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 	}
 
 	private void setupCalParams(Composite parent) {
