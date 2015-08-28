@@ -1,6 +1,7 @@
 package uk.ac.diamond.optid.views;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -16,8 +17,13 @@ public class IdDescForm extends ViewPart {
 
 	@Override
 	public void createPartControl(Composite parent) {
+		// Display vertical scroll bar if contents do not fit
+		ScrolledComposite sc = new ScrolledComposite(parent, SWT.BORDER | SWT.V_SCROLL);
+		sc.setExpandHorizontal(true);
+		sc.setExpandVertical(true);
+		
 		// Top-level composite
-		Composite mainComposite = new Composite(parent, SWT.NONE);
+		Composite mainComposite = new Composite(sc, SWT.NONE);
 		mainComposite.setLayout(new GridLayout(1, false));
 		mainComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
@@ -26,6 +32,10 @@ public class IdDescForm extends ViewPart {
 		setupMagnetDims(mainComposite);
 		setupCalParams(mainComposite);
 		setupAppleSymOnlyParams(mainComposite);
+		
+		sc.setContent(mainComposite);
+		// Set width at which vertical scroll bar will be used
+		sc.setMinSize(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 	}
 
 	/**
