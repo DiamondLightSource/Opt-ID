@@ -13,4 +13,5 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.intro
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
-Import-Package: org.dawb.common.ui.perspective
+Import-Package: org.dawb.common.ui.perspective,
+ org.slf4j;version="1.7.6"

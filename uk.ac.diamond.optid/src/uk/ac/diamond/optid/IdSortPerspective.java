@@ -11,29 +11,29 @@ public class IdSortPerspective implements IPerspectiveFactory {
 
 	@Override
 	public void createInitialLayout(IPageLayout layout) {
-		String editorArea = layout.getEditorArea();
 		layout.setEditorAreaVisible(true);
 		
-		/*
-		IFolderLayout left = layout.createFolder("idDescForm", IPageLayout.LEFT, 0.3f, editorArea);
-		left.addView("uk.ac.diamond.optid.idDescForm");
-		IViewLayout vLayout = layout.getViewLayout("uk.ac.diamond.optid.idDescForm");
-		vLayout.setCloseable(false);
-		*/
-		
-		IFolderLayout leftFolder = layout.createFolder("leftFolder", IPageLayout.LEFT, 0.25f, editorArea);
+		// ID Optimisation 'Main' view
+		IFolderLayout leftFolder = layout.createFolder("leftFolder", IPageLayout.LEFT, 0.25f, IPageLayout.ID_EDITOR_AREA);
 		leftFolder.addView("uk.ac.diamond.optid.mainView");
 		IViewLayout vLayout = layout.getViewLayout("uk.ac.diamond.optid.mainView");
 		vLayout.setCloseable(false);
 		
+		// Data manipulation tools
 		IFolderLayout rightFolder = layout.createFolder("rightFolder", IPageLayout.RIGHT, 0.6f, IPageLayout.ID_EDITOR_AREA);
 		rightFolder.addView("org.dawb.workbench.views.dataSetView");
 		rightFolder.addView("org.dawb.workbench.plotting.views.toolPageView.2D");
 		rightFolder.addView("org.dawb.common.ui.views.headerTableView");
 		
+		// Progress & Console views
 		IFolderLayout bottomFolder = layout.createFolder("bottomFolder", IPageLayout.BOTTOM, 0.7f, IPageLayout.ID_EDITOR_AREA);
 		bottomFolder.addView("org.eclipse.ui.views.ProgressView");
 		bottomFolder.addView("org.eclipse.ui.console.ConsoleView");
+		
+		// Optimisation file generation forms
+		IFolderLayout topFolder = layout.createFolder("topFolder", IPageLayout.LEFT, 0.4f, IPageLayout.ID_EDITOR_AREA);
+		topFolder.addPlaceholder("uk.ac.diamond.optid.idDescForm");
+		layout.getViewLayout("uk.ac.diamond.optid.idDescForm").setCloseable(false);
 	}
 
 }

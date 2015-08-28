@@ -14,6 +14,8 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.part.ViewPart;
 
 public class IdDescForm extends ViewPart {
+	
+	static final String ID = "uk.ac.diamond.optid.idDescForm";
 
 	public IdDescForm() {
 	}

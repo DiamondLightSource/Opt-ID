@@ -12,9 +12,17 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MainView extends ViewPart {
+	
+	private static final Logger logger = LoggerFactory.getLogger(MainView.class);
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -84,6 +92,24 @@ public class MainView extends ViewPart {
 		btnIdDes.setText("ID Description");
 		// Button set to fill width of containing composite
 		btnIdDes.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		// Show/hide respective form view
+		btnIdDes.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent event) {				
+				Button btn = (Button) event.widget;
+				if (btn.getSelection()) {
+					// Show view
+					try {
+						PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(IdDescForm.ID, null, IWorkbenchPage.VIEW_ACTIVATE);
+					} catch (PartInitException e) {
+						e.printStackTrace();
+					}
+				} else {
+					// Hide view
+					IViewPart view = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().findView(IdDescForm.ID);
+					PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().hideView(view);
+				}
+			}
+		});
 		
 		Label lblIdDesStatus = new Label(grpOptFiles, SWT.NONE);
 		// Initial label status
