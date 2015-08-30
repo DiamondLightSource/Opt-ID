@@ -2,6 +2,8 @@ package uk.ac.diamond.optid.views;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -14,16 +16,21 @@ import org.eclipse.ui.part.ViewPart;
 public class IdDescForm extends ViewPart {
 	
 	static final String ID = "uk.ac.diamond.optid.idDescForm";
+	
+	private static final String[] ID_PARAM_TYPE_LIST = new String[] {"PPM AntiSymmetric", "APPLE Symmetric"};
+	
+	private ScrolledComposite scrolledComp;
+	private Combo cboType;
 
 	@Override
 	public void createPartControl(Composite parent) {
 		// Display vertical scroll bar if contents do not fit
-		ScrolledComposite sc = new ScrolledComposite(parent, SWT.BORDER | SWT.V_SCROLL);
-		sc.setExpandHorizontal(true);
-		sc.setExpandVertical(true);
+		scrolledComp = new ScrolledComposite(parent, SWT.BORDER | SWT.V_SCROLL);
+		scrolledComp.setExpandHorizontal(true);
+		scrolledComp.setExpandVertical(true);
 		
 		// Top-level composite
-		Composite mainComposite = new Composite(sc, SWT.NONE);
+		Composite mainComposite = new Composite(scrolledComp, SWT.NONE);
 		mainComposite.setLayout(new GridLayout(1, false));
 		mainComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
@@ -33,16 +40,16 @@ public class IdDescForm extends ViewPart {
 		setupCalParams(mainComposite);
 		setupAppleSymOnlyParams(mainComposite);
 		
-		sc.setContent(mainComposite);
+		scrolledComp.setContent(mainComposite);
 		// Set width at which vertical scroll bar will be used
-		sc.setMinSize(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+		scrolledComp.setMinSize(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 	}
 
 	/**
 	 * Setup group of text fields to input general ID parameters
 	 * @param parent
 	 */
-	private void setupIdParams(Composite parent) {
+	private void setupIdParams(final Composite parent) {
 		// Group - ID Parameters
 		Group grpIdParams = new Group(parent, SWT.NONE);
 		grpIdParams.setText("ID Parameters");
@@ -55,9 +62,9 @@ public class IdDescForm extends ViewPart {
 		
 		// Combo (String) Field - Type
 		(new Label(grpIdParams, SWT.NONE)).setText("Type");
-		Combo cboType = new Combo(grpIdParams, SWT.READ_ONLY);
-		cboType.setItems(new String[] {"PPM AntiSymmetric", "APPLE Symmetric"});
-		
+		cboType = new Combo(grpIdParams, SWT.READ_ONLY);
+		cboType.setItems(ID_PARAM_TYPE_LIST);
+				
 		// Text (int) Field - Periods
 		(new Label(grpIdParams, SWT.NONE)).setText("Periods");
 		Text txtPeriods = new Text(grpIdParams, SWT.SINGLE | SWT.BORDER);
@@ -154,6 +161,10 @@ public class IdDescForm extends ViewPart {
 		txtHeS.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 	}
 
+	/**
+	 * Setup group to input calculation parameters
+	 * @param parent
+	 */
 	private void setupCalParams(Composite parent) {
 		// Group - Calculation Parameters
 		Group grpCalParams = new Group(parent, SWT.NONE);
@@ -226,14 +237,35 @@ public class IdDescForm extends ViewPart {
 		txtStepsS.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 	}
 	
-	private void setupAppleSymOnlyParams(Composite parent) {
+	/**
+	 * Setup group to input Apple Symmetric only parameters
+	 * <p>
+	 * Visibility depends on value of Type in ID Parameters
+	 * @param parent
+	 */
+	private void setupAppleSymOnlyParams(final Composite parent) {
+		// A composite is required between parent and grpAppleSymOnly
+		// since we need to show/hide contents depending on value of
+		// Type in ID Parameters
+		final Composite compAppleSymParams = new Composite(parent, SWT.NONE);
+		GridLayout gridLayout = new GridLayout(1, false);
+		// Remove margins so that group has same positioning as groups above it
+		// Composite is no longer visible on the UI
+		gridLayout.marginWidth = 0;
+		gridLayout.verticalSpacing = 0;
+		gridLayout.marginHeight = 0;
+		compAppleSymParams.setLayout(gridLayout);
+		// Used in cboType selection listener
+	    final GridData gridDataAppleSymParams = new GridData(SWT.FILL, SWT.FILL, true, false);
+	    compAppleSymParams.setLayoutData(gridDataAppleSymParams);
+		
 		// Group - Apple Symmetric only parameters
-		Group grpAppleSymOnly = new Group(parent, SWT.NONE);
+		Group grpAppleSymOnly = new Group(compAppleSymParams, SWT.NONE);
 		grpAppleSymOnly.setText("APPLE Symmetric only");
 		// Each row has 2 cells: label followed by a text box
 		grpAppleSymOnly.setLayout(new GridLayout(2, false));
 		grpAppleSymOnly.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		
+
 		// Text (float) Field - End gap
 		(new Label(grpAppleSymOnly, SWT.NONE)).setText("End gap");
 		Text txtEndGap = new Text(grpAppleSymOnly, SWT.SINGLE | SWT.BORDER);
@@ -250,6 +282,28 @@ public class IdDescForm extends ViewPart {
 		txtEndGap.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		txtPhasingGap.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		txtClampCut.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		
+		// Initially no value is selected in cboType so parameters are hidden
+		gridDataAppleSymParams.exclude = true;
+		compAppleSymParams.setVisible(false);
+		
+		// If "APPLE Symmetric" selected then show optional parameters
+		// otherwise hide them
+		cboType.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent event) {			
+				if (cboType.getText().equals("APPLE Symmetric")) {
+					gridDataAppleSymParams.exclude = false;
+					compAppleSymParams.setVisible(true);
+				} else {
+					gridDataAppleSymParams.exclude = true;
+					compAppleSymParams.setVisible(false);
+				}
+				
+				// Resizes parent and adjusts scroll bar to adapt to new size
+				parent.pack();
+				scrolledComp.setMinSize(parent.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+			}
+		});
 	}
 	
 	@Override
