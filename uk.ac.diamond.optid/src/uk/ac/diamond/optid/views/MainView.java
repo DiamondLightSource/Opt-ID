@@ -59,7 +59,7 @@ public class MainView extends ViewPart {
 		setupDirField(mainComposite);
 		setupOptFileGrp(mainComposite);
 		
-		getSite().getWorkbenchWindow().addPerspectiveListener(perspectiveListener);			
+		getSite().getWorkbenchWindow().addPerspectiveListener(perspectiveListener);
 	}
 	
 	/**
@@ -69,7 +69,7 @@ public class MainView extends ViewPart {
 	private void setupDirField(Composite parent) {
 		// Composite to layout label, text and button in a single row
 		Composite comp = new Composite(parent, SWT.NONE);
-		comp.setLayout(new GridLayout(3, false));
+		comp.setLayout(new GridLayout(4, false));
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		
 		// Label
@@ -79,7 +79,7 @@ public class MainView extends ViewPart {
 		final Text txtDir = new Text(comp, SWT.SINGLE | SWT.BORDER);
 		txtDir.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
-		// Button
+		// Button - Directory dialog
 		Button btnDir = new Button(comp, SWT.PUSH);
 		btnDir.setImage(imgFolder);
 		// On select, open dialog to select a directory
@@ -99,6 +99,10 @@ public class MainView extends ViewPart {
 		        }
 			}
 		});
+		
+		// Button - Set working directory
+		Button btnSave = new Button(comp, SWT.PUSH);
+		btnSave.setText("Save");
 	}
 	
 	/**
