@@ -6,6 +6,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
@@ -40,7 +41,9 @@ public class IdDescForm extends ViewPart {
 		mainComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
 		setupInputMethod(mainComposite);
+		addHorizontalSeparator(mainComposite);
 		setupNewFileForm(mainComposite);
+		setupLoadFile(mainComposite);
 
 		scrolledComp.setContent(mainComposite);
 		// Set width at which vertical scroll bar will be used
@@ -100,6 +103,55 @@ public class IdDescForm extends ViewPart {
 		cboInputMethod.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent event) {			
 				if (cboInputMethod.getText().equals("Create new file")) {
+					gridData.exclude = false;
+					comp.setVisible(true);
+				} else {
+					gridData.exclude = true;
+					comp.setVisible(false);
+				}
+				
+				// Resizes parent and adjusts scroll bar to adapt to new size
+				mainComposite.pack();
+				scrolledComp.setMinSize(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+			}
+		});
+	}
+	
+	/**
+	 * Setup components for loading existing file
+	 * @param parent
+	 */
+	private void setupLoadFile(Composite parent) {
+		// Container of input groups that will be hidden/showed
+		final Composite comp = new Composite(parent, SWT.NONE);		
+		GridLayout gridLayout = new GridLayout(2, false);
+		// Remove margins
+		gridLayout.marginWidth = 0;
+		gridLayout.marginHeight = 0;
+		comp.setLayout(gridLayout);
+	    final GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, false);
+	    comp.setLayoutData(gridData);
+	    
+	    // Label
+		(new Label(comp, SWT.NONE)).setText("ID Description JSON File");
+		new Label(comp, SWT.NONE); // Dummy label to fill 2nd cell
+		
+		// Text box
+		Text txtFilePath = new Text(comp, SWT.SINGLE | SWT.BORDER);
+		txtFilePath.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		
+		// Button - File path dialog
+		Button btnDialog = new Button(comp, SWT.PUSH);
+		btnDialog.setText("Open");
+		
+		// Initially hidden
+		gridData.exclude = true;
+		comp.setVisible(false);
+		
+		// If "Load from disk" selected then show corresponding components
+		cboInputMethod.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent event) {			
+				if (cboInputMethod.getText().equals("Load from disk")) {
 					gridData.exclude = false;
 					comp.setVisible(true);
 				} else {
@@ -373,6 +425,15 @@ public class IdDescForm extends ViewPart {
 				scrolledComp.setMinSize(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 			}
 		});
+	}
+	
+	/**
+	 * Adds horizontal line separator to composite
+	 * @param parent
+	 */
+	private void addHorizontalSeparator(Composite parent) {
+		Label separator = new Label(parent, SWT.HORIZONTAL | SWT.SEPARATOR);
+	    separator.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 	}
 	
 	@Override
