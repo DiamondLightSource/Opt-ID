@@ -1,8 +1,5 @@
 package uk.ac.diamond.optid.views;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -15,7 +12,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.IPropertyListener;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
@@ -36,9 +32,7 @@ public class MainView extends ViewPart {
 	private Button btnLookGen;
 	
 	private PerspectiveAdapter perspectiveListener = new PerspectiveAdapter() {
-		public void perspectiveChanged(IWorkbenchPage page, IPerspectiveDescriptor perspective, String changeId) {
-			logger.debug("***perspective changed***: " + perspective.getId() + "; " + changeId);
-			
+		public void perspectiveChanged(IWorkbenchPage page, IPerspectiveDescriptor perspective, String changeId) {			
 			if (perspective.getId().equals("uk.ac.diamond.optid.idSortPerspective")) {
 				if (changeId.equals(IWorkbenchPage.CHANGE_RESET)) {
 					btnIdDes.setSelection(false);
@@ -119,6 +113,10 @@ public class MainView extends ViewPart {
 		btnIdDes.setText("ID Description");
 		// Button set to fill width of containing composite
 		btnIdDes.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		// btnIdDes selection state depends on whether IdDescForm view is open
+		if (getWorkbenchPage().findView(IdDescForm.ID) != null) {
+			btnIdDes.setSelection(true);
+		}
 		// Show/hide respective form view
 		btnIdDes.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent event) {				
@@ -126,14 +124,14 @@ public class MainView extends ViewPart {
 				if (btn.getSelection()) {
 					// Show view
 					try {
-						PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(IdDescForm.ID, null, IWorkbenchPage.VIEW_ACTIVATE);
+						getWorkbenchPage().showView(IdDescForm.ID, null, IWorkbenchPage.VIEW_ACTIVATE);
 					} catch (PartInitException e) {
 						e.printStackTrace();
 					}
 				} else {
 					// Hide view
-					IViewPart view = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().findView(IdDescForm.ID);
-					PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().hideView(view);
+					IViewPart view = getWorkbenchPage().findView(IdDescForm.ID);
+					getWorkbenchPage().hideView(view);
 				}
 			}
 		});
@@ -168,6 +166,14 @@ public class MainView extends ViewPart {
 		// Initial label status
 		lblLookGenStatus.setText("Not complete");
 		lblLookGenStatus.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
+	}
+	
+	/**
+	 * Returns active workbench page
+	 * @return
+	 */
+	private IWorkbenchPage getWorkbenchPage() {
+		return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 	}
 
 	@Override
