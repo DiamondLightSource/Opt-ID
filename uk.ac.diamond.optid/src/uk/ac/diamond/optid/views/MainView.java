@@ -1,5 +1,8 @@
 package uk.ac.diamond.optid.views;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -12,17 +15,39 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.IPropertyListener;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PerspectiveAdapter;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
+import org.eclipse.ui.IPerspectiveDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MainView extends ViewPart {
 	
 	private static final Logger logger = LoggerFactory.getLogger(MainView.class);
+	
+	/* UI Components */
+	private Button btnIdDes;
+	private Button btnMagStr;
+	private Button btnLookGen;
+	
+	private PerspectiveAdapter perspectiveListener = new PerspectiveAdapter() {
+		public void perspectiveChanged(IWorkbenchPage page, IPerspectiveDescriptor perspective, String changeId) {
+			logger.debug("***perspective changed***: " + perspective.getId() + "; " + changeId);
+			
+			if (perspective.getId().equals("uk.ac.diamond.optid.idSortPerspective")) {
+				if (changeId.equals(IWorkbenchPage.CHANGE_RESET)) {
+					btnIdDes.setSelection(false);
+					btnMagStr.setSelection(false);
+					btnLookGen.setSelection(false);
+				}
+			}
+		}
+	};
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -33,6 +58,8 @@ public class MainView extends ViewPart {
 		
 		setupDirField(mainComposite);
 		setupOptFileGrp(mainComposite);
+		
+		getSite().getWorkbenchWindow().addPerspectiveListener(perspectiveListener);		
 	}
 	
 	/**
@@ -88,7 +115,7 @@ public class MainView extends ViewPart {
 		/* ID Description */
 		(new Label(grpOptFiles, SWT.NONE)).setText("1.");
 		
-		Button btnIdDes = new Button(grpOptFiles, SWT.TOGGLE);
+		btnIdDes = new Button(grpOptFiles, SWT.TOGGLE);
 		btnIdDes.setText("ID Description");
 		// Button set to fill width of containing composite
 		btnIdDes.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -119,7 +146,7 @@ public class MainView extends ViewPart {
 		/* Magnet Strengths */
 		(new Label(grpOptFiles, SWT.NONE)).setText("2.");
 		
-		Button btnMagStr = new Button(grpOptFiles, SWT.TOGGLE);
+		btnMagStr = new Button(grpOptFiles, SWT.TOGGLE);
 		btnMagStr.setText("Magnet Strengths");
 		// Button set to fill width of containing composite
 		btnMagStr.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -132,7 +159,7 @@ public class MainView extends ViewPart {
 		/* Lookup Generator */
 		(new Label(grpOptFiles, SWT.NONE)).setText("3.");
 		
-		Button btnLookGen = new Button(grpOptFiles, SWT.TOGGLE);
+		btnLookGen = new Button(grpOptFiles, SWT.TOGGLE);
 		btnLookGen.setText("Lookup Generator");
 		// Button set to fill width of containing composite
 		btnLookGen.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
