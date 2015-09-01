@@ -17,9 +17,14 @@ public class IdDescForm extends ViewPart {
 	
 	static final String ID = "uk.ac.diamond.optid.idDescForm";
 	
+	/* Combo items */
 	private static final String[] ID_PARAM_TYPE_LIST = new String[] {"PPM AntiSymmetric", "APPLE Symmetric"};
+	private static final String[] INPUT_METHOD_LIST = new String[] {"Create new file", "Load from disk"};
 	
+	/* Components */
 	private ScrolledComposite scrolledComp;
+	private Composite mainComposite;
+	private Combo cboInputMethod;
 	private Combo cboType;
 
 	@Override
@@ -30,19 +35,83 @@ public class IdDescForm extends ViewPart {
 		scrolledComp.setExpandVertical(true);
 		
 		// Top-level composite
-		Composite mainComposite = new Composite(scrolledComp, SWT.NONE);
+		mainComposite = new Composite(scrolledComp, SWT.NONE);
 		mainComposite.setLayout(new GridLayout(1, false));
 		mainComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
-		// Create groups for each category of inputs
-		setupIdParams(mainComposite);
-		setupMagnetDims(mainComposite);
-		setupCalParams(mainComposite);
-		setupAppleSymOnlyParams(mainComposite);
-		
+		setupInputMethod(mainComposite);
+		setupNewFileForm(mainComposite);
+
 		scrolledComp.setContent(mainComposite);
 		// Set width at which vertical scroll bar will be used
 		scrolledComp.setMinSize(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+	}
+	
+	/**
+	 * Setup components to select input method
+	 * @param parent
+	 */
+	private void setupInputMethod(Composite parent) {
+		// Container with grid layout 2 components wide
+		Composite comp = new Composite(parent, SWT.NONE);
+		GridLayout gridLayout = new GridLayout(2, false);
+		// Remove margins
+		gridLayout.marginWidth = 0;
+		gridLayout.verticalSpacing = 0;
+		gridLayout.marginHeight = 0;
+		comp.setLayout(gridLayout);
+	    comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+		
+	    // Components: Label & Combo
+		(new Label(comp, SWT.NONE)).setText("Input method");
+		cboInputMethod = new Combo(comp, SWT.READ_ONLY);
+		cboInputMethod.setItems(INPUT_METHOD_LIST);
+		
+		// Make combo stretch to fill width of view
+		cboInputMethod.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+	}
+	
+	/**
+	 * Setup components for creating new JSON file
+	 * @param parent
+	 */
+	private void setupNewFileForm(Composite parent) {
+		// Container of input groups that will be hidden/showed
+		final Composite comp = new Composite(parent, SWT.NONE);		
+		GridLayout gridLayout = new GridLayout(1, false);
+		// Remove margins
+		gridLayout.marginWidth = 0;
+		gridLayout.marginHeight = 0;
+		comp.setLayout(gridLayout);
+	    final GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, false);
+	    comp.setLayoutData(gridData);
+	    
+		// Create groups for each category of inputs
+		setupIdParams(comp);
+		setupMagnetDims(comp);
+		setupCalParams(comp);
+		setupAppleSymOnlyParams(comp);
+		
+		// Initially hidden
+		gridData.exclude = true;
+		comp.setVisible(false);
+		
+		// If "Create new file" selected then show corresponding components
+		cboInputMethod.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent event) {			
+				if (cboInputMethod.getText().equals("Create new file")) {
+					gridData.exclude = false;
+					comp.setVisible(true);
+				} else {
+					gridData.exclude = true;
+					comp.setVisible(false);
+				}
+				
+				// Resizes parent and adjusts scroll bar to adapt to new size
+				mainComposite.pack();
+				scrolledComp.setMinSize(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+			}
+		});
 	}
 
 	/**
@@ -300,8 +369,8 @@ public class IdDescForm extends ViewPart {
 				}
 				
 				// Resizes parent and adjusts scroll bar to adapt to new size
-				parent.pack();
-				scrolledComp.setMinSize(parent.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+				mainComposite.pack();
+				scrolledComp.setMinSize(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 			}
 		});
 	}
