@@ -85,6 +85,7 @@ public class IdDescForm extends ViewPart {
 		// Remove margins
 		gridLayout.marginWidth = 0;
 		gridLayout.marginHeight = 0;
+		gridLayout.verticalSpacing = 15;
 		comp.setLayout(gridLayout);
 	    final GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, false);
 	    comp.setLayoutData(gridData);
