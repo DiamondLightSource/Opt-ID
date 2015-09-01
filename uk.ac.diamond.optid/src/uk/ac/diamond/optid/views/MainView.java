@@ -3,6 +3,7 @@ package uk.ac.diamond.optid.views;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -12,6 +13,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
@@ -22,9 +24,13 @@ import org.eclipse.ui.IPerspectiveDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.diamond.optid.Activator;
+
 public class MainView extends ViewPart {
 	
 	private static final Logger logger = LoggerFactory.getLogger(MainView.class);
+	
+	private Image imgFolder = Activator.getDefault().getWorkbench().getSharedImages().getImageDescriptor(ISharedImages.IMG_OBJ_FOLDER).createImage();
 	
 	/* UI Components */
 	private Button btnIdDes;
@@ -53,7 +59,7 @@ public class MainView extends ViewPart {
 		setupDirField(mainComposite);
 		setupOptFileGrp(mainComposite);
 		
-		getSite().getWorkbenchWindow().addPerspectiveListener(perspectiveListener);		
+		getSite().getWorkbenchWindow().addPerspectiveListener(perspectiveListener);			
 	}
 	
 	/**
@@ -75,8 +81,7 @@ public class MainView extends ViewPart {
 		
 		// Button
 		Button btnDir = new Button(comp, SWT.PUSH);
-		//TODO: Replace button label with icon
-		btnDir.setText("Browse");
+		btnDir.setImage(imgFolder);
 		// On select, open dialog to select a directory
 		btnDir.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent event) {
@@ -180,4 +185,14 @@ public class MainView extends ViewPart {
 	public void setFocus() {		
 	}
 
+	@Override
+    public void dispose() {
+		// Dispose acquired images
+		if (imgFolder != null) {
+			imgFolder.dispose();
+		}
+		
+		super.dispose();
+    }
+	
 }
