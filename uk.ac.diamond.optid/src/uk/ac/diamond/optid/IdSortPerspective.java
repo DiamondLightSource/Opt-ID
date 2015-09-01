@@ -14,10 +14,10 @@ public class IdSortPerspective implements IPerspectiveFactory {
 		layout.setEditorAreaVisible(true);
 		
 		// ID Optimisation 'Main' view
-		IFolderLayout leftFolder = layout.createFolder("leftFolder", IPageLayout.LEFT, 0.25f, IPageLayout.ID_EDITOR_AREA);
-		leftFolder.addView("uk.ac.diamond.optid.mainView");
-		IViewLayout vLayout = layout.getViewLayout("uk.ac.diamond.optid.mainView");
-		vLayout.setCloseable(false);
+		layout.addStandaloneView("uk.ac.diamond.optid.mainView", true, IPageLayout.LEFT, 0.25f, IPageLayout.ID_EDITOR_AREA);
+		IViewLayout mainViewLayout = layout.getViewLayout("uk.ac.diamond.optid.mainView");
+		mainViewLayout.setCloseable(false);
+		mainViewLayout.setMoveable(false);
 		
 		// Data manipulation tools
 		IFolderLayout rightFolder = layout.createFolder("rightFolder", IPageLayout.RIGHT, 0.6f, IPageLayout.ID_EDITOR_AREA);
@@ -31,9 +31,7 @@ public class IdSortPerspective implements IPerspectiveFactory {
 		bottomFolder.addView("org.eclipse.ui.console.ConsoleView");
 		
 		// Optimisation file generation forms
-		IFolderLayout topFolder = layout.createFolder("topFolder", IPageLayout.LEFT, 0.4f, IPageLayout.ID_EDITOR_AREA);
-		topFolder.addPlaceholder("uk.ac.diamond.optid.idDescForm");
-		layout.getViewLayout("uk.ac.diamond.optid.idDescForm").setCloseable(false);
+		layout.addStandaloneViewPlaceholder("uk.ac.diamond.optid.idDescForm", IPageLayout.LEFT, 0.4f, IPageLayout.ID_EDITOR_AREA, false);
 	}
 
 }
