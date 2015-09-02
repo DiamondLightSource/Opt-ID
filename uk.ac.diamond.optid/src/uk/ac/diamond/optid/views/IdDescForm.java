@@ -61,8 +61,9 @@ public class IdDescForm extends ViewPart {
 	private static final String[] ID_PARAM_TYPE_LIST = new String[] {"PPM AntiSymmetric", "APPLE Symmetric"};
 	
 	/* Components */
-	private ScrolledComposite scrolledComp;
 	private CTabFolder tabFolder;
+	private ScrolledComposite scrolledComp;
+	private Composite compNewFileForm;
 
 	// Load file
 	private Text txtFilePath;
@@ -98,7 +99,7 @@ public class IdDescForm extends ViewPart {
 	private Text txtEndGap;
 	private Text txtPhasingGap;
 	private Text txtClampCut;
-	
+		
 	// Listener for view lifecycle
 	private IPartListener partListener = new IPartListener() {
 		@Override
@@ -162,19 +163,16 @@ public class IdDescForm extends ViewPart {
 	
 	@Override
 	public void createPartControl(Composite parent) {
-		// Display vertical scroll bar if contents do not fit
-		scrolledComp = new ScrolledComposite(parent, SWT.BORDER | SWT.V_SCROLL);
-		scrolledComp.setExpandHorizontal(true);
-		scrolledComp.setExpandVertical(true);
-
-		tabFolder = new CTabFolder(scrolledComp, SWT.NONE);
+		// Top-level tabbed composite
+		tabFolder = new CTabFolder(parent, SWT.NONE);
 		tabFolder.setLayoutData(new GridData(GridData.FILL_BOTH));
 		tabFolder.setSimple(false);
 		
 		// Tab 1 - Create new file
 		CTabItem tabNewFile = new CTabItem(tabFolder, SWT.NONE);
 		tabNewFile.setText("Create new file");
-		tabNewFile.setControl(setupNewFileForm(tabFolder));
+		setupScrolledComp(tabFolder);
+		tabNewFile.setControl(scrolledComp);
 		
 		// Tab 2 - Load file
 		CTabItem tabLoadFile = new CTabItem(tabFolder, SWT.NONE);
@@ -183,12 +181,24 @@ public class IdDescForm extends ViewPart {
 		
 		// Default tab selection
 		tabFolder.setSelection(tabNewFile);
-		
-		scrolledComp.setContent(tabFolder);
-		// Set width at which vertical scroll bar will be used
-		scrolledComp.setMinSize(tabFolder.computeSize(SWT.DEFAULT, SWT.DEFAULT));
-		
+
 		restoreComponentValues();
+	}
+	
+	/**
+	 * Setup vertical scroll bar for new file form
+	 * @param parent
+	 */
+	private void setupScrolledComp(Composite parent) {
+		scrolledComp = new ScrolledComposite(parent, SWT.BORDER | SWT.V_SCROLL);
+		scrolledComp.setExpandHorizontal(true);
+		scrolledComp.setExpandVertical(true);
+		
+		setupNewFileForm(scrolledComp);
+
+		scrolledComp.setContent(compNewFileForm);
+		// Set width at which vertical scroll bar will be used
+		scrolledComp.setMinSize(compNewFileForm.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 	}
 	
 	/**
@@ -235,21 +245,19 @@ public class IdDescForm extends ViewPart {
 	 * Setup components for creating new JSON file
 	 * @param parent
 	 */
-	private Composite setupNewFileForm(Composite parent) {
-		Composite comp = new Composite(parent, SWT.NONE);		
+	private void setupNewFileForm(Composite parent) {
+		compNewFileForm = new Composite(parent, SWT.NONE);		
 		GridLayout gridLayout = new GridLayout(1, false);
 		// Increase spacing between groups
 		gridLayout.verticalSpacing = 15;
-		comp.setLayout(gridLayout);
-	    comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+		compNewFileForm.setLayout(gridLayout);
+	    compNewFileForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 	    
 		// Create groups for each category of inputs
-		setupIdParams(comp);
-		setupMagnetDims(comp);
-		setupCalParams(comp);
-		setupAppleSymOnlyParams(comp);
-		
-		return comp;
+		setupIdParams(compNewFileForm);
+		setupMagnetDims(compNewFileForm);
+		setupCalParams(compNewFileForm);
+		setupAppleSymOnlyParams(compNewFileForm);
 	}
 	
 	/**
@@ -532,8 +540,8 @@ public class IdDescForm extends ViewPart {
 				}
 				
 				// Resizes composite and adjusts scroll bar to adapt to new size
-				tabFolder.pack();
-				scrolledComp.setMinHeight(tabFolder.computeSize(SWT.DEFAULT, SWT.DEFAULT).y);				
+				compNewFileForm.pack();
+				scrolledComp.setMinHeight(compNewFileForm.computeSize(SWT.DEFAULT, SWT.DEFAULT).y);				
 			}
 		});
 	}
