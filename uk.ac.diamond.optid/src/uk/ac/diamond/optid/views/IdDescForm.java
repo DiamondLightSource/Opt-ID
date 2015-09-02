@@ -3,6 +3,8 @@ package uk.ac.diamond.optid.views;
 import org.dawb.common.ui.Activator;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -28,7 +30,7 @@ public class IdDescForm extends ViewPart {
 	
 	/* Dialog settings keys */
 	private static final String ID_DESC_SETTINGS = "uk.ac.diamond.optid.idDescForm.settings";
-	private static final String ID_DESC_INPUT_METHOD = "uk.ac.diamond.optid.idDescForm.inputMethod";
+	private static final String ID_DESC_TAB = "uk.ac.diamond.optid.idDescForm.tab";
 	private static final String ID_DESC_FILE_PATH = "uk.ac.diamond.optid.idDescForm.filePath";
 	private static final String ID_DESC_NAME = "uk.ac.diamond.optid.idDescForm.name";
 	private static final String ID_DESC_TYPE = "uk.ac.diamond.optid.idDescForm.type";
@@ -57,14 +59,11 @@ public class IdDescForm extends ViewPart {
 	
 	/* Combo items */
 	private static final String[] ID_PARAM_TYPE_LIST = new String[] {"PPM AntiSymmetric", "APPLE Symmetric"};
-	private static final String[] INPUT_METHOD_LIST = new String[] {"Create new file", "Load from disk"};
 	
 	/* Components */
 	private ScrolledComposite scrolledComp;
-	private Composite mainComposite;
-	
-	private Combo cboInputMethod;
-	
+	private CTabFolder tabFolder;
+
 	// Load file
 	private Text txtFilePath;
 	
@@ -124,7 +123,7 @@ public class IdDescForm extends ViewPart {
 		    }
 
 		    // Store all component values
-		    section.put(ID_DESC_INPUT_METHOD, cboInputMethod.getText());
+		    section.put(ID_DESC_TAB, tabFolder.getSelectionIndex());
 		    section.put(ID_DESC_FILE_PATH, txtFilePath.getText());
 		    section.put(ID_DESC_NAME, txtName.getText());
 		    section.put(ID_DESC_TYPE, cboType.getText());
@@ -167,20 +166,27 @@ public class IdDescForm extends ViewPart {
 		scrolledComp = new ScrolledComposite(parent, SWT.BORDER | SWT.V_SCROLL);
 		scrolledComp.setExpandHorizontal(true);
 		scrolledComp.setExpandVertical(true);
-		
-		// Top-level composite
-		mainComposite = new Composite(scrolledComp, SWT.NONE);
-		mainComposite.setLayout(new GridLayout(1, false));
-		mainComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		
-		setupInputMethod(mainComposite);
-		addHorizontalSeparator(mainComposite);
-		setupNewFileForm(mainComposite);
-		setupLoadFile(mainComposite);
 
-		scrolledComp.setContent(mainComposite);
+		tabFolder = new CTabFolder(scrolledComp, SWT.NONE);
+		tabFolder.setLayoutData(new GridData(GridData.FILL_BOTH));
+		tabFolder.setSimple(false);
+		
+		// Tab 1 - Create new file
+		CTabItem tabNewFile = new CTabItem(tabFolder, SWT.NONE);
+		tabNewFile.setText("Create new file");
+		tabNewFile.setControl(setupNewFileForm(tabFolder));
+		
+		// Tab 2 - Load file
+		CTabItem tabLoadFile = new CTabItem(tabFolder, SWT.NONE);
+		tabLoadFile.setText("Load file");
+		tabLoadFile.setControl(setupLoadFile(tabFolder));
+		
+		// Default tab selection
+		tabFolder.setSelection(tabNewFile);
+		
+		scrolledComp.setContent(tabFolder);
 		// Set width at which vertical scroll bar will be used
-		scrolledComp.setMinSize(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+		scrolledComp.setMinSize(tabFolder.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 		
 		restoreComponentValues();
 	}
@@ -194,7 +200,7 @@ public class IdDescForm extends ViewPart {
 		IDialogSettings section = settings.getSection(ID_DESC_SETTINGS);
 		
 		if (section != null) {
-			cboInputMethod.setText(section.get(ID_DESC_INPUT_METHOD));
+			tabFolder.setSelection(section.getInt(ID_DESC_TAB));
 			txtFilePath.setText(section.get(ID_DESC_FILE_PATH));
 			txtName.setText(section.get(ID_DESC_NAME));
 			cboType.setText(section.get(ID_DESC_TYPE));
@@ -226,44 +232,16 @@ public class IdDescForm extends ViewPart {
 	}
 	
 	/**
-	 * Setup components to select input method
-	 * @param parent
-	 */
-	private void setupInputMethod(Composite parent) {
-		// Container with grid layout 2 components wide
-		Composite comp = new Composite(parent, SWT.NONE);
-		GridLayout gridLayout = new GridLayout(2, false);
-		// Remove margins
-		gridLayout.marginWidth = 0;
-		gridLayout.verticalSpacing = 0;
-		gridLayout.marginHeight = 0;
-		comp.setLayout(gridLayout);
-	    comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		
-	    // Components: Label & Combo
-		(new Label(comp, SWT.NONE)).setText("Input method");
-		cboInputMethod = new Combo(comp, SWT.READ_ONLY);
-		cboInputMethod.setItems(INPUT_METHOD_LIST);
-		
-		// Make combo stretch to fill width of view
-		cboInputMethod.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-	}
-	
-	/**
 	 * Setup components for creating new JSON file
 	 * @param parent
 	 */
-	private void setupNewFileForm(Composite parent) {
-		// Container of input groups that will be hidden/showed
-		final Composite comp = new Composite(parent, SWT.NONE);		
+	private Composite setupNewFileForm(Composite parent) {
+		Composite comp = new Composite(parent, SWT.NONE);		
 		GridLayout gridLayout = new GridLayout(1, false);
-		// Remove margins
-		gridLayout.marginWidth = 0;
-		gridLayout.marginHeight = 0;
+		// Increase spacing between groups
 		gridLayout.verticalSpacing = 15;
 		comp.setLayout(gridLayout);
-	    final GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, false);
-	    comp.setLayoutData(gridData);
+	    comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 	    
 		// Create groups for each category of inputs
 		setupIdParams(comp);
@@ -271,43 +249,17 @@ public class IdDescForm extends ViewPart {
 		setupCalParams(comp);
 		setupAppleSymOnlyParams(comp);
 		
-		// Initially hidden
-		gridData.exclude = true;
-		comp.setVisible(false);
-		
-		// If "Create new file" selected then show corresponding components
-		cboInputMethod.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
-				if (cboInputMethod.getText().equals("Create new file")) {
-					gridData.exclude = false;
-					comp.setVisible(true);
-				} else {
-					gridData.exclude = true;
-					comp.setVisible(false);
-				}
-				
-				// Resizes parent and adjusts scroll bar to adapt to new size
-				mainComposite.pack();
-				scrolledComp.setMinHeight(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT).y);				
-			}
-		});
+		return comp;
 	}
 	
 	/**
 	 * Setup components for loading existing file
 	 * @param parent
 	 */
-	private void setupLoadFile(Composite parent) {
-		// Container of input groups that will be hidden/showed
-		final Composite comp = new Composite(parent, SWT.NONE);		
-		GridLayout gridLayout = new GridLayout(2, false);
-		// Remove margins
-		gridLayout.marginWidth = 0;
-		gridLayout.marginHeight = 0;
-		comp.setLayout(gridLayout);
-	    final GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, false);
-	    comp.setLayoutData(gridData);
+	private Composite setupLoadFile(Composite parent) {
+		Composite comp = new Composite(parent, SWT.NONE);		
+		comp.setLayout(new GridLayout(2, false));
+	    comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 	    
 	    // Label
 		(new Label(comp, SWT.NONE)).setText("ID Description JSON File");
@@ -321,27 +273,7 @@ public class IdDescForm extends ViewPart {
 		Button btnDialog = new Button(comp, SWT.PUSH);
 		btnDialog.setText("Open");
 		
-		// Initially hidden
-		gridData.exclude = true;
-		comp.setVisible(false);
-		
-		// If "Load from disk" selected then show corresponding components
-		cboInputMethod.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
-				if (cboInputMethod.getText().equals("Load from disk")) {
-					gridData.exclude = false;
-					comp.setVisible(true);
-				} else {
-					gridData.exclude = true;
-					comp.setVisible(false);
-				}
-				
-				// Resizes parent and adjusts scroll bar to adapt to new size
-				mainComposite.pack();
-				scrolledComp.setMinHeight(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT).y);				
-			}
-		});
+		return comp;
 	}
 
 	/**
@@ -599,20 +531,11 @@ public class IdDescForm extends ViewPart {
 					compAppleSymParams.setVisible(false);
 				}
 				
-				// Resizes parent and adjusts scroll bar to adapt to new size
-				mainComposite.pack();
-				scrolledComp.setMinHeight(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT).y);				
+				// Resizes composite and adjusts scroll bar to adapt to new size
+				tabFolder.pack();
+				scrolledComp.setMinHeight(tabFolder.computeSize(SWT.DEFAULT, SWT.DEFAULT).y);				
 			}
 		});
-	}
-	
-	/**
-	 * Adds horizontal line separator to composite
-	 * @param parent
-	 */
-	private void addHorizontalSeparator(Composite parent) {
-		Label separator = new Label(parent, SWT.HORIZONTAL | SWT.SEPARATOR);
-	    separator.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 	}
 	
 	@Override

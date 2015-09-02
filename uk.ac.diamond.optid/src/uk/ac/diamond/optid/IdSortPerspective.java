@@ -31,7 +31,11 @@ public class IdSortPerspective implements IPerspectiveFactory {
 		bottomFolder.addView("org.eclipse.ui.console.ConsoleView");
 		
 		// Optimisation file generation forms
-		layout.addStandaloneViewPlaceholder("uk.ac.diamond.optid.idDescForm", IPageLayout.LEFT, 0.4f, IPageLayout.ID_EDITOR_AREA, false);
+		IFolderLayout leftFolder = layout.createFolder("leftFolder", IPageLayout.LEFT, 0.4f, IPageLayout.ID_EDITOR_AREA);
+		leftFolder.addPlaceholder("uk.ac.diamond.optid.idDescForm");
+		IViewLayout idDescFormLayout = layout.getViewLayout("uk.ac.diamond.optid.idDescForm");
+		idDescFormLayout.setCloseable(false);
+		idDescFormLayout.setMoveable(false);
 	}
 
 }
