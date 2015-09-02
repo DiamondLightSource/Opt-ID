@@ -1,9 +1,11 @@
 package uk.ac.diamond.optid.views;
 
+import org.dawb.common.ui.Activator;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -12,11 +14,46 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.IPartListener;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class IdDescForm extends ViewPart {
 	
 	static final String ID = "uk.ac.diamond.optid.idDescForm";
+	
+	private static final Logger logger = LoggerFactory.getLogger(IdDescForm.class);
+	
+	/* Dialog settings keys */
+	private static final String ID_DESC_SETTINGS = "uk.ac.diamond.optid.idDescForm.settings";
+	private static final String ID_DESC_INPUT_METHOD = "uk.ac.diamond.optid.idDescForm.inputMethod";
+	private static final String ID_DESC_FILE_PATH = "uk.ac.diamond.optid.idDescForm.filePath";
+	private static final String ID_DESC_NAME = "uk.ac.diamond.optid.idDescForm.name";
+	private static final String ID_DESC_TYPE = "uk.ac.diamond.optid.idDescForm.type";
+	private static final String ID_DESC_PERIODS = "uk.ac.diamond.optid.idDescForm.periods";
+	private static final String ID_DESC_GAP = "uk.ac.diamond.optid.idDescForm.gap";
+	private static final String ID_DESC_INTERSTICE = "uk.ac.diamond.optid.idDescForm.interstice";
+	private static final String ID_DESC_FULL_X = "uk.ac.diamond.optid.idDescForm.fullX";
+	private static final String ID_DESC_FULL_Z = "uk.ac.diamond.optid.idDescForm.fullZ";
+	private static final String ID_DESC_FULL_S = "uk.ac.diamond.optid.idDescForm.fullS";
+	private static final String ID_DESC_VE_X = "uk.ac.diamond.optid.idDescForm.veX";
+	private static final String ID_DESC_VE_Z = "uk.ac.diamond.optid.idDescForm.veZ";
+	private static final String ID_DESC_VE_S = "uk.ac.diamond.optid.idDescForm.veS";
+	private static final String ID_DESC_HE_X = "uk.ac.diamond.optid.idDescForm.heX";
+	private static final String ID_DESC_HE_Z = "uk.ac.diamond.optid.idDescForm.heZ";
+	private static final String ID_DESC_HE_S = "uk.ac.diamond.optid.idDescForm.heS";
+	private static final String ID_DESC_X_START = "uk.ac.diamond.optid.idDescForm.xStart";
+	private static final String ID_DESC_X_STOP = "uk.ac.diamond.optid.idDescForm.xStop";	
+	private static final String ID_DESC_X_STEP = "uk.ac.diamond.optid.idDescForm.xStep";
+	private static final String ID_DESC_Z_START = "uk.ac.diamond.optid.idDescForm.zStart";
+	private static final String ID_DESC_Z_STOP = "uk.ac.diamond.optid.idDescForm.zStop";
+	private static final String ID_DESC_Z_STEP = "uk.ac.diamond.optid.idDescForm.zStep";
+	private static final String ID_DESC_STEPS_S = "uk.ac.diamond.optid.idDescForm.stepsS";
+	private static final String ID_DESC_END_GAP = "uk.ac.diamond.optid.idDescForm.endGap";
+	private static final String ID_DESC_PHASING_GAP = "uk.ac.diamond.optid.idDescForm.phasingGap";
+	private static final String ID_DESC_CLAMP_CUT = "uk.ac.diamond.optid.idDescForm.clampCut";
 	
 	/* Combo items */
 	private static final String[] ID_PARAM_TYPE_LIST = new String[] {"PPM AntiSymmetric", "APPLE Symmetric"};
@@ -25,9 +62,105 @@ public class IdDescForm extends ViewPart {
 	/* Components */
 	private ScrolledComposite scrolledComp;
 	private Composite mainComposite;
+	
 	private Combo cboInputMethod;
+	
+	// Load file
+	private Text txtFilePath;
+	
+	// ID parameters
+	private Text txtName;
 	private Combo cboType;
+	private Text txtPeriods;
+	private Text txtGap;
+	private Text txtInterstice;
+	
+	// Magnet dimensions
+	private Text txtFullX;
+	private Text txtFullZ;
+	private Text txtFullS;
+	private Text txtVeX;
+	private Text txtVeZ;
+	private Text txtVeS;
+	private Text txtHeX;
+	private Text txtHeZ;
+	private Text txtHeS;
+	
+	// Calculation parameters
+	private Text txtXStart;
+	private Text txtXStop;
+	private Text txtXStep;
+	private Text txtZStart;
+	private Text txtZStop;
+	private Text txtZStep;
+	private Text txtStepsS;
+	
+	// Apply symmetric only parameters
+	private Text txtEndGap;
+	private Text txtPhasingGap;
+	private Text txtClampCut;
+	
+	// Listener for view lifecycle
+	private IPartListener partListener = new IPartListener() {
+		@Override
+		public void partOpened(IWorkbenchPart part) {			
+		}
+		
+		@Override
+		public void partDeactivated(IWorkbenchPart part) {			
+		}
+		
+		@Override
+		public void partClosed(IWorkbenchPart part) {
+			// View closed, listener no longer needed
+			getSite().getWorkbenchWindow().getPartService().removePartListener(this);
+			
+		    IDialogSettings settings = Activator.getDefault().getDialogSettings();
+		    IDialogSettings section = settings.getSection(ID_DESC_SETTINGS);
 
+		    // If section does not exist, create it
+		    if (section == null) {
+		        section = settings.addNewSection(ID_DESC_SETTINGS);
+		    }
+
+		    // Store all component values
+		    section.put(ID_DESC_INPUT_METHOD, cboInputMethod.getText());
+		    section.put(ID_DESC_FILE_PATH, txtFilePath.getText());
+		    section.put(ID_DESC_NAME, txtName.getText());
+		    section.put(ID_DESC_TYPE, cboType.getText());
+		    section.put(ID_DESC_PERIODS, txtPeriods.getText());
+		    section.put(ID_DESC_GAP, txtGap.getText());
+		    section.put(ID_DESC_INTERSTICE, txtInterstice.getText());
+		    section.put(ID_DESC_FULL_X, txtFullX.getText());
+		    section.put(ID_DESC_FULL_Z, txtFullZ.getText());
+		    section.put(ID_DESC_FULL_S, txtFullS.getText());
+		    section.put(ID_DESC_VE_X, txtVeX.getText());
+		    section.put(ID_DESC_VE_Z, txtVeZ.getText());
+		    section.put(ID_DESC_VE_S, txtVeS.getText());
+		    section.put(ID_DESC_HE_X, txtHeX.getText());
+		    section.put(ID_DESC_HE_Z, txtHeZ.getText());
+		    section.put(ID_DESC_HE_S, txtHeS.getText());
+		    section.put(ID_DESC_X_START, txtXStart.getText());
+		    section.put(ID_DESC_X_STOP, txtXStop.getText());
+		    section.put(ID_DESC_X_STEP, txtXStep.getText());	    
+		    section.put(ID_DESC_Z_START, txtZStart.getText());
+		    section.put(ID_DESC_Z_STOP, txtZStop.getText());
+		    section.put(ID_DESC_Z_STEP, txtZStep.getText());
+		    section.put(ID_DESC_STEPS_S, txtStepsS.getText());
+		    section.put(ID_DESC_END_GAP, txtEndGap.getText());
+		    section.put(ID_DESC_PHASING_GAP, txtPhasingGap.getText());
+		    section.put(ID_DESC_CLAMP_CUT, txtClampCut.getText());
+		}
+		
+		@Override
+		public void partBroughtToTop(IWorkbenchPart part) {			
+		}
+		
+		@Override
+		public void partActivated(IWorkbenchPart part) {			
+		}
+	};
+	
 	@Override
 	public void createPartControl(Composite parent) {
 		// Display vertical scroll bar if contents do not fit
@@ -48,6 +181,48 @@ public class IdDescForm extends ViewPart {
 		scrolledComp.setContent(mainComposite);
 		// Set width at which vertical scroll bar will be used
 		scrolledComp.setMinSize(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+		
+		restoreComponentValues();
+	}
+	
+	/**
+	 * Enables user-entered component values to persist across invocations
+	 * of view
+	 */
+	private void restoreComponentValues() {
+		IDialogSettings settings = Activator.getDefault().getDialogSettings();
+		IDialogSettings section = settings.getSection(ID_DESC_SETTINGS);
+		
+		if (section != null) {
+			cboInputMethod.setText(section.get(ID_DESC_INPUT_METHOD));
+			txtFilePath.setText(section.get(ID_DESC_FILE_PATH));
+			txtName.setText(section.get(ID_DESC_NAME));
+			cboType.setText(section.get(ID_DESC_TYPE));
+			txtPeriods.setText(section.get(ID_DESC_PERIODS));
+			txtGap.setText(section.get(ID_DESC_GAP));
+			txtInterstice.setText(section.get(ID_DESC_INTERSTICE));
+			txtFullX.setText(section.get(ID_DESC_FULL_X));
+			txtFullZ.setText(section.get(ID_DESC_FULL_Z));
+			txtFullS.setText(section.get(ID_DESC_FULL_S));
+			txtVeX.setText(section.get(ID_DESC_VE_X));
+			txtVeZ.setText(section.get(ID_DESC_VE_Z));
+			txtVeS.setText(section.get(ID_DESC_VE_S));
+			txtHeX.setText(section.get(ID_DESC_HE_X));
+			txtHeZ.setText(section.get(ID_DESC_HE_Z));
+			txtHeS.setText(section.get(ID_DESC_HE_S));
+			txtXStart.setText(section.get(ID_DESC_X_START));
+			txtXStop.setText(section.get(ID_DESC_X_STOP));
+			txtXStep.setText(section.get(ID_DESC_X_STEP));
+			txtZStart.setText(section.get(ID_DESC_Z_START));
+			txtZStop.setText(section.get(ID_DESC_Z_STOP));
+			txtZStep.setText(section.get(ID_DESC_Z_STEP));
+			txtStepsS.setText(section.get(ID_DESC_STEPS_S));
+			txtEndGap.setText(section.get(ID_DESC_END_GAP));
+			txtPhasingGap.setText(section.get(ID_DESC_PHASING_GAP));
+			txtClampCut.setText(section.get(ID_DESC_CLAMP_CUT));
+		}
+		
+		getSite().getWorkbenchWindow().getPartService().addPartListener(partListener);
 	}
 	
 	/**
@@ -101,8 +276,9 @@ public class IdDescForm extends ViewPart {
 		comp.setVisible(false);
 		
 		// If "Create new file" selected then show corresponding components
-		cboInputMethod.addSelectionListener(new SelectionAdapter() {
-			public void widgetSelected(SelectionEvent event) {			
+		cboInputMethod.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
 				if (cboInputMethod.getText().equals("Create new file")) {
 					gridData.exclude = false;
 					comp.setVisible(true);
@@ -113,7 +289,7 @@ public class IdDescForm extends ViewPart {
 				
 				// Resizes parent and adjusts scroll bar to adapt to new size
 				mainComposite.pack();
-				scrolledComp.setMinSize(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+				scrolledComp.setMinHeight(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT).y);				
 			}
 		});
 	}
@@ -138,7 +314,7 @@ public class IdDescForm extends ViewPart {
 		new Label(comp, SWT.NONE); // Dummy label to fill 2nd cell
 		
 		// Text box
-		Text txtFilePath = new Text(comp, SWT.SINGLE | SWT.BORDER);
+		txtFilePath = new Text(comp, SWT.SINGLE | SWT.BORDER);
 		txtFilePath.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
 		// Button - File path dialog
@@ -150,8 +326,9 @@ public class IdDescForm extends ViewPart {
 		comp.setVisible(false);
 		
 		// If "Load from disk" selected then show corresponding components
-		cboInputMethod.addSelectionListener(new SelectionAdapter() {
-			public void widgetSelected(SelectionEvent event) {			
+		cboInputMethod.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
 				if (cboInputMethod.getText().equals("Load from disk")) {
 					gridData.exclude = false;
 					comp.setVisible(true);
@@ -162,7 +339,7 @@ public class IdDescForm extends ViewPart {
 				
 				// Resizes parent and adjusts scroll bar to adapt to new size
 				mainComposite.pack();
-				scrolledComp.setMinSize(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+				scrolledComp.setMinHeight(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT).y);				
 			}
 		});
 	}
@@ -180,7 +357,7 @@ public class IdDescForm extends ViewPart {
 		
 		// Text (String) Field - Name
 		(new Label(grpIdParams, SWT.NONE)).setText("Name");
-		Text txtName = new Text(grpIdParams, SWT.SINGLE | SWT.BORDER);
+		txtName = new Text(grpIdParams, SWT.SINGLE | SWT.BORDER);
 		
 		// Combo (String) Field - Type
 		(new Label(grpIdParams, SWT.NONE)).setText("Type");
@@ -189,16 +366,16 @@ public class IdDescForm extends ViewPart {
 				
 		// Text (int) Field - Periods
 		(new Label(grpIdParams, SWT.NONE)).setText("Periods");
-		Text txtPeriods = new Text(grpIdParams, SWT.SINGLE | SWT.BORDER);
+		txtPeriods = new Text(grpIdParams, SWT.SINGLE | SWT.BORDER);
 		txtPeriods.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		// Text (float) Field - Gap
 		(new Label(grpIdParams, SWT.NONE)).setText("Gap");
-		Text txtGap = new Text(grpIdParams, SWT.SINGLE | SWT.BORDER);
+		txtGap = new Text(grpIdParams, SWT.SINGLE | SWT.BORDER);
 		
 		// Text (float) Field - Interstice
 		(new Label(grpIdParams, SWT.NONE)).setText("Interstice");
-		Text txtInterstice = new Text(grpIdParams, SWT.SINGLE | SWT.BORDER);
+		txtInterstice = new Text(grpIdParams, SWT.SINGLE | SWT.BORDER);
 		
 		// Make text box stretch to fill width of view
 		txtName.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -237,13 +414,13 @@ public class IdDescForm extends ViewPart {
 		/* Full magnet block */
 		(new Label(grpMagDims, SWT.NONE)).setText("Full");
 		// Text (float) Field - Full X
-		Text txtFullX = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		txtFullX = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
 		
 		// Text (float) Field - Full Z
-		Text txtFullZ = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		txtFullZ = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
 
 		// Text (float) Field - Full S
-		Text txtFullS = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		txtFullS = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
 		
 		// Make text box stretch to fill width of view
 		txtFullX.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -253,13 +430,13 @@ public class IdDescForm extends ViewPart {
 		/* VE magnet block */
 		(new Label(grpMagDims, SWT.NONE)).setText("VE");
 		// Text (float) Field - VE X
-		Text txtVeX = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		txtVeX = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
 		
 		// Text (float) Field - VE Z
-		Text txtVeZ = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		txtVeZ = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
 
 		// Text (float) Field - VE S
-		Text txtVeS = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		txtVeS = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
 		
 		// Make text box stretch to fill width of view
 		txtVeX.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -269,13 +446,13 @@ public class IdDescForm extends ViewPart {
 		/* HE magnet block */
 		(new Label(grpMagDims, SWT.NONE)).setText("HE");
 		// Text (float) Field - HE X
-		Text txtHeX = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		txtHeX = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
 		
 		// Text (float) Field - HE Z
-		Text txtHeZ = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		txtHeZ = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
 
 		// Text (float) Field - HE S
-		Text txtHeS = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
+		txtHeS = new Text(grpMagDims, SWT.SINGLE | SWT.BORDER);
 		
 		// Make text box stretch to fill width of view
 		txtHeX.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -318,13 +495,13 @@ public class IdDescForm extends ViewPart {
 		/* X Start-Stop-Step */
 		(new Label(comp1, SWT.NONE)).setText("X");
 		// Text (float) Field - X Start
-		Text txtXStart = new Text(comp1, SWT.SINGLE | SWT.BORDER);
+		txtXStart = new Text(comp1, SWT.SINGLE | SWT.BORDER);
 		
 		// Text (float) Field - X Stop
-		Text txtXStop = new Text(comp1, SWT.SINGLE | SWT.BORDER);
+		txtXStop = new Text(comp1, SWT.SINGLE | SWT.BORDER);
 
 		// Text (float) Field - X Step
-		Text txtXStep = new Text(comp1, SWT.SINGLE | SWT.BORDER);
+		txtXStep = new Text(comp1, SWT.SINGLE | SWT.BORDER);
 		
 		// Make text box stretch to fill width of view
 		txtXStart.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -334,13 +511,13 @@ public class IdDescForm extends ViewPart {
 		/* Z Start-Stop-Step */
 		(new Label(comp1, SWT.NONE)).setText("Z");
 		// Text (float) Field - Z Start
-		Text txtZStart = new Text(comp1, SWT.SINGLE | SWT.BORDER);
+		txtZStart = new Text(comp1, SWT.SINGLE | SWT.BORDER);
 
 		// Text (float) Field - Z Stop
-		Text txtZStop = new Text(comp1, SWT.SINGLE | SWT.BORDER);
+		txtZStop = new Text(comp1, SWT.SINGLE | SWT.BORDER);
 		
 		// Text (float) Field - Z Step
-		Text txtZStep = new Text(comp1, SWT.SINGLE | SWT.BORDER);
+		txtZStep = new Text(comp1, SWT.SINGLE | SWT.BORDER);
 		
 		// Make text box stretch to fill width of view
 		txtZStart.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -355,7 +532,7 @@ public class IdDescForm extends ViewPart {
 
 		// Text (float) Field - Steps in S
 		(new Label(comp2, SWT.NONE)).setText("Steps in S");
-		Text txtStepsS = new Text(comp2, SWT.SINGLE | SWT.BORDER);
+		txtStepsS = new Text(comp2, SWT.SINGLE | SWT.BORDER);
 		txtStepsS.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 	}
 	
@@ -390,15 +567,15 @@ public class IdDescForm extends ViewPart {
 
 		// Text (float) Field - End gap
 		(new Label(grpAppleSymOnly, SWT.NONE)).setText("End gap");
-		Text txtEndGap = new Text(grpAppleSymOnly, SWT.SINGLE | SWT.BORDER);
+		txtEndGap = new Text(grpAppleSymOnly, SWT.SINGLE | SWT.BORDER);
 		
 		// Text (float) Field - Phasing gap
 		(new Label(grpAppleSymOnly, SWT.NONE)).setText("Phasing gap");
-		Text txtPhasingGap = new Text(grpAppleSymOnly, SWT.SINGLE | SWT.BORDER);
+		txtPhasingGap = new Text(grpAppleSymOnly, SWT.SINGLE | SWT.BORDER);
 
 		// Text (float) Field - Clamp cut
 		(new Label(grpAppleSymOnly, SWT.NONE)).setText("Clamp cut");
-		Text txtClampCut = new Text(grpAppleSymOnly, SWT.SINGLE | SWT.BORDER);
+		txtClampCut = new Text(grpAppleSymOnly, SWT.SINGLE | SWT.BORDER);
 		
 		// Make text box stretch to fill width of view
 		txtEndGap.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -411,8 +588,9 @@ public class IdDescForm extends ViewPart {
 		
 		// If "APPLE Symmetric" selected then show optional parameters
 		// otherwise hide them
-		cboType.addSelectionListener(new SelectionAdapter() {
-			public void widgetSelected(SelectionEvent event) {			
+		cboType.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
 				if (cboType.getText().equals("APPLE Symmetric")) {
 					gridDataAppleSymParams.exclude = false;
 					compAppleSymParams.setVisible(true);
@@ -423,7 +601,7 @@ public class IdDescForm extends ViewPart {
 				
 				// Resizes parent and adjusts scroll bar to adapt to new size
 				mainComposite.pack();
-				scrolledComp.setMinSize(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+				scrolledComp.setMinHeight(mainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT).y);				
 			}
 		});
 	}
