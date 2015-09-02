@@ -1,6 +1,11 @@
 package uk.ac.diamond.optid.views;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
@@ -78,6 +83,17 @@ public class MainView extends ViewPart {
 		// Textbox
 		final Text txtDir = new Text(comp, SWT.SINGLE | SWT.BORDER);
 		txtDir.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		// Sets text colour depending on whether path is a valid directory
+		txtDir.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
+				if (Files.isDirectory(Paths.get(txtDir.getText()))) {
+					txtDir.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_GREEN));
+				} else {
+					txtDir.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
+				}
+			}
+		});
 		
 		// Button - Directory dialog
 		Button btnDir = new Button(comp, SWT.PUSH);
