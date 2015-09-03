@@ -99,7 +99,7 @@ public class IdDescForm extends ViewPart {
 	private Text txtEndGap;
 	private Text txtPhasingGap;
 	private Text txtClampCut;
-		
+			
 	// Listener for view lifecycle
 	private IPartListener partListener = new IPartListener() {
 		@Override
@@ -171,8 +171,7 @@ public class IdDescForm extends ViewPart {
 		// Tab 1 - Create new file
 		CTabItem tabNewFile = new CTabItem(tabFolder, SWT.NONE);
 		tabNewFile.setText("Create new file");
-		setupScrolledComp(tabFolder);
-		tabNewFile.setControl(scrolledComp);
+		tabNewFile.setControl(setupNewFile(tabFolder));
 		
 		// Tab 2 - Load file
 		CTabItem tabLoadFile = new CTabItem(tabFolder, SWT.NONE);
@@ -186,11 +185,36 @@ public class IdDescForm extends ViewPart {
 	}
 	
 	/**
+	 * Setup composite containing scrollable form and buttons
+	 * @param parent
+	 * @return
+	 */
+	private Composite setupNewFile(Composite parent) {
+		Composite comp = new Composite(tabFolder, SWT.NONE);
+		comp.setLayout(new GridLayout(1, false));
+		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		
+		setupScrolledComp(comp);
+		
+		Button btnSubmit = new Button(comp, SWT.PUSH);
+		btnSubmit.setText("Submit");
+		btnSubmit.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		
+		return comp;
+	}
+	
+	/**
 	 * Setup vertical scroll bar for new file form
 	 * @param parent
 	 */
 	private void setupScrolledComp(Composite parent) {
-		scrolledComp = new ScrolledComposite(parent, SWT.BORDER | SWT.V_SCROLL);
+		scrolledComp = new ScrolledComposite(parent, SWT.V_SCROLL);
+		/*
+		GridLayout layout = new GridLayout();
+		layout.marginWidth = 0;
+		scrolledComp.setLayout(layout);
+		*/
+		scrolledComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		scrolledComp.setExpandHorizontal(true);
 		scrolledComp.setExpandVertical(true);
 		
@@ -252,7 +276,7 @@ public class IdDescForm extends ViewPart {
 		gridLayout.verticalSpacing = 15;
 		compNewFileForm.setLayout(gridLayout);
 	    compNewFileForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-	    
+	    	    
 		// Create groups for each category of inputs
 		setupIdParams(compNewFileForm);
 		setupMagnetDims(compNewFileForm);
@@ -279,7 +303,12 @@ public class IdDescForm extends ViewPart {
 		
 		// Button - File path dialog
 		Button btnDialog = new Button(comp, SWT.PUSH);
-		btnDialog.setText("Open");
+		btnDialog.setText("Browse");
+		
+		// Button - Submit file path
+		Button btnSubmit = new Button(comp, SWT.PUSH);
+		btnSubmit.setText("Submit");
+		btnSubmit.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 		
 		return comp;
 	}
@@ -541,7 +570,7 @@ public class IdDescForm extends ViewPart {
 				
 				// Resizes composite and adjusts scroll bar to adapt to new size
 				compNewFileForm.pack();
-				scrolledComp.setMinHeight(compNewFileForm.computeSize(SWT.DEFAULT, SWT.DEFAULT).y);				
+				scrolledComp.setMinHeight(compNewFileForm.computeSize(SWT.DEFAULT, SWT.DEFAULT).y);
 			}
 		});
 	}
