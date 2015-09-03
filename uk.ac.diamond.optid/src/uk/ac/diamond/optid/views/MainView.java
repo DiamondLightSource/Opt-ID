@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.diamond.optid.Activator;
+import uk.ac.diamond.optid.Console;
 
 public class MainView extends ViewPart {
 	
@@ -43,6 +44,7 @@ public class MainView extends ViewPart {
 	private Button btnLookGen;
 	
 	private PerspectiveAdapter perspectiveListener = new PerspectiveAdapter() {
+		@Override
 		public void perspectiveChanged(IWorkbenchPage page, IPerspectiveDescriptor perspective, String changeId) {			
 			if (perspective.getId().equals("uk.ac.diamond.optid.idSortPerspective")) {
 				if (changeId.equals(IWorkbenchPage.CHANGE_RESET)) {
@@ -83,23 +85,19 @@ public class MainView extends ViewPart {
 		// Textbox
 		final Text txtDir = new Text(comp, SWT.SINGLE | SWT.BORDER);
 		txtDir.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		// Sets text colour depending on whether path is a valid directory
-		txtDir.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
-				if (Files.isDirectory(Paths.get(txtDir.getText()))) {
-					txtDir.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_GREEN));
-				} else {
-					txtDir.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
-				}
-			}
-		});
 		
 		// Button - Directory dialog
 		Button btnDir = new Button(comp, SWT.PUSH);
 		btnDir.setImage(imgFolder);
+		
+		// Button - Set working directory
+		final Button btnSave = new Button(comp, SWT.PUSH);
+		btnSave.setText("Save");
+		btnSave.setEnabled(false);
+		
 		// On select, open dialog to select a directory
 		btnDir.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent event) {
 				DirectoryDialog dialog = new DirectoryDialog(MainView.this.getSite().getShell());
 				// If string contained in textbox is a valid path to a
@@ -116,9 +114,39 @@ public class MainView extends ViewPart {
 			}
 		});
 		
-		// Button - Set working directory
-		Button btnSave = new Button(comp, SWT.PUSH);
-		btnSave.setText("Save");
+		// Sets text colour depending on whether path is a valid directory
+		txtDir.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
+				if (isValidDirectory(txtDir.getText())) {
+					txtDir.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_GREEN));
+					btnSave.setEnabled(true);
+				} else {
+					txtDir.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
+					btnSave.setEnabled(false);
+				}
+			}
+		});
+		
+		// Note: Button will only be enabled if valid path in txtDir
+		btnSave.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				Console.getInstance().newMessage(getWorkbenchPage(), "Working directory set: " + txtDir.getText());
+			}
+		});
+	}
+	
+	/**
+	 * Determines whether given path is a valid directory
+	 * @param path
+	 * @return true if path is a valid directory
+	 */
+	//TODO: Move to a Util class
+	private boolean isValidDirectory(String path) {
+		return path.length() > 0
+				& path.charAt(0) == '/'
+				& Files.isDirectory(Paths.get(path));
 	}
 	
 	/**
@@ -144,6 +172,7 @@ public class MainView extends ViewPart {
 		}
 		// Show/hide respective form view
 		btnIdDes.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent event) {				
 				Button btn = (Button) event.widget;
 				if (btn.getSelection()) {
