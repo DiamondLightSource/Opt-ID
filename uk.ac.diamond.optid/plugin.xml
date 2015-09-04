@@ -4,13 +4,15 @@
    <extension
          point="org.eclipse.ui.views">
       <view
+            allowMultiple="false"
             category="uk.ac.diamond.optid.idOptCategory"
             class="uk.ac.diamond.optid.views.IdDescForm"
             id="uk.ac.diamond.optid.idDescForm"
             name="ID Description Form"
-            restorable="true">
+            restorable="false">
       </view>
       <view
+            allowMultiple="false"
             category="uk.ac.diamond.optid.idOptCategory"
             class="uk.ac.diamond.optid.views.MainView"
             id="uk.ac.diamond.optid.mainView"
