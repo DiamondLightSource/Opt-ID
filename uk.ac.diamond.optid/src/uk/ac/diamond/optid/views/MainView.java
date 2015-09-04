@@ -52,6 +52,15 @@ public class MainView extends ViewPart {
 					btnMagStr.setSelection(false);
 					btnLookGen.setSelection(false);
 				}
+				
+				// Handles case where view opened by Window -> Show View menu
+				if (changeId.equals(IWorkbenchPage.CHANGE_VIEW_SHOW)) {
+					IViewPart idDescForm = getWorkbenchPage().findView(IdDescForm.ID);
+					// IdDescForm open
+					if (idDescForm != null) {
+						btnIdDes.setSelection(true);
+					}
+				}
 			}
 		}
 	};
