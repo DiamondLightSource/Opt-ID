@@ -191,16 +191,31 @@ public class IdDescForm extends ViewPart {
 	 */
 	private Composite setupNewFile(Composite parent) {
 		Composite comp = new Composite(tabFolder, SWT.NONE);
-		comp.setLayout(new GridLayout(1, false));
+		comp.setLayout(new GridLayout(2, false));
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
 		setupScrolledComp(comp);
-		
-		Button btnSubmit = new Button(comp, SWT.PUSH);
-		btnSubmit.setText("Submit");
-		btnSubmit.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		setupSubmissionControls(comp);
 		
 		return comp;
+	}
+	
+	/**
+	 * Setup buttons for manipulating form and submitting values
+	 * @param parent
+	 */
+	private void setupSubmissionControls(Composite parent) {
+		Button btnClear = new Button(parent, SWT.PUSH);
+		btnClear.setText("Clear");
+		btnClear.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		
+		Button btnRestore = new Button(parent, SWT.PUSH);
+		btnRestore.setText("Restore");
+		btnRestore.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+		Button btnSubmit = new Button(parent, SWT.PUSH);
+		btnSubmit.setText("Submit");
+		btnSubmit.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 	}
 	
 	/**
@@ -209,12 +224,7 @@ public class IdDescForm extends ViewPart {
 	 */
 	private void setupScrolledComp(Composite parent) {
 		scrolledComp = new ScrolledComposite(parent, SWT.V_SCROLL);
-		/*
-		GridLayout layout = new GridLayout();
-		layout.marginWidth = 0;
-		scrolledComp.setLayout(layout);
-		*/
-		scrolledComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		scrolledComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 		scrolledComp.setExpandHorizontal(true);
 		scrolledComp.setExpandVertical(true);
 		
