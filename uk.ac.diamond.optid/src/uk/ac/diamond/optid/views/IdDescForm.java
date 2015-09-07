@@ -669,10 +669,12 @@ public class IdDescForm extends ViewPart {
 	 */
 	private String[] getArguments() throws IllegalStateException {
 		// Contains values from input widgets in form
-		List<String> arguments = new ArrayList<String>();
+		List<String> arguments = new ArrayList<>();
+		// Text fields which have errors
+		List<String> errorArgs = new ArrayList<>();
 		
 		// Verification error in at least one of the Text widget values
-		boolean error = checkArguments(arguments, textDescMap);
+		boolean error = checkArguments(arguments, errorArgs, textDescMap);
 		// True if cboType is APPLE_AntiSymmetric
 		// i.e. we need to check optional Apple sym-only widgets
 		boolean optArgs = false;
@@ -698,19 +700,25 @@ public class IdDescForm extends ViewPart {
 			}
 		// No type option selected
 		} catch(IllegalArgumentException e) {
-			Console.getInstance().newMessage(getWorkbenchPage(),
-					"No value entered: " + e.getMessage(), Console.ERROR_COLOUR);
+			errorArgs.add(e.getMessage());
 			error = true;
 		}
 		
 		// Verification error in optional Apple sym-only Text widgets
 		boolean optError = false;
 		if (optArgs) {
-			optError = checkArguments(arguments, appleSymOnlyTextMap);
+			optError = checkArguments(arguments, errorArgs, appleSymOnlyTextMap);
 		}
 		
-		// Error then arguments list not valid so throw exception
+		// Error then arguments list not valid so print message and throw exception
 		if (error | optError) {
+			String msg = "";
+			for (String arg : errorArgs) {
+				msg += arg + "; ";
+			}
+			msg = msg.substring(0, msg.length() - 2); // Remove trailing '; '
+			Console.getInstance().newMessage(getWorkbenchPage(), 
+					"No value entered for: " + msg, Console.ERROR_COLOUR);
 			throw new IllegalStateException();
 		}
 
@@ -723,7 +731,7 @@ public class IdDescForm extends ViewPart {
 	 * @param map
 	 * @return boolean
 	 */
-	private boolean checkArguments(List<String> arguments, LinkedHashMap<Text, String> map) {
+	private boolean checkArguments(List<String> arguments, List<String> errorArgs, LinkedHashMap<Text, String> map) {
 		boolean error = false;
 		// Iterates over all <Text, Description> objects in map
 		for (Entry<Text, String> entry : map.entrySet()) {
@@ -731,8 +739,9 @@ public class IdDescForm extends ViewPart {
 				// Attempts to add Text value to list of arguments
 				arguments.add(process(entry));
 			} catch(IllegalArgumentException e) {
-				Console.getInstance().newMessage(getWorkbenchPage(),
-						"No value entered: " + e.getMessage(), Console.ERROR_COLOUR);
+				//Console.getInstance().newMessage(getWorkbenchPage(),
+				//		"No value entered: " + e.getMessage(), Console.ERROR_COLOUR);
+				errorArgs.add(e.getMessage());
 				error = true;
 			}
 		}
