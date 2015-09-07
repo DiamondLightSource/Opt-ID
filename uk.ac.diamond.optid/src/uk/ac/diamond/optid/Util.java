@@ -1,0 +1,123 @@
+package uk.ac.diamond.optid;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
+
+public class Util {
+	
+	public static int exit_value = -1;
+	
+	public static void main(String[] args) {
+		String[] test_arguments = new String[] {"91", "33.", "33.", "13.95", "33.", "33.", "6.95", "33.", "33.", "6.95",
+				"0.05", "20.0", "APPLE_Symmetric",
+				"I21", "-5.0", "5.1", "2.5", "-5.0", "5.1", "5.0", "5",
+				"5.0", "0.5", "6.0"};
+		String test_dir = "/home/xrp26957/Downloads";
+		String test_filename =  "I21.json";
+		
+		System.out.println(run(test_arguments, test_dir, test_filename));
+	}
+	
+	public static String run(String[] arguments, String workingDir, String fileName) {
+		String script_dir = getAbsoluteScriptDirPath();
+		
+		String scriptPath = FilenameUtils.concat(script_dir, "run_id_setup.sh");
+		String pythonPath = FilenameUtils.concat(script_dir, "python/id_setup.py");
+		String outputFilePath = FilenameUtils.concat(workingDir, fileName);
+
+		ArrayList<String> processArray = new ArrayList<String>(Arrays.asList(arguments));
+		processArray.add(0, scriptPath);
+		processArray.add(1, pythonPath);
+		processArray.add(outputFilePath);
+		
+		ProcessBuilder processBuilder = new ProcessBuilder(processArray);
+		processBuilder.redirectErrorStream(true);
+		
+		Process process;
+		try {
+			process = processBuilder.start();
+		} catch (IOException ioe) {
+			System.out.println(ioe);
+			process = null;
+		}
+		
+		String result = "";
+		if (process != null) {
+			BufferedReader brOut = new BufferedReader(new InputStreamReader(
+					process.getInputStream()));
+			String line = null;
+			try {
+				while ((line = brOut.readLine()) != null) {
+					result += line + "\n";
+				}
+				result = StringUtils.chomp(result); // Remove extra newline
+				brOut.close();
+			} catch (IOException ioe) {
+				System.out.println(ioe);
+			}
+		}
+		
+		try {
+			exit_value = process.waitFor();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * Gets the absolute path of the script 
+	 * @return String
+	 */
+	private static String getAbsoluteScriptDirPath() {
+		java.security.ProtectionDomain pd = Util.class.getProtectionDomain();
+		if (pd == null) {
+			System.out.print("No path found returning null");
+			return null;
+		}
+		java.security.CodeSource cs = pd.getCodeSource();
+		if (cs == null) {
+			System.out.print("No path found returning null");
+			return null;
+		}
+		java.net.URL url = cs.getLocation();
+		if (url == null) {
+			System.out.print("No path found returning null");
+			return null;
+		}
+		java.io.File f = new File(url.getFile());
+		String resultTest = f.getAbsolutePath();
+
+		if (resultTest == null) {
+			System.out.print("No path found returning null");
+			return null;
+		}
+
+		if (isFolder(resultTest + "/scripts")) {
+			return resultTest + "/scripts/";
+		} else {
+			File file = new File(resultTest);
+			return file.getParent() + "/scripts/";
+		}
+
+	}
+	
+	/**
+	 * Return true if input is a valid directory
+	 * @param input
+	 * @return
+	 */
+	private static boolean isFolder(String input) {
+		File file = new File(input);
+		return file.isDirectory();
+	}
+
+}

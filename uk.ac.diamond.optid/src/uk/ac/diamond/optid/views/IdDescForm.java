@@ -1,5 +1,10 @@
 package uk.ac.diamond.optid.views;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map.Entry;
+
 import org.dawb.common.ui.Activator;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
@@ -8,6 +13,8 @@ import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -17,10 +24,15 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IPartListener;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import uk.ac.diamond.optid.Console;
+import uk.ac.diamond.optid.Util;
 
 public class IdDescForm extends ViewPart {
 	
@@ -59,6 +71,12 @@ public class IdDescForm extends ViewPart {
 	
 	/* Combo items */
 	private static final String[] ID_PARAM_TYPE_LIST = new String[] {"PPM AntiSymmetric", "APPLE Symmetric"};
+	
+	/* Text to description maps */
+	// Linked hash map used as we want to maintain order of insertion
+	// Order of Text objects corresponds to order of arguments required by python script
+	private LinkedHashMap<Text, String> textDescMap = new LinkedHashMap<>();
+	private LinkedHashMap<Text, String> appleSymOnlyTextMap = new LinkedHashMap<>();
 	
 	/* Components */
 	private CTabFolder tabFolder;
@@ -181,6 +199,7 @@ public class IdDescForm extends ViewPart {
 		// Default tab selection
 		tabFolder.setSelection(tabNewFile);
 
+		initialiseMaps();
 		restoreComponentValues();
 	}
 	
@@ -216,6 +235,30 @@ public class IdDescForm extends ViewPart {
 		Button btnSubmit = new Button(parent, SWT.PUSH);
 		btnSubmit.setText("Submit");
 		btnSubmit.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
+		
+		// On click, checks if all text widgets have values
+		// Then forwards arguments to Util.run() to call script to generate file
+		// Message printed in console indicating success or failure
+		btnSubmit.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				try {
+					String[] arguments = getArguments();
+					// TODO: Need to get working directory from MainView
+					String workingDir = "/home/xrp26957/Downloads";
+					String errorOutput = Util.run(arguments, workingDir, arguments[13]);
+					// TODO: Investigate different colour text for console
+					// TODO: If successful, show pop-up and close view
+					if (Util.exit_value == 0) {
+						Console.getInstance().newMessage(getWorkbenchPage(), "File generated successfully");
+					} else {
+						Console.getInstance().newMessage(getWorkbenchPage(), "Error generating file:");
+						Console.getInstance().newMessage(getWorkbenchPage(), errorOutput);
+					}
+				} catch (IllegalStateException e) {
+				}
+			}
+		});
 	}
 	
 	/**
@@ -273,6 +316,40 @@ public class IdDescForm extends ViewPart {
 		}
 		
 		getSite().getWorkbenchWindow().getPartService().addPartListener(partListener);
+	}
+	
+	/**
+	 * Initialise Text to String map
+	 */
+	private void initialiseMaps() {
+		// Order of insertion corresponds to order of arguments for python script
+		textDescMap.put(txtPeriods, "Periods");
+		textDescMap.put(txtFullX, "Full magnet block X-dimension");
+		textDescMap.put(txtFullZ, "Full magnet block Z-dimension");
+		textDescMap.put(txtFullS, "Full magnet block S-dimension");
+		textDescMap.put(txtVeX, "VE magnet block X-dimension");
+		textDescMap.put(txtVeZ, "VE magnet block Z-dimension");
+		textDescMap.put(txtVeS, "VE magnet block S-dimension");
+		textDescMap.put(txtHeX, "HE magnet block X-dimension");
+		textDescMap.put(txtHeZ, "HE magnet block Z-dimension");
+		textDescMap.put(txtHeS, "HE magnet block S-dimension");
+		textDescMap.put(txtInterstice, "Interstice");
+		textDescMap.put(txtGap, "Gap");
+		// Type (combo) would be here
+		// but cannot be included in the map since it is a Combo not Text
+		textDescMap.put(txtName, "Name");
+		textDescMap.put(txtXStart, "X Start");
+		textDescMap.put(txtXStop, "X Stop");
+		textDescMap.put(txtXStep, "X Step");
+		textDescMap.put(txtZStart, "Z Start");
+		textDescMap.put(txtZStop, "Z Stop");
+		textDescMap.put(txtZStep, "Z Step");
+		textDescMap.put(txtStepsS, "Steps in S");
+		
+		// Optional arguments
+		appleSymOnlyTextMap.put(txtEndGap, "End gap");
+		appleSymOnlyTextMap.put(txtPhasingGap, "Phasing gap");
+		appleSymOnlyTextMap.put(txtClampCut, "Clamp cut");
 	}
 	
 	/**
@@ -583,6 +660,120 @@ public class IdDescForm extends ViewPart {
 				scrolledComp.setMinHeight(compNewFileForm.computeSize(SWT.DEFAULT, SWT.DEFAULT).y);
 			}
 		});
+	}
+	
+	/**
+	 * Returns array of arguments obtained from Text/Combo widgets in UI form
+	 * @return
+	 * @throws IllegalStateException
+	 */
+	private String[] getArguments() throws IllegalStateException {
+		// Contains values from input widgets in form
+		List<String> arguments = new ArrayList<String>();
+		
+		// Verification error in at least one of the Text widget values
+		boolean error = checkArguments(arguments, textDescMap);
+		// True if cboType is APPLE_AntiSymmetric
+		// i.e. we need to check optional Apple sym-only widgets
+		boolean optArgs = false;
+
+		try {
+			// Check cboType
+			String typeValue = process(cboType.getText(), "Type");
+			
+			// Convert to String accepted by script
+			String typeArg;
+			if (typeValue.equals("PPM AntiSymmetric")) {
+				typeArg = "PPM_AntiSymmetric";
+			} else {
+				typeArg = "APPLE_Symmetric";
+				optArgs = true;
+			}
+			
+			if (!error) {
+				// Type is the 12th argument in the python script
+				// Insertion at position 12 only guaranteed to work 
+				// if there were no previous errors
+				arguments.add(12, typeArg);
+			}
+		// No type option selected
+		} catch(IllegalArgumentException e) {
+			Console.getInstance().newMessage(getWorkbenchPage(),
+					"No value entered: " + e.getMessage());
+			error = true;
+		}
+		
+		// Verification error in optional Apple sym-only Text widgets
+		boolean optError = false;
+		if (optArgs) {
+			optError = checkArguments(arguments, appleSymOnlyTextMap);
+		}
+		
+		// Error then arguments list not valid so throw exception
+		if (error | optError) {
+			throw new IllegalStateException();
+		}
+
+		return arguments.toArray(new String[arguments.size()]);
+	}
+	
+	/**
+	 * Determines if Text values are valid and if so adds them to the list of arguments
+	 * @param arguments
+	 * @param map
+	 * @return boolean
+	 */
+	private boolean checkArguments(List<String> arguments, LinkedHashMap<Text, String> map) {
+		boolean error = false;
+		// Iterates over all <Text, Description> objects in map
+		for (Entry<Text, String> entry : map.entrySet()) {
+			try {
+				// Attempts to add Text value to list of arguments
+				arguments.add(process(entry));
+			} catch(IllegalArgumentException e) {
+				Console.getInstance().newMessage(getWorkbenchPage(),
+						"No value entered: " + e.getMessage());
+				error = true;
+			}
+		}
+		return error;
+	}
+	
+	/**
+	 * Checks if Text value in entry is valid
+	 * @param entry
+	 * @return String
+	 * @throws IllegalArgumentException
+	 */
+	private String process(Entry<Text, String> entry) throws IllegalArgumentException {
+		String arg = entry.getKey().getText();
+		String desc = entry.getValue();
+		
+		return process(arg, desc);
+	}
+	
+	/**
+	 * Checks if arg is valid
+	 * @param arg
+	 * @param description
+	 * @return String
+	 * @throws IllegalArgumentException
+	 */
+	private String process(String arg, String description) throws IllegalArgumentException {
+		// No value entered
+		if (arg.equals("")) {
+			throw new IllegalArgumentException(description);
+		}
+		
+		return arg;
+	}
+	
+	/**
+	 * Returns active workbench page
+	 * @return
+	 */
+	private IWorkbenchPage getWorkbenchPage() {
+		return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 	}
 	
 	@Override
