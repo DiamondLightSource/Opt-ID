@@ -250,9 +250,9 @@ public class IdDescForm extends ViewPart {
 					// TODO: Investigate different colour text for console
 					// TODO: If successful, show pop-up and close view
 					if (Util.exit_value == 0) {
-						Console.getInstance().newMessage(getWorkbenchPage(), "File generated successfully");
+						Console.getInstance().newMessage(getWorkbenchPage(), "File generated successfully", Console.SUCCESS_COLOUR);
 					} else {
-						Console.getInstance().newMessage(getWorkbenchPage(), "Error generating file:");
+						Console.getInstance().newMessage(getWorkbenchPage(), "Error generating file:", Console.ERROR_COLOUR);
 						Console.getInstance().newMessage(getWorkbenchPage(), errorOutput);
 					}
 				} catch (IllegalStateException e) {
@@ -699,7 +699,7 @@ public class IdDescForm extends ViewPart {
 		// No type option selected
 		} catch(IllegalArgumentException e) {
 			Console.getInstance().newMessage(getWorkbenchPage(),
-					"No value entered: " + e.getMessage());
+					"No value entered: " + e.getMessage(), Console.ERROR_COLOUR);
 			error = true;
 		}
 		
@@ -732,7 +732,7 @@ public class IdDescForm extends ViewPart {
 				arguments.add(process(entry));
 			} catch(IllegalArgumentException e) {
 				Console.getInstance().newMessage(getWorkbenchPage(),
-						"No value entered: " + e.getMessage());
+						"No value entered: " + e.getMessage(), Console.ERROR_COLOUR);
 				error = true;
 			}
 		}

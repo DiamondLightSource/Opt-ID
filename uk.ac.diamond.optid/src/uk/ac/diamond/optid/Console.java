@@ -1,5 +1,8 @@
 package uk.ac.diamond.optid;
 
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.console.ConsolePlugin;
@@ -10,6 +13,10 @@ import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 
 public final class Console {
+	
+	/* Colours to use for console output */
+	public static final Color SUCCESS_COLOUR = Display.getDefault().getSystemColor(SWT.COLOR_DARK_GREEN);
+	public static final Color ERROR_COLOUR = Display.getDefault().getSystemColor(SWT.COLOR_RED);	
 	
 	private static Console instance = null;
 	private static String CONSOLE_NAME = "OptID";
@@ -35,7 +42,12 @@ public final class Console {
 	}
 	
 	public void newMessage(IWorkbenchPage page, String message) {
+		newMessage(page, message, null);
+	}
+	
+	public void newMessage(IWorkbenchPage page, String message, Color textColour) {
 		MessageConsoleStream out = messageConsole.newMessageStream();
+		out.setColor(textColour);
 		out.println(message);
 
 		IConsoleView view = null;

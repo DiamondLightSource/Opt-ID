@@ -175,10 +175,7 @@ public class MainView extends ViewPart {
 		btnIdDes.setText("ID Description");
 		// Button set to fill width of containing composite
 		btnIdDes.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		// btnIdDes selection state depends on whether IdDescForm view is open
-		if (getWorkbenchPage().findView(IdDescForm.ID) != null) {
-			btnIdDes.setSelection(true);
-		}
+
 		// Show/hide respective form view
 		btnIdDes.addSelectionListener(new SelectionAdapter() {
 			@Override
