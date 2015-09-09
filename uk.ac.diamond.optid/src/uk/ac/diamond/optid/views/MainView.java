@@ -1,8 +1,5 @@
 package uk.ac.diamond.optid.views;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -143,6 +140,9 @@ public class MainView extends ViewPart {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
 				Console.getInstance().newMessage(getWorkbenchPage(), "Working directory set: " + txtDir.getText());
+				btnIdDes.setEnabled(true);
+				btnMagStr.setEnabled(true);
+				btnLookGen.setEnabled(true);
 			}
 		});
 	}
@@ -164,6 +164,7 @@ public class MainView extends ViewPart {
 		btnIdDes.setText("ID Description");
 		// Button set to fill width of containing composite
 		btnIdDes.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		btnIdDes.setEnabled(false);
 
 		// Show/hide respective form view
 		btnIdDes.addSelectionListener(new SelectionAdapter() {
@@ -197,6 +198,7 @@ public class MainView extends ViewPart {
 		btnMagStr.setText("Magnet Strengths");
 		// Button set to fill width of containing composite
 		btnMagStr.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		btnMagStr.setEnabled(false);
 		
 		Label lblMagStrStatus = new Label(grpOptFiles, SWT.NONE);
 		// Initial label status
@@ -210,6 +212,7 @@ public class MainView extends ViewPart {
 		btnLookGen.setText("Lookup Generator");
 		// Button set to fill width of containing composite
 		btnLookGen.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		btnLookGen.setEnabled(false);
 		
 		Label lblLookGenStatus = new Label(grpOptFiles, SWT.NONE);
 		// Initial label status
