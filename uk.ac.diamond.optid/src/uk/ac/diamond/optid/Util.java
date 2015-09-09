@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -137,7 +139,7 @@ public class Util {
 			return null;
 		}
 
-		if (isFolder(resultTest + "/scripts")) {
+		if (isValidDirectory(resultTest + "/scripts")) {
 			return resultTest + "/scripts/";
 		} else {
 			File file = new File(resultTest);
@@ -147,13 +149,14 @@ public class Util {
 	}
 	
 	/**
-	 * Return true if input is a valid directory
-	 * @param input
-	 * @return
+	 * Determines whether given path is a valid directory
+	 * @param path
+	 * @return true if path is a valid directory
 	 */
-	private static boolean isFolder(String input) {
-		File file = new File(input);
-		return file.isDirectory();
+	public static boolean isValidDirectory(String path) {
+		return path.length() > 0
+				& path.charAt(0) == '/'
+				& Files.isDirectory(Paths.get(path));
 	}
 
 }

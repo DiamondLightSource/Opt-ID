@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.diamond.optid.Activator;
 import uk.ac.diamond.optid.Console;
+import uk.ac.diamond.optid.Util;
 
 public class MainView extends ViewPart {
 	
@@ -127,7 +128,7 @@ public class MainView extends ViewPart {
 		txtDir.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e) {
-				if (isValidDirectory(txtDir.getText())) {
+				if (Util.isValidDirectory(txtDir.getText())) {
 					txtDir.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_GREEN));
 					btnSave.setEnabled(true);
 				} else {
@@ -144,18 +145,6 @@ public class MainView extends ViewPart {
 				Console.getInstance().newMessage(getWorkbenchPage(), "Working directory set: " + txtDir.getText());
 			}
 		});
-	}
-	
-	/**
-	 * Determines whether given path is a valid directory
-	 * @param path
-	 * @return true if path is a valid directory
-	 */
-	//TODO: Move to a Util class
-	private boolean isValidDirectory(String path) {
-		return path.length() > 0
-				& path.charAt(0) == '/'
-				& Files.isDirectory(Paths.get(path));
 	}
 	
 	/**
