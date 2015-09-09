@@ -15,22 +15,58 @@ public class Util {
 	public static int exit_value = -1;
 	
 	public static void main(String[] args) {
-		String[] test_arguments = new String[] {"91", "33.", "33.", "13.95", "33.", "33.", "6.95", "33.", "33.", "6.95",
+		String[] test_arguments = new String[] {"109", "41", "16", "6.22", "41", "16",
+				"3.12", "41", "16", "4.0", "0.03", "6.15", "PPM_AntiSymmetric", "J13",
+				"-5.0", "5.1", "2.5", "-0.0", ".1", "0.1", "5"};
+		String test_filename =  "J13";
+		
+		String[] test_arguments_sym = new String[] {"91", "33.", "33.", "13.95", "33.", "33.", "6.95", "33.", "33.", "6.95",
 				"0.05", "20.0", "APPLE_Symmetric",
 				"I21", "-5.0", "5.1", "2.5", "-5.0", "5.1", "5.0", "5",
 				"5.0", "0.5", "6.0"};
-		String test_dir = "/home/xrp26957/Downloads";
-		String test_filename =  "I21.json";
+		String test_filename_sym =  "I21";
 		
-		System.out.println(run(test_arguments, test_dir, test_filename));
+		// Directory where output files will be generated
+		String test_dir = "/home/xrp26957/Downloads";
+		
+		// run_id_setup.sh Argument Type: PPM_AntiSymmetric 
+		test(test_arguments, test_dir, test_filename);
+		
+		System.out.println();
+		
+		// run_id_setup.sh Argument Type: APPLE_Symmetric
+		test(test_arguments_sym, test_dir, test_filename_sym);
 	}
 	
+	private static void test(String[] arguments, String workingDir, String fileName) {
+		String testType;
+		if (arguments.length == 21) {
+			testType = "PPM_AntiSymmetric";
+		} else if (arguments.length == 24) {
+			testType = "APPLE_SYMMETRIC";
+		} else {
+			System.out.println("Test has invalid number of arguments");
+			return;
+		}
+		
+		System.out.println("Running \"run_id_setup.sh\" script with valid '" + testType + "' arguments:");
+		String errorOutput = run(arguments, workingDir, fileName);
+		if (exit_value == 0) {
+			System.out.println("File generated successfully");
+		} else {
+			System.out.println("Error generating file:");
+			System.out.println(errorOutput);
+		}
+	}
+	
+	//TODO: Needs to be modified to be handle all scripts i.e. add Enum to parameters
 	public static String run(String[] arguments, String workingDir, String fileName) {
 		String script_dir = getAbsoluteScriptDirPath();
 		
 		String scriptPath = FilenameUtils.concat(script_dir, "run_id_setup.sh");
 		String pythonPath = FilenameUtils.concat(script_dir, "python/id_setup.py");
-		String outputFilePath = FilenameUtils.concat(workingDir, fileName);
+		String outFileExt = ".json";
+		String outputFilePath = FilenameUtils.concat(workingDir, fileName + outFileExt);
 
 		ArrayList<String> processArray = new ArrayList<String>(Arrays.asList(arguments));
 		processArray.add(0, scriptPath);

@@ -247,7 +247,6 @@ public class IdDescForm extends ViewPart {
 					// TODO: Need to get working directory from MainView
 					String workingDir = "/home/xrp26957/Downloads";
 					String errorOutput = Util.run(arguments, workingDir, arguments[13]);
-					// TODO: Investigate different colour text for console
 					// TODO: If successful, show pop-up and close view
 					if (Util.exit_value == 0) {
 						Console.getInstance().newMessage(getWorkbenchPage(), "File generated successfully", Console.SUCCESS_COLOUR);
