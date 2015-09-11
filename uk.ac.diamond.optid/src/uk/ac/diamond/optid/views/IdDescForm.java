@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.diamond.optid.Activator;
 import uk.ac.diamond.optid.Console;
 import uk.ac.diamond.optid.Util;
+import uk.ac.diamond.optid.properties.IdDescPropertyConstants;
 import uk.ac.diamond.optid.properties.PropertyConstants;
 
 public class IdDescForm extends ViewPart {
@@ -301,16 +302,27 @@ public class IdDescForm extends ViewPart {
 					String errorOutput = Util.run(arguments, workingDir, fileName);
 					
 					// TODO: If successful, show pop-up and close view
+					// File generation successful
 					if (Util.exit_value == 0) {
 						Console.getInstance().newMessage(getWorkbenchPage(), 
 								fileName + ".json generated successfully in " + workingDir, Console.SUCCESS_COLOUR);
-					} else {
+						// Fields only saved (long-term) if file generation successful
+						saveToPropertyStore();
+					} else { 
 						Console.getInstance().newMessage(getWorkbenchPage(), 
 								"Error generating file " + fileName + ".json", Console.ERROR_COLOUR);
 						Console.getInstance().newMessage(getWorkbenchPage(), errorOutput);
 					}
 				} catch (IllegalStateException e) {
 				}
+			}
+		});
+		
+		// Restores text fields with values from previous successful file generation
+		btnRestore.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				setFromPropertyStore();
 			}
 		});
 	}
@@ -830,6 +842,66 @@ public class IdDescForm extends ViewPart {
 		}
 		
 		return arg;
+	}
+	
+	/**
+	 * Saves text field values to property store
+	 */
+	private void saveToPropertyStore() {
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_NAME, txtName.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_TYPE, cboType.getSelectionIndex());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_PERIODS, txtPeriods.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_GAP, txtGap.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_INTERSTICE, txtInterstice.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_FULL_X, txtFullX.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_FULL_Z, txtFullZ.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_FULL_S, txtFullS.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_VE_X, txtVeX.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_VE_Z, txtVeZ.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_VE_S, txtVeS.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_HE_X, txtHeX.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_HE_Z, txtHeZ.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_HE_S, txtHeS.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_X_START, txtXStart.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_X_STOP, txtXStop.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_X_STEP, txtXStep.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_Z_START, txtZStart.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_Z_STOP, txtZStop.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_Z_STEP, txtZStep.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_STEPS_S, txtStepsS.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_END_GAP, txtEndGap.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_PHASING_GAP, txtPhasingGap.getText());
+		propertyStore.setValue(IdDescPropertyConstants.P_ID_DESC_CLAMP_CUT, txtClampCut.getText());	
+	}
+	
+	/**
+	 * Fills text fields with values from property store
+	 */
+	private void setFromPropertyStore() {
+		txtName.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_NAME));
+		cboType.select(propertyStore.getInt(IdDescPropertyConstants.P_ID_DESC_TYPE));
+		txtPeriods.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_PERIODS));
+		txtGap.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_GAP));
+		txtInterstice.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_INTERSTICE));
+		txtFullX.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_FULL_X));
+		txtFullZ.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_FULL_Z));
+		txtFullS.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_FULL_S));
+		txtVeX.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_VE_X));
+		txtVeZ.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_VE_Z));
+		txtVeS.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_VE_S));
+		txtHeX.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_HE_X));
+		txtHeZ.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_HE_Z));
+		txtHeS.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_HE_S));
+		txtXStart.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_X_START));
+		txtXStop.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_X_STOP));
+		txtXStep.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_X_STEP));
+		txtZStart.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_Z_START));
+		txtZStop.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_Z_STOP));
+		txtZStep.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_Z_STEP));
+		txtStepsS.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_STEPS_S));
+		txtEndGap.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_END_GAP));
+		txtPhasingGap.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_PHASING_GAP));
+		txtClampCut.setText(propertyStore.getString(IdDescPropertyConstants.P_ID_DESC_CLAMP_CUT));
 	}
 	
 	/**
