@@ -5,8 +5,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.dawb.common.ui.Activator;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -24,20 +26,25 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IPartListener;
+import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.diamond.optid.Activator;
 import uk.ac.diamond.optid.Console;
 import uk.ac.diamond.optid.Util;
+import uk.ac.diamond.optid.properties.PropertyConstants;
 
 public class IdDescForm extends ViewPart {
 	
 	static final String ID = "uk.ac.diamond.optid.idDescForm";
 	
+	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger(IdDescForm.class);
 	
 	/* Dialog settings keys */
@@ -71,6 +78,12 @@ public class IdDescForm extends ViewPart {
 	
 	/* Combo items */
 	private static final String[] ID_PARAM_TYPE_LIST = new String[] {"PPM AntiSymmetric", "APPLE Symmetric"};
+	
+	// Store values after perspective closed
+	private IPreferenceStore propertyStore;
+	
+	// Directory to generate file in
+	private String workingDir;
 	
 	/* Text to description maps */
 	// Linked hash map used as we want to maintain order of insertion
@@ -179,6 +192,28 @@ public class IdDescForm extends ViewPart {
 		}
 	};
 	
+	// Monitor changes to properties in the perspective-wide property store
+	private IPropertyChangeListener propertyChangeListener = new IPropertyChangeListener() {
+		@Override
+		public void propertyChange(PropertyChangeEvent event) {
+			// Working directory changed in MainView
+			if (event.getProperty().equals(PropertyConstants.P_WORK_DIR)) {
+				// Update to latest value
+				workingDir = (String) event.getNewValue();
+			}
+		}
+	};
+	
+	@Override
+    public void init(IViewSite site) throws PartInitException {
+		super.init(site);
+		
+		propertyStore = Activator.getDefault().getPreferenceStore();
+		propertyStore.addPropertyChangeListener(propertyChangeListener);
+		
+		workingDir = propertyStore.getString(PropertyConstants.P_WORK_DIR);
+    }
+	
 	@Override
 	public void createPartControl(Composite parent) {
 		// Top-level tabbed composite
@@ -244,14 +279,17 @@ public class IdDescForm extends ViewPart {
 			public void widgetSelected(SelectionEvent event) {
 				try {
 					String[] arguments = getArguments();
-					// TODO: Need to get working directory from MainView
-					String workingDir = "/home/xrp26957/Downloads";
-					String errorOutput = Util.run(arguments, workingDir, arguments[13]);
+					String fileName = arguments[13];
+					
+					String errorOutput = Util.run(arguments, workingDir, fileName);
+					
 					// TODO: If successful, show pop-up and close view
 					if (Util.exit_value == 0) {
-						Console.getInstance().newMessage(getWorkbenchPage(), "File generated successfully", Console.SUCCESS_COLOUR);
+						Console.getInstance().newMessage(getWorkbenchPage(), 
+								fileName + ".json generated successfully in " + workingDir, Console.SUCCESS_COLOUR);
 					} else {
-						Console.getInstance().newMessage(getWorkbenchPage(), "Error generating file:", Console.ERROR_COLOUR);
+						Console.getInstance().newMessage(getWorkbenchPage(), 
+								"Error generating file " + fileName + ".json", Console.ERROR_COLOUR);
 						Console.getInstance().newMessage(getWorkbenchPage(), errorOutput);
 					}
 				} catch (IllegalStateException e) {

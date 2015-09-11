@@ -56,5 +56,11 @@
             content="intro/introContribution.xml">
       </configExtension>
    </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="uk.ac.diamond.optid.properties.PropertyInitializer">
+      </initializer>
+   </extension>
 
 </plugin>

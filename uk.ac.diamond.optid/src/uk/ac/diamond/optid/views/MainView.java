@@ -1,5 +1,6 @@
 package uk.ac.diamond.optid.views;
 
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -17,6 +18,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PerspectiveAdapter;
@@ -29,18 +31,23 @@ import org.slf4j.LoggerFactory;
 import uk.ac.diamond.optid.Activator;
 import uk.ac.diamond.optid.Console;
 import uk.ac.diamond.optid.Util;
+import uk.ac.diamond.optid.properties.PropertyConstants;
 
 public class MainView extends ViewPart {
 	
+	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger(MainView.class);
 	
 	private Image imgFolder = Activator.getDefault().getWorkbench().getSharedImages().getImageDescriptor(ISharedImages.IMG_OBJ_FOLDER).createImage();
+	
+	// Store values after perspective closed
+	private IPreferenceStore propertyStore;
 	
 	/* UI Components */
 	private Button btnIdDes;
 	private Button btnMagStr;
 	private Button btnLookGen;
-	
+		
 	private PerspectiveAdapter perspectiveListener = new PerspectiveAdapter() {
 		@Override
 		public void perspectiveChanged(IWorkbenchPage page, IPerspectiveDescriptor perspective, String changeId) {			
@@ -62,6 +69,12 @@ public class MainView extends ViewPart {
 			}
 		}
 	};
+	
+	@Override
+    public void init(IViewSite site) throws PartInitException {
+		super.init(site);
+		propertyStore = Activator.getDefault().getPreferenceStore();
+	}
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -139,7 +152,13 @@ public class MainView extends ViewPart {
 		btnSave.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
+				// Save new directory value to property store
+				propertyStore.setValue(PropertyConstants.P_WORK_DIR, txtDir.getText());
+				
+				// Inform user
 				Console.getInstance().newMessage(getWorkbenchPage(), "Working directory set: " + txtDir.getText());
+				
+				// Enable form buttons
 				btnIdDes.setEnabled(true);
 				btnMagStr.setEnabled(true);
 				btnLookGen.setEnabled(true);
@@ -234,10 +253,18 @@ public class MainView extends ViewPart {
 
 	@Override
     public void dispose() {
+		// Required since getSite() returns null during workbench initialisation
+		if (getSite() != null) {
+			getSite().getWorkbenchWindow().removePerspectiveListener(perspectiveListener);
+		}
+		
 		// Dispose acquired images
 		if (imgFolder != null) {
 			imgFolder.dispose();
 		}
+		
+		// Restore working directory value to default on close
+		propertyStore.setToDefault(PropertyConstants.P_WORK_DIR);
 		
 		super.dispose();
     }
