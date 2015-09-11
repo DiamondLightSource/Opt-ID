@@ -271,6 +271,23 @@ public class IdDescForm extends ViewPart {
 		btnSubmit.setText("Submit");
 		btnSubmit.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 		
+		// Clear all text boxes
+		btnClear.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				for (Text text : textDescMap.keySet()) {
+					text.setText("");
+				}
+				
+				// Only clear symmetric only fields if type set
+				if (cboType.getText().equals("APPLE Symmetric")) {
+					for (Text text : appleSymOnlyTextMap.keySet()) {
+						text.setText("");
+					}	
+				}
+			}
+		});
+		
 		// On click, checks if all text widgets have values
 		// Then forwards arguments to Util.run() to call script to generate file
 		// Message printed in console indicating success or failure
@@ -456,6 +473,7 @@ public class IdDescForm extends ViewPart {
 		(new Label(grpIdParams, SWT.NONE)).setText("Type");
 		cboType = new Combo(grpIdParams, SWT.READ_ONLY);
 		cboType.setItems(ID_PARAM_TYPE_LIST);
+		cboType.select(0);
 				
 		// Text (int) Field - Periods
 		(new Label(grpIdParams, SWT.NONE)).setText("Periods");
