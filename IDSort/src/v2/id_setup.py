@@ -238,7 +238,27 @@ def create_location_list_symmetric_apple_q3(period, nperiods, fullmagdims, vemag
     V1.append((x,z,s))
     return V1
 
+def create_type_list_symmetric_hybrid(nperiods):
+    # do the first end
+    types = []
+    start = 0
+    stop = 0
 
+    types.append('HEE')
+    types.append('HE')
+
+    start, stop = (2, (4*nperiods+5)-2)
+
+    # now put in all the middle periods
+    for i in range(start, stop):
+        types.append('HH')
+
+
+    # finally add in the other end
+    types.append('HE')
+    types.append('HEE')
+
+    return types
 
 def create_type_list_antisymetric_ppm(nperiods):
     # do the first end
@@ -394,6 +414,91 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
 
+    if options.type == 'Hybrid_Symmetric':
+        output = {}
+        output['name'] = options.name
+        output['type'] = options.type
+        output['number_of_beams'] = 2
+        output['gap'] = options.gap
+        output['periods'] = options.periods
+        output['period_length'] = 4*(options.interstice+options.fullmagdims[2])
+        # TODO needs sorting out
+        output['xmin'] = options.x[0]
+        output['xmax'] = options.x[1]
+        output['xstep'] = options.x[2]
+        output['zmin'] = options.z[0]
+        output['zmax'] = options.z[1]
+        output['zstep'] = options.z[2]
+        length = (options.fullmagdims[2]+options.interstice)*4*(options.periods+16)
+        output['smin'] = -length/2.0
+        output['smax'] = (length/2.0)+((options.fullmagdims[2]+options.interstice)/options.steps)
+        output['sstep'] = (options.fullmagdims[2]+options.interstice)/options.steps
+        output['interstice'] = options.interstice
+
+        # calculate all magnet values
+        types = create_type_list_symmetric_hybrid(options.periods)
+        top_directions = create_direction_list_symmetric_hybrid_top(options.periods)
+        bottom_directions = create_direction_list_symmetric_hybrid_bottom(options.periods)
+        top_directions_matrix = create_direction_matrix_list_symmetric_hybrid_top(options.periods)
+        bottom_directions_matrix = create_direction_matrix_list_symmetric_hybrid_bottom(options.periods)
+        top_positions = create_location_list_symmetric_hybrid_top(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
+        bottom_positions = create_location_list_symmetric_hybrid_bottom(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
+        top_flip_matrix = create_flip_matrix_symmetric_hybrid_top(options.periods)
+        bottom_flip_matrix = create_flip_matrix_symmetric_hybrid_bottom(options.periods)
+
+        # output beams
+        output['beams'] = []
+        top_beam = {}
+        top_beam['name'] = "Top Beam"
+        top_beam['mags'] = []
+        
+        bottom_beam = {}
+        bottom_beam['name'] = "Bottom Beam"
+        bottom_beam['mags'] = []
+
+        # top beam
+        for i in range(len(types)):
+            mag = {}
+            mag['type'] = types[i]
+            mag['direction'] = top_directions[i]
+            mag['direction_matrix'] = top_directions_matrix[i]
+            mag['position'] = top_positions[i]
+            mag['flip_matrix'] = top_flip_matrix[i]
+            if types[i] == 'VV':
+                mag['dimensions'] = options.fullmagdims
+            elif types[i] == 'HH':
+                mag['dimensions'] = options.fullmagdims
+            elif types[i] == 'HE':
+                mag['dimensions'] = options.hemagdims
+            elif types[i] == 'VE':
+                mag['dimensions'] = options.vemagdims
+            top_beam['mags'].append(mag)
+
+        # bottom beam
+        for i in range(len(types)):
+            mag = {}
+            mag['type'] = types[i]
+            mag['direction'] = bottom_directions[i]
+            mag['direction_matrix'] = bottom_directions_matrix[i]
+            mag['position'] = bottom_positions[i]
+            mag['flip_matrix'] = bottom_flip_matrix[i]
+            if types[i] == 'VV':
+                mag['dimensions'] = options.fullmagdims
+            elif types[i] == 'HH':
+                mag['dimensions'] = options.fullmagdims
+            elif types[i] == 'HE':
+                mag['dimensions'] = options.hemagdims
+            elif types[i] == 'VE':
+                mag['dimensions'] = options.vemagdims
+            bottom_beam['mags'].append(mag)
+
+        output['beams'].append(top_beam)
+        output['beams'].append(bottom_beam)
+
+        fp = open(args[0], 'w')
+        json.dump(output, fp, indent=4)
+        fp.close()
+        
     if options.type == 'PPM_AntiSymmetric':
         output = {}
         output['name'] = options.name
