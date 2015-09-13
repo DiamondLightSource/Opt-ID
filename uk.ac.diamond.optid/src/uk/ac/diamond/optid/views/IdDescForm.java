@@ -10,8 +10,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -50,8 +48,6 @@ public class IdDescForm extends ViewPart {
 	
 	/* Dialog settings keys */
 	private static final String ID_DESC_SETTINGS = "uk.ac.diamond.optid.idDescForm.settings";
-	private static final String ID_DESC_TAB = "uk.ac.diamond.optid.idDescForm.tab";
-	private static final String ID_DESC_FILE_PATH = "uk.ac.diamond.optid.idDescForm.filePath";
 	private static final String ID_DESC_NAME = "uk.ac.diamond.optid.idDescForm.name";
 	private static final String ID_DESC_TYPE = "uk.ac.diamond.optid.idDescForm.type";
 	private static final String ID_DESC_PERIODS = "uk.ac.diamond.optid.idDescForm.periods";
@@ -93,12 +89,8 @@ public class IdDescForm extends ViewPart {
 	private LinkedHashMap<Text, String> appleSymOnlyTextMap = new LinkedHashMap<>();
 	
 	/* Components */
-	private CTabFolder tabFolder;
 	private ScrolledComposite scrolledComp;
 	private Composite compNewFileForm;
-
-	// Load file
-	private Text txtFilePath;
 	
 	// ID parameters
 	private Text txtName;
@@ -156,8 +148,6 @@ public class IdDescForm extends ViewPart {
 		    }
 
 		    // Store all component values
-		    section.put(ID_DESC_TAB, tabFolder.getSelectionIndex());
-		    section.put(ID_DESC_FILE_PATH, txtFilePath.getText());
 		    section.put(ID_DESC_NAME, txtName.getText());
 		    section.put(ID_DESC_TYPE, cboType.getText());
 		    section.put(ID_DESC_PERIODS, txtPeriods.getText());
@@ -217,42 +207,18 @@ public class IdDescForm extends ViewPart {
 	
 	@Override
 	public void createPartControl(Composite parent) {
-		// Top-level tabbed composite
-		tabFolder = new CTabFolder(parent, SWT.NONE);
-		tabFolder.setLayoutData(new GridData(GridData.FILL_BOTH));
-		tabFolder.setSimple(false);
-		
-		// Tab 1 - Create new file
-		CTabItem tabNewFile = new CTabItem(tabFolder, SWT.NONE);
-		tabNewFile.setText("Create new file");
-		tabNewFile.setControl(setupNewFile(tabFolder));
-		
-		// Tab 2 - Load file
-		CTabItem tabLoadFile = new CTabItem(tabFolder, SWT.NONE);
-		tabLoadFile.setText("Load file");
-		tabLoadFile.setControl(setupLoadFile(tabFolder));
-		
-		// Default tab selection
-		tabFolder.setSelection(tabNewFile);
-
-		initialiseMaps();
-		restoreComponentValues();
-	}
-	
-	/**
-	 * Setup composite containing scrollable form and buttons
-	 * @param parent
-	 * @return
-	 */
-	private Composite setupNewFile(Composite parent) {
-		Composite comp = new Composite(tabFolder, SWT.NONE);
+		// Top-level composite
+		Composite comp = new Composite(parent, SWT.NONE);
 		comp.setLayout(new GridLayout(2, false));
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
+		// Set up scrolled composite containing form fields
 		setupScrolledComp(comp);
+		// Setup Clear, Restore & Submit buttons
 		setupSubmissionControls(comp);
 		
-		return comp;
+		initialiseMaps();
+		restoreComponentValues();
 	}
 	
 	/**
@@ -357,8 +323,6 @@ public class IdDescForm extends ViewPart {
 		IDialogSettings section = settings.getSection(ID_DESC_SETTINGS);
 		
 		if (section != null) {
-			tabFolder.setSelection(section.getInt(ID_DESC_TAB));
-			txtFilePath.setText(section.get(ID_DESC_FILE_PATH));
 			txtName.setText(section.get(ID_DESC_NAME));
 			cboType.setText(section.get(ID_DESC_TYPE));
 			txtPeriods.setText(section.get(ID_DESC_PERIODS));
@@ -439,35 +403,6 @@ public class IdDescForm extends ViewPart {
 		setupMagnetDims(compNewFileForm);
 		setupCalParams(compNewFileForm);
 		setupAppleSymOnlyParams(compNewFileForm);
-	}
-	
-	/**
-	 * Setup components for loading existing file
-	 * @param parent
-	 */
-	private Composite setupLoadFile(Composite parent) {
-		Composite comp = new Composite(parent, SWT.NONE);		
-		comp.setLayout(new GridLayout(2, false));
-	    comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-	    
-	    // Label
-		(new Label(comp, SWT.NONE)).setText("ID Description JSON File");
-		new Label(comp, SWT.NONE); // Dummy label to fill 2nd cell
-		
-		// Text box
-		txtFilePath = new Text(comp, SWT.SINGLE | SWT.BORDER);
-		txtFilePath.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
-		// Button - File path dialog
-		Button btnDialog = new Button(comp, SWT.PUSH);
-		btnDialog.setText("Browse");
-		
-		// Button - Submit file path
-		Button btnSubmit = new Button(comp, SWT.PUSH);
-		btnSubmit.setText("Submit");
-		btnSubmit.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
-		
-		return comp;
 	}
 
 	/**
