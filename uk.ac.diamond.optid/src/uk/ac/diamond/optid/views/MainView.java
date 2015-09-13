@@ -1,5 +1,9 @@
 package uk.ac.diamond.optid.views;
 
+import java.io.File;
+
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -8,6 +12,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -25,6 +30,10 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PerspectiveAdapter;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.forms.events.HyperlinkEvent;
+import org.eclipse.ui.forms.events.IHyperlinkListener;
+import org.eclipse.ui.forms.widgets.Hyperlink;
+import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.IPerspectiveDescriptor;
 import org.slf4j.Logger;
@@ -45,13 +54,17 @@ public class MainView extends ViewPart {
 	// Store values after perspective closed
 	private IPreferenceStore propertyStore;
 	
+	// Generated file paths
 	private String idDescFilePath;
+	
+	// Open generated file listeners
+	private HyperLinkListener idDescLinkListener;
 	
 	/* UI Components */
 	private Button btnIdDes;
 	private Button btnMagStr;
 	private Button btnLookGen;
-	private Label lblIdDesStatus;
+	private Hyperlink lblIdDesStatus;
 		
 	private PerspectiveAdapter perspectiveListener = new PerspectiveAdapter() {
 		@Override
@@ -80,13 +93,45 @@ public class MainView extends ViewPart {
 		@Override
 		public void propertyChange(PropertyChangeEvent event) {			
 			if (event.getProperty().equals(PropertyConstants.P_ID_DESC_PATH)) {
+				// Update ID Description file path to new value
 				idDescFilePath = (String) event.getNewValue();
-				lblIdDesStatus.setText("Complete");
-				lblIdDesStatus.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_GREEN));
+				// Update status
+				setLabelStatusComplete(lblIdDesStatus, idDescFilePath);
 			}
 		}
 	};
 	
+	// On click, opens file with given path using default editor
+	private class HyperLinkListener implements IHyperlinkListener {
+		private String filePath;
+		
+		public HyperLinkListener(String filePath) {
+			this.filePath = filePath;
+		}
+		
+		@Override
+		public void linkEntered(HyperlinkEvent e) {			
+		}
+
+		@Override
+		public void linkExited(HyperlinkEvent e) {			
+		}
+
+		@Override
+		public void linkActivated(HyperlinkEvent e) {
+			if (filePath != null) {
+				File idDescfile = new File(filePath);
+				if (idDescfile.exists() && idDescfile.isFile()) {	
+				    IFileStore fileStore = EFS.getLocalFileSystem().getStore(idDescfile.toURI());
+				    try {
+				        IDE.openEditorOnFileStore(getWorkbenchPage(), fileStore);
+				    } catch ( PartInitException exc ) {
+				    }
+				}
+			}	
+		}
+	}
+		
 	@Override
     public void init(IViewSite site) throws PartInitException {
 		super.init(site);
@@ -186,9 +231,9 @@ public class MainView extends ViewPart {
 					// Inform user
 					Console.getInstance().newMessage(getWorkbenchPage(), "Working directory set: " + newWorkDir);
 					
+					// Resets all file generation form statuses
 					idDescFilePath = null;
-					lblIdDesStatus.setText("Not complete");
-					lblIdDesStatus.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
+					setLabelStatusNotComplete(lblIdDesStatus, idDescLinkListener);
 				}
 			}
 		});
@@ -233,10 +278,8 @@ public class MainView extends ViewPart {
 			}
 		});
 		
-		lblIdDesStatus = new Label(grpOptFiles, SWT.NONE);
-		// Initial label status
-		lblIdDesStatus.setText("Not complete");
-		lblIdDesStatus.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
+		lblIdDesStatus = new Hyperlink(grpOptFiles, SWT.NONE);
+		setLabelStatusNotComplete(lblIdDesStatus, idDescLinkListener);
 		
 		/* Magnet Strengths */
 		(new Label(grpOptFiles, SWT.NONE)).setText("2.");
@@ -296,5 +339,29 @@ public class MainView extends ViewPart {
 		
 		super.dispose();
     }
+	
+	/**
+	 * Updates label to status of file generation complete
+	 */
+	private void setLabelStatusComplete(Hyperlink label, String filePath) {
+		label.setText("Open");
+		label.setUnderlined(true);
+		label.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_GREEN));
+		label.setCursor(new Cursor(Display.getCurrent(), SWT.CURSOR_HAND));
+
+		idDescLinkListener = new HyperLinkListener(idDescFilePath);
+		label.addHyperlinkListener(idDescLinkListener);
+	}
+	
+	/**
+	 * Updates label to status of file generation not complete
+	 */
+	private void setLabelStatusNotComplete(Hyperlink label, HyperLinkListener listener) {
+		label.setText("Not complete");
+		label.setUnderlined(false);
+		label.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
+		label.setCursor(new Cursor(Display.getCurrent(), SWT.CURSOR_ARROW));
+		label.removeHyperlinkListener(listener);
+	}
 	
 }

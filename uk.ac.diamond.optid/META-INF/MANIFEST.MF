@@ -16,6 +16,10 @@ Bundle-ActivationPolicy: lazy
 Import-Package: org.apache.commons.io;version="2.4.0",
  org.apache.commons.lang;version="2.6.0",
  org.dawb.common.ui.perspective,
+ org.eclipse.core.filesystem,
  org.eclipse.ui,
  org.eclipse.ui.console,
+ org.eclipse.ui.forms.events,
+ org.eclipse.ui.forms.widgets,
+ org.eclipse.ui.ide,
  org.slf4j;version="1.7.6"
