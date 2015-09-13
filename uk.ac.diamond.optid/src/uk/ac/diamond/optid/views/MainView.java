@@ -170,16 +170,26 @@ public class MainView extends ViewPart {
 		btnSave.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				// Save new directory value to property store
-				propertyStore.setValue(PropertyConstants.P_WORK_DIR, txtDir.getText());
+				String oldWorkDir = propertyStore.getString(PropertyConstants.P_WORK_DIR);
+				String newWorkDir = txtDir.getText();
 				
-				// Inform user
-				Console.getInstance().newMessage(getWorkbenchPage(), "Working directory set: " + txtDir.getText());
+				// Save new directory value to property store
+				propertyStore.setValue(PropertyConstants.P_WORK_DIR, newWorkDir);
 				
 				// Enable form buttons
 				btnIdDes.setEnabled(true);
 				btnMagStr.setEnabled(true);
 				btnLookGen.setEnabled(true);
+				
+				// If value has actually changed
+				if (!newWorkDir.equals(oldWorkDir)) {
+					// Inform user
+					Console.getInstance().newMessage(getWorkbenchPage(), "Working directory set: " + newWorkDir);
+					
+					idDescFilePath = null;
+					lblIdDesStatus.setText("Not complete");
+					lblIdDesStatus.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
+				}
 			}
 		});
 	}
