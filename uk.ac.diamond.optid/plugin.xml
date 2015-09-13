@@ -23,6 +23,14 @@
             id="uk.ac.diamond.optid.idOptCategory"
             name="ID Optimisation">
       </category>
+      <view
+            allowMultiple="false"
+            category="uk.ac.diamond.optid.idOptCategory"
+            class="uk.ac.diamond.optid.views.MagStrForm"
+            id="uk.ac.diamond.optid.magStrForm"
+            name="Magnet Strengths Form"
+            restorable="false">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.perspectives">
