@@ -12,6 +12,8 @@ public class PropertyInitializer extends AbstractPreferenceInitializer {
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 		
 		store.setDefault(PropertyConstants.P_WORK_DIR, System.getProperty("user.home"));
+		// Since file generated in runtime, no default value
+		store.setDefault(PropertyConstants.P_ID_DESC_PATH, "");
 		
 		// Add ID Description constants
 		store.setDefault(IdDescPropertyConstants.P_ID_DESC_NAME, IdDescPropertyConstants.DEF_ID_DESC_NAME);

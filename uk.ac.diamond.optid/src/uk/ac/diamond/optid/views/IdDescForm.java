@@ -308,6 +308,10 @@ public class IdDescForm extends ViewPart {
 								fileName + ".json generated successfully in " + workingDir, Console.SUCCESS_COLOUR);
 						// Fields only saved (long-term) if file generation successful
 						saveToPropertyStore();
+						// Update generated file's path in property store
+						// To notify MainView of new value
+						String filePath = Util.createFilePath(workingDir, fileName + ".json");
+						propertyStore.setValue(PropertyConstants.P_ID_DESC_PATH, filePath);
 					} else { 
 						Console.getInstance().newMessage(getWorkbenchPage(), 
 								"Error generating file " + fileName + ".json", Console.ERROR_COLOUR);

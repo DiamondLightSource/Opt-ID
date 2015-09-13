@@ -65,10 +65,10 @@ public class Util {
 	public static String run(String[] arguments, String workingDir, String fileName) {
 		String script_dir = getAbsoluteScriptDirPath();
 		
-		String scriptPath = FilenameUtils.concat(script_dir, "run_id_setup.sh");
-		String pythonPath = FilenameUtils.concat(script_dir, "python/id_setup.py");
+		String scriptPath = createFilePath(script_dir, "run_id_setup.sh");
+		String pythonPath = createFilePath(script_dir, "python/id_setup.py");
 		String outFileExt = ".json";
-		String outputFilePath = FilenameUtils.concat(workingDir, fileName + outFileExt);
+		String outputFilePath = createFilePath(workingDir, fileName + outFileExt);
 
 		ArrayList<String> processArray = new ArrayList<String>(Arrays.asList(arguments));
 		processArray.add(0, scriptPath);
@@ -157,6 +157,16 @@ public class Util {
 		return path.length() > 0
 				& path.charAt(0) == '/'
 				& Files.isDirectory(Paths.get(path));
+	}
+	
+	/**
+	 * Combines directory and file name into single path
+	 * @param dir
+	 * @param fileName
+	 * @return String
+	 */
+	public static String createFilePath(String dir, String fileName) {
+		return FilenameUtils.concat(dir, fileName);
 	}
 
 }

@@ -1,6 +1,8 @@
 package uk.ac.diamond.optid.views;
 
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -43,10 +45,13 @@ public class MainView extends ViewPart {
 	// Store values after perspective closed
 	private IPreferenceStore propertyStore;
 	
+	private String idDescFilePath;
+	
 	/* UI Components */
 	private Button btnIdDes;
 	private Button btnMagStr;
 	private Button btnLookGen;
+	private Label lblIdDesStatus;
 		
 	private PerspectiveAdapter perspectiveListener = new PerspectiveAdapter() {
 		@Override
@@ -70,10 +75,23 @@ public class MainView extends ViewPart {
 		}
 	};
 	
+	// Monitor changes to properties in the perspective-wide property store
+	private IPropertyChangeListener propertyChangeListener = new IPropertyChangeListener() {
+		@Override
+		public void propertyChange(PropertyChangeEvent event) {			
+			if (event.getProperty().equals(PropertyConstants.P_ID_DESC_PATH)) {
+				idDescFilePath = (String) event.getNewValue();
+				lblIdDesStatus.setText("Complete");
+				lblIdDesStatus.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_GREEN));
+			}
+		}
+	};
+	
 	@Override
     public void init(IViewSite site) throws PartInitException {
 		super.init(site);
 		propertyStore = Activator.getDefault().getPreferenceStore();
+		propertyStore.addPropertyChangeListener(propertyChangeListener);
 	}
 
 	@Override
@@ -205,7 +223,7 @@ public class MainView extends ViewPart {
 			}
 		});
 		
-		Label lblIdDesStatus = new Label(grpOptFiles, SWT.NONE);
+		lblIdDesStatus = new Label(grpOptFiles, SWT.NONE);
 		// Initial label status
 		lblIdDesStatus.setText("Not complete");
 		lblIdDesStatus.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
