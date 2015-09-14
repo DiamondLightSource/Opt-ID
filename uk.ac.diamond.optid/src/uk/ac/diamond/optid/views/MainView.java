@@ -83,6 +83,12 @@ public class MainView extends ViewPart {
 					if (idDescForm != null) {
 						btnIdDes.setSelection(true);
 					}
+					
+					IViewPart magStrForm = getWorkbenchPage().findView(MagStrForm.ID);
+					// MagStrForm open
+					if (magStrForm != null) {
+						btnMagStr.setSelection(true);
+					}
 				}
 			}
 		}
@@ -131,6 +137,32 @@ public class MainView extends ViewPart {
 			}	
 		}
 	}
+	
+	// On widget selection, opens view referenced by viewId
+	private class OpenViewSelectionListener extends SelectionAdapter {
+		private String viewId;
+		
+		public OpenViewSelectionListener(String viewId) {
+			this.viewId = viewId;
+		}
+		
+		@Override
+		public void widgetSelected(SelectionEvent event) {	
+			Button btn = (Button) event.widget;
+			if (btn.getSelection()) {
+				// Show view
+				try {
+					getWorkbenchPage().showView(viewId, null, IWorkbenchPage.VIEW_ACTIVATE);
+				} catch (PartInitException e) {
+					e.printStackTrace();
+				}
+			} else {
+				// Hide view
+				IViewPart view = getWorkbenchPage().findView(viewId);
+				getWorkbenchPage().hideView(view);
+			}
+		}
+	};
 		
 	@Override
     public void init(IViewSite site) throws PartInitException {
@@ -257,26 +289,8 @@ public class MainView extends ViewPart {
 		// Button set to fill width of containing composite
 		btnIdDes.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		btnIdDes.setEnabled(false);
-
 		// Show/hide respective form view
-		btnIdDes.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent event) {				
-				Button btn = (Button) event.widget;
-				if (btn.getSelection()) {
-					// Show view
-					try {
-						getWorkbenchPage().showView(IdDescForm.ID, null, IWorkbenchPage.VIEW_ACTIVATE);
-					} catch (PartInitException e) {
-						e.printStackTrace();
-					}
-				} else {
-					// Hide view
-					IViewPart view = getWorkbenchPage().findView(IdDescForm.ID);
-					getWorkbenchPage().hideView(view);
-				}
-			}
-		});
+		btnIdDes.addSelectionListener(new OpenViewSelectionListener(IdDescForm.ID));
 		
 		lblIdDesStatus = new Hyperlink(grpOptFiles, SWT.NONE);
 		setLabelStatusNotComplete(lblIdDesStatus, idDescLinkListener);
@@ -289,6 +303,8 @@ public class MainView extends ViewPart {
 		// Button set to fill width of containing composite
 		btnMagStr.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		btnMagStr.setEnabled(false);
+		// Show/hide respective form view
+		btnMagStr.addSelectionListener(new OpenViewSelectionListener(MagStrForm.ID));
 		
 		Label lblMagStrStatus = new Label(grpOptFiles, SWT.NONE);
 		// Initial label status

@@ -298,7 +298,7 @@ public class IdDescForm extends ViewPart {
 	}
 	
 	/**
-	 * Setup vertical scroll bar for new file form
+	 * Setup vertical scroll bar for form
 	 * @param parent
 	 */
 	private void setupScrolledComp(Composite parent) {
@@ -429,7 +429,6 @@ public class IdDescForm extends ViewPart {
 		// Text (int) Field - Periods
 		(new Label(grpIdParams, SWT.NONE)).setText("Periods");
 		txtPeriods = new Text(grpIdParams, SWT.SINGLE | SWT.BORDER);
-		txtPeriods.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		// Text (float) Field - Gap
 		(new Label(grpIdParams, SWT.NONE)).setText("Gap");
@@ -442,6 +441,7 @@ public class IdDescForm extends ViewPart {
 		// Make text box stretch to fill width of view
 		txtName.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		cboType.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		txtPeriods.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		txtGap.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		txtInterstice.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));	
 	}

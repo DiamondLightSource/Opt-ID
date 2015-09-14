@@ -160,6 +160,17 @@ public class Util {
 	}
 	
 	/**
+	 * Determines whether given path is a valid sim file
+	 * @param path
+	 * @return true if path is a valid sim file
+	 */
+	public static boolean isValidSimFile(String path) {
+		return path.length() > 0 
+				& Files.isReadable(Paths.get(path))
+				& FilenameUtils.isExtension(path, "sim");
+	}
+	
+	/**
 	 * Combines directory and file name into single path
 	 * @param dir
 	 * @param fileName
