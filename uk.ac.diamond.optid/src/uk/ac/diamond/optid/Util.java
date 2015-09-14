@@ -201,14 +201,14 @@ public class Util {
 	}
 	
 	/**
-	 * Determines whether given path is a valid sim file
+	 * Determines whether given path is a valid file with given extension
 	 * @param path
-	 * @return true if path is a valid sim file
+	 * @return true if path is a valid file
 	 */
-	public static boolean isValidSimFile(String path) {
+	public static boolean isValidFile(String path, String ext) {
 		return path.length() > 0 
 				& Files.isReadable(Paths.get(path))
-				& FilenameUtils.isExtension(path, "sim");
+				& FilenameUtils.isExtension(path, ext);
 	}
 	
 	/**

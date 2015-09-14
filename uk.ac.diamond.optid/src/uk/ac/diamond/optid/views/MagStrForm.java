@@ -338,7 +338,7 @@ public class MagStrForm extends ViewPart {
 		txtPath.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e) {
-				if (Util.isValidSimFile(txtPath.getText())) {
+				if (Util.isValidFile(txtPath.getText(), "sim")) {
 					txtPath.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_GREEN));
 				} else {
 					txtPath.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
