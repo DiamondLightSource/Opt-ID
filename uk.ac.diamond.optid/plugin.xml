@@ -31,6 +31,14 @@
             name="Magnet Strengths Form"
             restorable="false">
       </view>
+      <view
+            allowMultiple="false"
+            category="uk.ac.diamond.optid.idOptCategory"
+            class="uk.ac.diamond.optid.views.LookupGenForm"
+            id="uk.ac.diamond.optid.lookupGenForm"
+            name="Lookup Generator Form"
+            restorable="false">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.perspectives">

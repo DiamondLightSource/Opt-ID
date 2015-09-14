@@ -332,6 +332,8 @@ public class MainView extends ViewPart {
 		// Button set to fill width of containing composite
 		btnLookGen.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		btnLookGen.setEnabled(false);
+		// Show/hide respective form view
+		btnLookGen.addSelectionListener(new OpenViewSelectionListener(LookupGenForm.ID));
 		
 		Label lblLookGenStatus = new Label(grpOptFiles, SWT.NONE);
 		// Initial label status

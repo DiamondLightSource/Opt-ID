@@ -34,6 +34,8 @@ public class IdSortPerspective implements IPerspectiveFactory {
 		IFolderLayout leftFolder = layout.createFolder("leftFolder", IPageLayout.LEFT, 0.4f, IPageLayout.ID_EDITOR_AREA);
 		leftFolder.addPlaceholder("uk.ac.diamond.optid.idDescForm");
 		leftFolder.addPlaceholder("uk.ac.diamond.optid.magStrForm");
+		leftFolder.addPlaceholder("uk.ac.diamond.optid.lookupGenForm");
+
 		
 		IViewLayout idDescFormLayout = layout.getViewLayout("uk.ac.diamond.optid.idDescForm");
 		idDescFormLayout.setCloseable(false);
@@ -42,6 +44,10 @@ public class IdSortPerspective implements IPerspectiveFactory {
 		IViewLayout magStrFormLayout = layout.getViewLayout("uk.ac.diamond.optid.magStrForm");
 		magStrFormLayout.setCloseable(false);
 		magStrFormLayout.setMoveable(false);
+		
+		IViewLayout lookupGenFormLayout = layout.getViewLayout("uk.ac.diamond.optid.lookupGenForm");
+		lookupGenFormLayout.setCloseable(false);
+		lookupGenFormLayout.setMoveable(false);
 	}
 
 }
