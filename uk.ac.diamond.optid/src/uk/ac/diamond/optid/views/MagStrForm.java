@@ -1,6 +1,15 @@
 package uk.ac.diamond.optid.views;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map.Entry;
+
+import org.apache.commons.lang.ArrayUtils;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ModifyEvent;
@@ -19,18 +28,31 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IPartListener;
 import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import uk.ac.diamond.optid.Activator;
+import uk.ac.diamond.optid.Console;
 import uk.ac.diamond.optid.Util;
+import uk.ac.diamond.optid.properties.MagStrPropertyConstants;
+import uk.ac.diamond.optid.properties.PropertyConstants;
 
 public class MagStrForm extends ViewPart {
 	
 	static final String ID = "uk.ac.diamond.optid.magStrForm";
 	
+	@SuppressWarnings("unused")
+	private static final Logger logger = LoggerFactory.getLogger(MagStrForm.class);
+	
 	/* Dialog settings keys */
 	private static final String MAG_STR_SETTINGS = "uk.ac.diamond.optid.magStrForm.settings";
+	private static final String MAG_STR_FILENAME = "uk.ac.diamond.optid.magStrForm.filename";
 	private static final String MAG_STR_SIM_H = "uk.ac.diamond.optid.magStrForm.simH";
 	private static final String MAG_STR_SIM_HE = "uk.ac.diamond.optid.magStrForm.simHe";
 	private static final String MAG_STR_SIM_V = "uk.ac.diamond.optid.magStrForm.simV";
@@ -38,9 +60,22 @@ public class MagStrForm extends ViewPart {
 
 	private Image imgFile = Activator.getDefault().getWorkbench().getSharedImages().getImageDescriptor(ISharedImages.IMG_OBJ_FILE).createImage();
 	
+	// Store values after perspective closed
+	private IPreferenceStore propertyStore;
+	
+	// Directory to generate file in
+	private String workingDir;
+	
+	/* Text to description maps */
+	// Linked hash map used as we want to maintain order of insertion
+	// Order of Text objects corresponds to order of arguments required by python script
+	private LinkedHashMap<Text, String> textDescMap = new LinkedHashMap<>();
+	
 	/* Components */
 	private ScrolledComposite scrolledComp;
 	private Composite compNewFileForm;
+	
+	private Text txtFilename;
 	
 	// Magnet data file paths
 	private Text txtMagDataH;
@@ -72,6 +107,7 @@ public class MagStrForm extends ViewPart {
 		    }
 
 		    // Store all component values
+		    section.put(MAG_STR_FILENAME, txtFilename.getText());
 		    section.put(MAG_STR_SIM_H, txtMagDataH.getText());
 		    section.put(MAG_STR_SIM_HE, txtMagDataHe.getText());
 		    section.put(MAG_STR_SIM_V, txtMagDataV.getText());
@@ -86,6 +122,27 @@ public class MagStrForm extends ViewPart {
 		public void partActivated(IWorkbenchPart part) {			
 		}
 	};
+	
+	// Monitor changes to properties in the perspective-wide property store
+	private IPropertyChangeListener propertyChangeListener = new IPropertyChangeListener() {
+		@Override
+		public void propertyChange(PropertyChangeEvent event) {
+			// Working directory changed in MainView
+			if (event.getProperty().equals(PropertyConstants.P_WORK_DIR)) {
+				// Update to latest value
+				workingDir = (String) event.getNewValue();
+			}
+		}
+	};
+	
+	@Override
+    public void init(IViewSite site) throws PartInitException {
+		super.init(site);
+		propertyStore = Activator.getDefault().getPreferenceStore();
+		propertyStore.addPropertyChangeListener(propertyChangeListener);
+		
+		workingDir = propertyStore.getString(PropertyConstants.P_WORK_DIR);
+	}
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -99,6 +156,7 @@ public class MagStrForm extends ViewPart {
 		// Setup Clear, Restore & Submit buttons
 		setupSubmissionControls(comp);
 		
+		initialiseMaps();
 		restoreComponentValues();
 	}
 	
@@ -124,15 +182,49 @@ public class MagStrForm extends ViewPart {
 	 * @param parent
 	 */
 	private void setupMagData(Composite parent) {
-		compNewFileForm = new Composite(parent, SWT.NONE);		
-		compNewFileForm.setLayout(new GridLayout(1, false));
+		compNewFileForm = new Composite(parent, SWT.NONE);
+		GridLayout compGridLayout = new GridLayout(2, false);
+		compGridLayout.verticalSpacing = 15;
+		compNewFileForm.setLayout(compGridLayout);
 		compNewFileForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		
+		setupFilename(compNewFileForm);
+		setupMagDataGrp(compNewFileForm);
+	}
+	
+	/**
+	 * Sets up Text widget to input filename for MAG output
+	 * @param parent
+	 */
+	private void setupFilename(Composite parent) {
+		// Text (String) Field - Filename
+		(new Label(parent, SWT.NONE)).setText("Filename");
+		
+		// Remove spacing between Text widget and '.mag' label
+		Composite comp = new Composite(parent, SWT.NONE);
+		GridLayout gridLayout = new GridLayout(2, false);
+		gridLayout.horizontalSpacing = 0;
+		gridLayout.marginWidth = 0;
+		gridLayout.verticalSpacing = 0;
+		gridLayout.marginHeight = 0;
+		comp.setLayout(gridLayout);
+		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+
+		txtFilename = new Text(comp, SWT.SINGLE | SWT.BORDER);
+		txtFilename.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		(new Label(comp, SWT.NONE)).setText(".mag");
+	}
+	
+	/**
+	 * Sets up widgets for getting SIM files
+	 * @param parent
+	 */
+	private void setupMagDataGrp(Composite parent) {
 		// Group - Magnet data parameters
-		Group grpMagData = new Group(compNewFileForm, SWT.NONE);
+		Group grpMagData = new Group(parent, SWT.NONE);
 		grpMagData.setText("Magnet Data Files (.sim)");
 		grpMagData.setLayout(new GridLayout(3, false));
-		grpMagData.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+		grpMagData.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 		
 		// Text (String) Field - H Magnet Data path
 		(new Label(grpMagData, SWT.NONE)).setText("H");
@@ -177,6 +269,61 @@ public class MagStrForm extends ViewPart {
 		Button btnSubmit = new Button(parent, SWT.PUSH);
 		btnSubmit.setText("Submit");
 		btnSubmit.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
+		
+		// Clear all text boxes
+		btnClear.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				for (Text text : textDescMap.keySet()) {
+					text.setText("");
+				}
+				txtFilename.setText("");
+			}
+		});
+		
+		// On click, checks if all text widgets have values
+		// Then forwards arguments to Util.run() to call script to generate file
+		// Message printed in console indicating success or failure
+		btnSubmit.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				try {
+					String[] arguments = getArguments();
+					String filename = arguments[4];
+					// Remove filename from arguments array
+					arguments = (String[]) ArrayUtils.removeElement(arguments, filename);
+					
+					String errorOutput = Util.run(Util.ScriptOpt.MAG_STR, arguments, workingDir, filename);
+					
+					if (Util.exit_value == 0) {
+						Console.getInstance().newMessage(getWorkbenchPage(), 
+								filename + ".mag generated successfully in " + workingDir, Console.SUCCESS_COLOUR);
+						
+						// Fields only saved (long-term) if file generation successful
+						saveToPropertyStore();
+						// Update generated file's path in property store
+						// To notify MainView of new value
+						String filePath = Util.createFilePath(workingDir, filename + ".mag");
+						propertyStore.setValue(PropertyConstants.P_MAG_STR_PATH, filePath);
+					} else {
+						Console.getInstance().newMessage(getWorkbenchPage(), 
+								"Error generating file " + filename + ".mag", Console.ERROR_COLOUR);
+						String trimOutput = errorOutput.substring(errorOutput.indexOf("Traceback"));
+						Console.getInstance().newMessage(getWorkbenchPage(), trimOutput);
+					}
+				} catch (IllegalStateException e) {
+				}
+			}
+		});
+		
+		
+		// Restores text fields with values from previous successful file generation
+		btnRestore.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				setFromPropertyStore();
+			}
+		});
 	}
 	
 	/**
@@ -242,6 +389,7 @@ public class MagStrForm extends ViewPart {
 		IDialogSettings section = settings.getSection(MAG_STR_SETTINGS);
 		
 		if (section != null) {
+			txtFilename.setText(section.get(MAG_STR_FILENAME));
 			txtMagDataH.setText(section.get(MAG_STR_SIM_H));
 			txtMagDataHe.setText(section.get(MAG_STR_SIM_HE));
 			txtMagDataV.setText(section.get(MAG_STR_SIM_V));
@@ -249,6 +397,135 @@ public class MagStrForm extends ViewPart {
 		}
 		
 		getSite().getWorkbenchWindow().getPartService().addPartListener(partListener);
+	}
+	
+	/**
+	 * Initialise Text to String map
+	 */
+	private void initialiseMaps() {
+		// Order of insertion corresponds to order of arguments for python script
+		textDescMap.put(txtMagDataH, "H magnet data");
+		textDescMap.put(txtMagDataHe, "HE magnet data");
+		textDescMap.put(txtMagDataV, "V magnet data");
+		textDescMap.put(txtMagDataVe, "VE magnet data");
+	}
+	
+	/**
+	 * Returns array of arguments obtained from Text widgets in UI form
+	 * @return
+	 * @throws IllegalStateException
+	 */
+	private String[] getArguments() throws IllegalStateException {
+		// Contains values from input widgets in form
+		List<String> arguments = new ArrayList<>();
+		// Text fields which have errors
+		List<String> errorArgs = new ArrayList<>();
+		
+		// Verification error in at least one of the Text widget values
+		boolean error = checkArguments(arguments, errorArgs, textDescMap);
+		
+		try {
+			String fileName = process(txtFilename.getText(), "Filename");
+			arguments.add(fileName);
+		// No filename given
+		} catch(IllegalArgumentException e) {
+			errorArgs.add(e.getMessage());
+			error = true;
+		}
+		
+		// Error then arguments list not valid so print message and throw exception
+		if (error) {
+			String msg = "";
+			for (String arg : errorArgs) {
+				msg += arg + "; ";
+			}
+			msg = msg.substring(0, msg.length() - 2); // Remove trailing '; '
+			Console.getInstance().newMessage(getWorkbenchPage(), 
+					"No value entered for: " + msg, Console.ERROR_COLOUR);
+			throw new IllegalStateException();
+		}
+
+		return arguments.toArray(new String[arguments.size()]);
+	}
+	
+	/**
+	 * Determines if Text values are valid and if so adds them to the list of arguments
+	 * @param arguments
+	 * @param map
+	 * @return boolean
+	 */
+	private boolean checkArguments(List<String> arguments, List<String> errorArgs, LinkedHashMap<Text, String> map) {
+		boolean error = false;
+		// Iterates over all <Text, Description> objects in map
+		for (Entry<Text, String> entry : map.entrySet()) {
+			try {
+				// Attempts to add Text value to list of arguments
+				arguments.add(process(entry));
+			} catch(IllegalArgumentException e) {
+				errorArgs.add(e.getMessage());
+				error = true;
+			}
+		}
+		return error;
+	}
+	
+	/**
+	 * Checks if Text value in entry is valid
+	 * @param entry
+	 * @return String
+	 * @throws IllegalArgumentException
+	 */
+	private String process(Entry<Text, String> entry) throws IllegalArgumentException {
+		String arg = entry.getKey().getText();
+		String desc = entry.getValue();
+		
+		return process(arg, desc);
+	}
+	
+	/**
+	 * Checks if arg is valid
+	 * @param arg
+	 * @param description
+	 * @return String
+	 * @throws IllegalArgumentException
+	 */
+	private String process(String arg, String description) throws IllegalArgumentException {
+		// No value entered
+		if (arg.equals("")) {
+			throw new IllegalArgumentException(description);
+		}
+		
+		return arg;
+	}
+	
+	/**
+	 * Saves text field values to property store
+	 */
+	private void saveToPropertyStore() {
+		propertyStore.setValue(MagStrPropertyConstants.P_MAG_STR_FILENAME, txtFilename.getText());
+		propertyStore.setValue(MagStrPropertyConstants.P_MAG_STR_H, txtMagDataH.getText());
+		propertyStore.setValue(MagStrPropertyConstants.P_MAG_STR_HE, txtMagDataHe.getText());
+		propertyStore.setValue(MagStrPropertyConstants.P_MAG_STR_V, txtMagDataV.getText());
+		propertyStore.setValue(MagStrPropertyConstants.P_MAG_STR_VE, txtMagDataVe.getText());
+	}
+	
+	/**
+	 * Fills text fields with values from property store
+	 */
+	private void setFromPropertyStore() {
+		txtFilename.setText(propertyStore.getString(MagStrPropertyConstants.P_MAG_STR_FILENAME));
+		txtMagDataH.setText(propertyStore.getString(MagStrPropertyConstants.P_MAG_STR_H));
+		txtMagDataHe.setText(propertyStore.getString(MagStrPropertyConstants.P_MAG_STR_HE));
+		txtMagDataV.setText(propertyStore.getString(MagStrPropertyConstants.P_MAG_STR_V));
+		txtMagDataVe.setText(propertyStore.getString(MagStrPropertyConstants.P_MAG_STR_VE));
+	}
+	
+	/**
+	 * Returns active workbench page
+	 * @return
+	 */
+	private IWorkbenchPage getWorkbenchPage() {
+		return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 	}
 	
 	@Override

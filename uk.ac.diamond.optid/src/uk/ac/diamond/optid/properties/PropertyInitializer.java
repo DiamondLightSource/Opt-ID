@@ -14,7 +14,8 @@ public class PropertyInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(PropertyConstants.P_WORK_DIR, System.getProperty("user.home"));
 		// Since file generated in runtime, no default value
 		store.setDefault(PropertyConstants.P_ID_DESC_PATH, "");
-		
+		store.setDefault(PropertyConstants.P_MAG_STR_PATH, "");
+
 		// Add ID Description constants
 		store.setDefault(IdDescPropertyConstants.P_ID_DESC_NAME, IdDescPropertyConstants.DEF_ID_DESC_NAME);
 		store.setDefault(IdDescPropertyConstants.P_ID_DESC_TYPE, IdDescPropertyConstants.DEF_ID_DESC_TYPE);
@@ -40,6 +41,13 @@ public class PropertyInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(IdDescPropertyConstants.P_ID_DESC_END_GAP, IdDescPropertyConstants.DEF_ID_DESC_END_GAP);
 		store.setDefault(IdDescPropertyConstants.P_ID_DESC_PHASING_GAP, IdDescPropertyConstants.DEF_ID_DESC_PHASING_GAP);
 		store.setDefault(IdDescPropertyConstants.P_ID_DESC_CLAMP_CUT, IdDescPropertyConstants.DEF_ID_DESC_CLAMP_CUT);
+		
+		// Add Magnet Strength to store
+		store.setDefault(MagStrPropertyConstants.P_MAG_STR_FILENAME, "");
+		store.setDefault(MagStrPropertyConstants.P_MAG_STR_H, "");
+		store.setDefault(MagStrPropertyConstants.P_MAG_STR_HE, "");
+		store.setDefault(MagStrPropertyConstants.P_MAG_STR_V, "");
+		store.setDefault(MagStrPropertyConstants.P_MAG_STR_VE, "");
 	}
 
 }

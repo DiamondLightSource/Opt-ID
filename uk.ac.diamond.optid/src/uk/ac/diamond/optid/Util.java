@@ -16,6 +16,13 @@ public class Util {
 	
 	public static int exit_value = -1;
 	
+	// Enum representing different script (file generation) options
+	public enum ScriptOpt {
+		ID_DESC,
+		MAG_STR,
+		LOOKUP_GEN
+	}
+	
 	public static void main(String[] args) {
 		String[] test_arguments = new String[] {"109", "41", "16", "6.22", "41", "16",
 				"3.12", "41", "16", "4.0", "0.03", "6.15", "PPM_AntiSymmetric", "J13",
@@ -32,15 +39,15 @@ public class Util {
 		String test_dir = "/home/xrp26957/Downloads";
 		
 		// run_id_setup.sh Argument Type: PPM_AntiSymmetric 
-		test(test_arguments, test_dir, test_filename);
+		testIdDesc(test_arguments, test_dir, test_filename);
 		
 		System.out.println();
 		
 		// run_id_setup.sh Argument Type: APPLE_Symmetric
-		test(test_arguments_sym, test_dir, test_filename_sym);
+		testIdDesc(test_arguments_sym, test_dir, test_filename_sym);
 	}
 	
-	private static void test(String[] arguments, String workingDir, String fileName) {
+	private static void testIdDesc(String[] arguments, String workingDir, String fileName) {
 		String testType;
 		if (arguments.length == 21) {
 			testType = "PPM_AntiSymmetric";
@@ -52,7 +59,7 @@ public class Util {
 		}
 		
 		System.out.println("Running \"run_id_setup.sh\" script with valid '" + testType + "' arguments:");
-		String errorOutput = run(arguments, workingDir, fileName);
+		String errorOutput = run(ScriptOpt.ID_DESC, arguments, workingDir, fileName);
 		if (exit_value == 0) {
 			System.out.println("File generated successfully");
 		} else {
@@ -61,20 +68,54 @@ public class Util {
 		}
 	}
 	
-	//TODO: Needs to be modified to be handle all scripts i.e. add Enum to parameters
-	public static String run(String[] arguments, String workingDir, String fileName) {
+	/**
+	 * Runs specified script
+	 * @param option
+	 * @param arguments
+	 * @param workingDir
+	 * @param fileName
+	 * @return
+	 */
+	public static String run(ScriptOpt option, String[] arguments, String workingDir, String fileName) {
 		String script_dir = getAbsoluteScriptDirPath();
 		
-		String scriptPath = createFilePath(script_dir, "run_id_setup.sh");
-		String pythonPath = createFilePath(script_dir, "python/id_setup.py");
-		String outFileExt = ".json";
+		String bashScript = null;
+		String pythonScript = null;
+		String outFileExt = null;
+		switch (option) {
+			case ID_DESC:
+				bashScript = "run_id_setup.sh";
+				pythonScript = "python/id_setup.py";
+				outFileExt = ".json";
+				break;
+			case MAG_STR:
+				bashScript = "run_magnets.sh";
+				pythonScript = "python/magnets.py";
+				outFileExt = ".mag";
+				break;
+			case LOOKUP_GEN:
+				// TODO
+				break;				
+		}
+				
+		String scriptPath = createFilePath(script_dir, bashScript);
+		String pythonPath = createFilePath(script_dir, pythonScript);
 		String outputFilePath = createFilePath(workingDir, fileName + outFileExt);
-
+		
 		ArrayList<String> processArray = new ArrayList<String>(Arrays.asList(arguments));
 		processArray.add(0, scriptPath);
 		processArray.add(1, pythonPath);
 		processArray.add(outputFilePath);
 		
+		return execute(processArray);
+	}
+	
+	/**
+	 * Runs the created process
+	 * @param processArray
+	 * @return
+	 */
+	private static String execute(ArrayList<String> processArray) {
 		ProcessBuilder processBuilder = new ProcessBuilder(processArray);
 		processBuilder.redirectErrorStream(true);
 		

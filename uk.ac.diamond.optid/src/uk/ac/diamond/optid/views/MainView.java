@@ -54,17 +54,20 @@ public class MainView extends ViewPart {
 	// Store values after perspective closed
 	private IPreferenceStore propertyStore;
 	
-	// Generated file paths
+	/* Generated file paths */
 	private String idDescFilePath;
+	private String magStrFilePath;
 	
 	// Open generated file listeners
 	private HyperLinkListener idDescLinkListener;
+	private HyperLinkListener magStrLinkListener;
 	
 	/* UI Components */
 	private Button btnIdDes;
 	private Button btnMagStr;
 	private Button btnLookGen;
 	private Hyperlink lblIdDesStatus;
+	private Hyperlink lblMagStrStatus;
 		
 	private PerspectiveAdapter perspectiveListener = new PerspectiveAdapter() {
 		@Override
@@ -101,8 +104,17 @@ public class MainView extends ViewPart {
 			if (event.getProperty().equals(PropertyConstants.P_ID_DESC_PATH)) {
 				// Update ID Description file path to new value
 				idDescFilePath = (String) event.getNewValue();
+				
 				// Update status
-				setLabelStatusComplete(lblIdDesStatus, idDescFilePath);
+				idDescLinkListener = new HyperLinkListener(idDescFilePath);
+				setLabelStatusComplete(lblIdDesStatus, idDescFilePath, idDescLinkListener);
+			} else if (event.getProperty().equals(PropertyConstants.P_MAG_STR_PATH)) {				
+				// Update ID Description file path to new value
+				magStrFilePath = (String) event.getNewValue();
+								
+				// Update status
+				magStrLinkListener = new HyperLinkListener(magStrFilePath);
+				setLabelStatusComplete(lblMagStrStatus, magStrFilePath, magStrLinkListener);
 			}
 		}
 	};
@@ -266,6 +278,9 @@ public class MainView extends ViewPart {
 					// Resets all file generation form statuses
 					idDescFilePath = null;
 					setLabelStatusNotComplete(lblIdDesStatus, idDescLinkListener);
+					
+					magStrFilePath = null;
+					setLabelStatusNotComplete(lblMagStrStatus, magStrLinkListener);
 				}
 			}
 		});
@@ -306,10 +321,8 @@ public class MainView extends ViewPart {
 		// Show/hide respective form view
 		btnMagStr.addSelectionListener(new OpenViewSelectionListener(MagStrForm.ID));
 		
-		Label lblMagStrStatus = new Label(grpOptFiles, SWT.NONE);
-		// Initial label status
-		lblMagStrStatus.setText("Not complete");
-		lblMagStrStatus.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
+		lblMagStrStatus = new Hyperlink(grpOptFiles, SWT.NONE);
+		setLabelStatusNotComplete(lblMagStrStatus, magStrLinkListener);
 		
 		/* Lookup Generator */
 		(new Label(grpOptFiles, SWT.NONE)).setText("3.");
@@ -352,6 +365,9 @@ public class MainView extends ViewPart {
 		
 		// Restore working directory value to default on close
 		propertyStore.setToDefault(PropertyConstants.P_WORK_DIR);
+		// Reset generated file paths on close
+		propertyStore.setToDefault(PropertyConstants.P_ID_DESC_PATH);
+		propertyStore.setToDefault(PropertyConstants.P_MAG_STR_PATH);
 		
 		super.dispose();
     }
@@ -359,14 +375,12 @@ public class MainView extends ViewPart {
 	/**
 	 * Updates label to status of file generation complete
 	 */
-	private void setLabelStatusComplete(Hyperlink label, String filePath) {
+	private void setLabelStatusComplete(Hyperlink label, String filePath, HyperLinkListener listener) {
 		label.setText("Open");
 		label.setUnderlined(true);
 		label.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_GREEN));
 		label.setCursor(new Cursor(Display.getCurrent(), SWT.CURSOR_HAND));
-
-		idDescLinkListener = new HyperLinkListener(idDescFilePath);
-		label.addHyperlinkListener(idDescLinkListener);
+		label.addHyperlinkListener(listener);
 	}
 	
 	/**

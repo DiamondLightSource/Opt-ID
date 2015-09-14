@@ -265,7 +265,7 @@ public class IdDescForm extends ViewPart {
 					String[] arguments = getArguments();
 					String fileName = arguments[13];
 					
-					String errorOutput = Util.run(arguments, workingDir, fileName);
+					String errorOutput = Util.run(Util.ScriptOpt.ID_DESC, arguments, workingDir, fileName);
 					
 					// TODO: If successful, show pop-up and close view
 					// File generation successful
@@ -745,8 +745,6 @@ public class IdDescForm extends ViewPart {
 				// Attempts to add Text value to list of arguments
 				arguments.add(process(entry));
 			} catch(IllegalArgumentException e) {
-				//Console.getInstance().newMessage(getWorkbenchPage(),
-				//		"No value entered: " + e.getMessage(), Console.ERROR_COLOUR);
 				errorArgs.add(e.getMessage());
 				error = true;
 			}
