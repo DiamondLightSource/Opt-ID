@@ -1,5 +1,6 @@
 package uk.ac.diamond.optid.views;
 
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ModifyEvent;
@@ -16,7 +17,9 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.IPartListener;
 import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 
 import uk.ac.diamond.optid.Activator;
@@ -26,6 +29,13 @@ public class MagStrForm extends ViewPart {
 	
 	static final String ID = "uk.ac.diamond.optid.magStrForm";
 	
+	/* Dialog settings keys */
+	private static final String MAG_STR_SETTINGS = "uk.ac.diamond.optid.magStrForm.settings";
+	private static final String MAG_STR_SIM_H = "uk.ac.diamond.optid.magStrForm.simH";
+	private static final String MAG_STR_SIM_HE = "uk.ac.diamond.optid.magStrForm.simHe";
+	private static final String MAG_STR_SIM_V = "uk.ac.diamond.optid.magStrForm.simV";
+	private static final String MAG_STR_SIM_VE = "uk.ac.diamond.optid.magStrForm.simVe";
+
 	private Image imgFile = Activator.getDefault().getWorkbench().getSharedImages().getImageDescriptor(ISharedImages.IMG_OBJ_FILE).createImage();
 	
 	/* Components */
@@ -37,6 +47,45 @@ public class MagStrForm extends ViewPart {
 	private Text txtMagDataHe;
 	private Text txtMagDataV;
 	private Text txtMagDataVe;
+	
+	// Listener for view lifecycle
+	private IPartListener partListener = new IPartListener() {
+		@Override
+		public void partOpened(IWorkbenchPart part) {			
+		}
+		
+		@Override
+		public void partDeactivated(IWorkbenchPart part) {			
+		}
+		
+		@Override
+		public void partClosed(IWorkbenchPart part) {
+			// View closed, listener no longer needed
+			getSite().getWorkbenchWindow().getPartService().removePartListener(this);
+			
+		    IDialogSettings settings = Activator.getDefault().getDialogSettings();
+		    IDialogSettings section = settings.getSection(MAG_STR_SETTINGS);
+
+		    // If section does not exist, create it
+		    if (section == null) {
+		        section = settings.addNewSection(MAG_STR_SETTINGS);
+		    }
+
+		    // Store all component values
+		    section.put(MAG_STR_SIM_H, txtMagDataH.getText());
+		    section.put(MAG_STR_SIM_HE, txtMagDataHe.getText());
+		    section.put(MAG_STR_SIM_V, txtMagDataV.getText());
+		    section.put(MAG_STR_SIM_VE, txtMagDataVe.getText());
+		}
+		
+		@Override
+		public void partBroughtToTop(IWorkbenchPart part) {			
+		}
+		
+		@Override
+		public void partActivated(IWorkbenchPart part) {			
+		}
+	};
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -49,6 +98,8 @@ public class MagStrForm extends ViewPart {
 		setupScrolledComp(comp);
 		// Setup Clear, Restore & Submit buttons
 		setupSubmissionControls(comp);
+		
+		restoreComponentValues();
 	}
 	
 	/**
@@ -180,6 +231,24 @@ public class MagStrForm extends ViewPart {
 		        }
 			}
 		});
+	}
+	
+	/**
+	 * Enables user-entered component values to persist across invocations
+	 * of view
+	 */
+	private void restoreComponentValues() {
+		IDialogSettings settings = Activator.getDefault().getDialogSettings();
+		IDialogSettings section = settings.getSection(MAG_STR_SETTINGS);
+		
+		if (section != null) {
+			txtMagDataH.setText(section.get(MAG_STR_SIM_H));
+			txtMagDataHe.setText(section.get(MAG_STR_SIM_HE));
+			txtMagDataV.setText(section.get(MAG_STR_SIM_V));
+			txtMagDataVe.setText(section.get(MAG_STR_SIM_VE));
+		}
+		
+		getSite().getWorkbenchWindow().getPartService().addPartListener(partListener);
 	}
 	
 	@Override
