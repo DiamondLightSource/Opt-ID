@@ -491,7 +491,7 @@ if __name__ == "__main__":
         output['number_of_beams'] = 2
         output['gap'] = options.gap
         output['periods'] = options.periods
-        output['period_length'] = 4*(options.interstice+options.fullmagdims[2])
+        output['period_length'] = 4*options.interstice+2*options.fullmagdims[2]+2*options.poledims[2]
         # TODO needs sorting out
         output['xmin'] = options.x[0]
         output['xmax'] = options.x[1]
@@ -499,7 +499,7 @@ if __name__ == "__main__":
         output['zmin'] = options.z[0]
         output['zmax'] = options.z[1]
         output['zstep'] = options.z[2]
-        length = (options.fullmagdims[2]+options.interstice)*4*(options.periods+16)
+        length = (options.fullmagdims[2]+options.poledims[2]+2*options.interstice)*2*(options.periods+16)
         output['smin'] = -length/2.0
         output['smax'] = (length/2.0)+((options.fullmagdims[2]+options.interstice)/options.steps)
         output['sstep'] = (options.fullmagdims[2]+options.interstice)/options.steps
