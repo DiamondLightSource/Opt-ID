@@ -43,26 +43,26 @@
    <extension
          point="org.eclipse.ui.perspectives">
       <perspective
-            class="uk.ac.diamond.optid.IdSortPerspective"
-            icon="icons/idSort_perspective.png"
-            id="uk.ac.diamond.optid.idSortPerspective"
-            name="ID Sorting">
+            class="uk.ac.diamond.optid.IdOptimisationPerspective"
+            icon="icons/idOptimisation_perspective.png"
+            id="uk.ac.diamond.optid.idOptimisationPerspective"
+            name="ID Optimisation">
       </perspective>
    </extension>
    <extension
          point="org.dawnsci.introRegister">
       <introPageRegister
-            class="uk.ac.diamond.optid.IdSortPerspectiveLaunch"
+            class="uk.ac.diamond.optid.IdOptimisationPerspectiveLaunch"
             description="Perform optimisation of IDs"
-            icon="icons/idSort_intro.png"
-            id="uk.ac.diamond.optid.idSortPerspectiveIntro"
-            name="ID Sorting">
+            icon="icons/idOptimisation_intro.png"
+            id="uk.ac.diamond.optid.idOptimisationPerspectiveIntro"
+            name="ID Optimisation">
       </introPageRegister>
    </extension>
    <extension
          point="org.eclipse.ui.perspectiveExtensions">
       <perspectiveExtension
-            targetID="uk.ac.diamond.optid.idSortPerspective">
+            targetID="uk.ac.diamond.optid.idOptimisationPerspective">
       </perspectiveExtension>
    </extension>
    <extension

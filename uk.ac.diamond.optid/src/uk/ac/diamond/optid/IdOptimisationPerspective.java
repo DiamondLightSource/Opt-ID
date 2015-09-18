@@ -5,9 +5,9 @@ import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.IPerspectiveFactory;
 import org.eclipse.ui.IViewLayout;
 
-public class IdSortPerspective implements IPerspectiveFactory {
+public class IdOptimisationPerspective implements IPerspectiveFactory {
 	
-	static final String ID = "uk.ac.diamond.optid.idSortPerspective";
+	static final String ID = "uk.ac.diamond.optid.idOptimisationPerspective";
 
 	@Override
 	public void createInitialLayout(IPageLayout layout) {
