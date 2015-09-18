@@ -17,6 +17,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
@@ -48,7 +49,9 @@ public class MainView extends ViewPart {
 	
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger(MainView.class);
-	
+
+	private static final String[] CLUSTER_QUEUE_LIST = new String[] {"Low", "Medium", "High"};
+
 	private Image imgFolder = Activator.getDefault().getWorkbench().getSharedImages().getImageDescriptor(ISharedImages.IMG_OBJ_FOLDER).createImage();
 	
 	// Store values after perspective closed
@@ -197,11 +200,15 @@ public class MainView extends ViewPart {
 	public void createPartControl(Composite parent) {
 		// Top-level composite
 		Composite mainComposite = new Composite(parent, SWT.NONE);
-		mainComposite.setLayout(new GridLayout(1, false));
+		// Increase spacing between components vertically
+		GridLayout layout = new GridLayout(1, false);
+		layout.verticalSpacing = 15;
+		mainComposite.setLayout(layout);
 		mainComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		
+
 		setupDirField(mainComposite);
 		setupOptFileGrp(mainComposite);
+		setupClusterGrp(mainComposite);
 		
 		getSite().getWorkbenchWindow().addPerspectiveListener(perspectiveListener);
 	}
@@ -350,6 +357,41 @@ public class MainView extends ViewPart {
 		
 		lblLookGenStatus = new Hyperlink(grpOptFiles, SWT.NONE);
 		setLabelStatusNotComplete(lblLookGenStatus, lookupGenLinkListener);
+	}
+	
+	/**
+	 * Setup group to specify cluster settings and run optimisation
+	 * @param parent
+	 */
+	private void setupClusterGrp(Composite parent) {
+		// Group - Cluster settings
+		Group grpCluster = new Group(parent, SWT.NONE);
+		grpCluster.setText("Cluster Settings");
+		grpCluster.setLayout(new GridLayout(2, false));
+		grpCluster.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+		
+		// Text (int) Field - Slots
+		(new Label(grpCluster, SWT.NONE)).setText("No. of slots");
+		Text txtSlots = new Text(grpCluster, SWT.SINGLE | SWT.BORDER);
+		
+		// Combo (String) Field - Queue
+		(new Label(grpCluster, SWT.NONE)).setText("Queue");
+		Combo cboQueue = new Combo(grpCluster, SWT.READ_ONLY);
+		cboQueue.setItems(CLUSTER_QUEUE_LIST);
+		
+		// Text (int) Field - Iterations
+		(new Label(grpCluster, SWT.NONE)).setText("No. of iterations");
+		Text txtIters = new Text(grpCluster, SWT.SINGLE | SWT.BORDER);
+		
+		// Make components stretch to fill width of view
+		txtSlots.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		cboQueue.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		txtIters.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		
+		// Run
+		Button btnRun = new Button(grpCluster, SWT.PUSH);
+		btnRun.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
+		btnRun.setText("Run");
 	}
 	
 	/**
