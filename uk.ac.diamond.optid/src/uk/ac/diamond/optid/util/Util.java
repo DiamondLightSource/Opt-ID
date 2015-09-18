@@ -15,6 +15,10 @@ import org.apache.commons.lang.StringUtils;
 public class Util {
 	
 	public static int exit_value = -1;
+	// Lookup generator has own exit value
+	// As file generation occurs in a separate thread, the other two files
+	// could be generated simultaneously
+	public static int lookup_exit_value = -1;
 	
 	// Enum representing different script (file generation) options
 	public enum ScriptOpt {
@@ -94,7 +98,9 @@ public class Util {
 				outFileExt = ".mag";
 				break;
 			case LOOKUP_GEN:
-				// TODO
+				bashScript = "run_lookup_generator.sh";
+				pythonScript = "python/lookup_generator.py";
+				outFileExt = ".h5";
 				break;				
 		}
 				
@@ -107,7 +113,14 @@ public class Util {
 		processArray.add(1, pythonPath);
 		processArray.add(outputFilePath);
 		
-		return execute(processArray);
+		String output = execute(processArray);
+	
+		if (option == ScriptOpt.LOOKUP_GEN) {
+			lookup_exit_value = exit_value;
+			exit_value = -1;
+		}
+		
+		return output;
 	}
 	
 	/**
