@@ -156,7 +156,7 @@ public class MagStrForm extends ViewPart {
 		// Setup Clear, Restore & Submit buttons
 		setupSubmissionControls(comp);
 		
-		initialiseMaps();
+		initialiseMap();
 		restoreComponentValues();
 	}
 	
@@ -402,7 +402,7 @@ public class MagStrForm extends ViewPart {
 	/**
 	 * Initialise Text to String map
 	 */
-	private void initialiseMaps() {
+	private void initialiseMap() {
 		// Order of insertion corresponds to order of arguments for python script
 		textDescMap.put(txtMagDataH, "H magnet data");
 		textDescMap.put(txtMagDataHe, "HE magnet data");

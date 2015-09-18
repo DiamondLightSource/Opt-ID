@@ -24,7 +24,8 @@ public class Util {
 	public enum ScriptOpt {
 		ID_DESC,
 		MAG_STR,
-		LOOKUP_GEN
+		LOOKUP_GEN,
+		CLUSTER
 	}
 	
 	public static void main(String[] args) {
@@ -101,7 +102,12 @@ public class Util {
 				bashScript = "run_lookup_generator.sh";
 				pythonScript = "python/lookup_generator.py";
 				outFileExt = ".h5";
-				break;				
+				break;	
+			case CLUSTER:
+				bashScript = "cluster_mpi.sh";
+				pythonScript = "python/mpi_runner.py";
+				outFileExt = "";
+				break;	
 		}
 				
 		String scriptPath = createFilePath(script_dir, bashScript);
@@ -111,6 +117,10 @@ public class Util {
 		ArrayList<String> processArray = new ArrayList<String>(Arrays.asList(arguments));
 		processArray.add(0, scriptPath);
 		processArray.add(1, pythonPath);
+		if (option == ScriptOpt.CLUSTER) {
+			String sndBashScript = createFilePath(script_dir, "mpi_job.sh");
+			processArray.add(1, sndBashScript);
+		}
 		processArray.add(outputFilePath);
 		
 		String output = execute(processArray);

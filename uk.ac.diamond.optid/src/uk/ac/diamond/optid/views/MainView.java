@@ -1,6 +1,10 @@
 package uk.ac.diamond.optid.views;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map.Entry;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
@@ -57,6 +61,13 @@ public class MainView extends ViewPart {
 	// Store values after perspective closed
 	private IPreferenceStore propertyStore;
 	
+	/* Text to description maps */
+	// Linked hash map used as we want to maintain order of insertion
+	// Order of Text objects corresponds to order of arguments required by  script
+	private LinkedHashMap<Text, String> textDescMap = new LinkedHashMap<>();
+	
+	private String workingDir;
+	
 	/* Generated file paths */
 	private String idDescFilePath;
 	private String magStrFilePath;
@@ -68,12 +79,19 @@ public class MainView extends ViewPart {
 	private HyperLinkListener lookupGenLinkListener;
 	
 	/* UI Components */
+	
+	// File generation
 	private Button btnIdDes;
 	private Button btnMagStr;
 	private Button btnLookGen;
 	private Hyperlink lblIdDesStatus;
 	private Hyperlink lblMagStrStatus;
 	private Hyperlink lblLookGenStatus;
+	
+	// Cluster
+	private Text txtSlots;
+	private Combo cboQueue;
+	private Text txtIters;
 		
 	private PerspectiveAdapter perspectiveListener = new PerspectiveAdapter() {
 		@Override
@@ -122,6 +140,8 @@ public class MainView extends ViewPart {
 				magStrLinkListener = new HyperLinkListener(magStrFilePath);
 				setLabelStatusComplete(lblMagStrStatus, magStrFilePath, magStrLinkListener);
 			} else if (event.getProperty().equals(PropertyConstants.P_LOOKUP_GEN_PATH)) {
+				logger.debug("** lookup file path: ");
+				
 				// Update Lookup Generator file path to new value
 				lookupGenFilePath = (String) event.getNewValue();
 				
@@ -211,6 +231,7 @@ public class MainView extends ViewPart {
 		setupClusterGrp(mainComposite);
 		
 		getSite().getWorkbenchWindow().addPerspectiveListener(perspectiveListener);
+		initialiseMap();
 	}
 	
 	/**
@@ -277,10 +298,10 @@ public class MainView extends ViewPart {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
 				String oldWorkDir = propertyStore.getString(PropertyConstants.P_WORK_DIR);
-				String newWorkDir = txtDir.getText();
+				workingDir = txtDir.getText();
 				
 				// Save new directory value to property store
-				propertyStore.setValue(PropertyConstants.P_WORK_DIR, newWorkDir);
+				propertyStore.setValue(PropertyConstants.P_WORK_DIR, workingDir);
 				
 				// Enable form buttons
 				btnIdDes.setEnabled(true);
@@ -288,9 +309,9 @@ public class MainView extends ViewPart {
 				btnLookGen.setEnabled(true);
 				
 				// If value has actually changed
-				if (!newWorkDir.equals(oldWorkDir)) {
+				if (!workingDir.equals(oldWorkDir)) {
 					// Inform user
-					Console.getInstance().newMessage(getWorkbenchPage(), "Working directory set: " + newWorkDir);
+					Console.getInstance().newMessage(getWorkbenchPage(), "Working directory set: " + workingDir);
 					
 					// Resets all file generation form statuses
 					idDescFilePath = null;
@@ -372,16 +393,17 @@ public class MainView extends ViewPart {
 		
 		// Text (int) Field - Slots
 		(new Label(grpCluster, SWT.NONE)).setText("No. of slots");
-		Text txtSlots = new Text(grpCluster, SWT.SINGLE | SWT.BORDER);
+		txtSlots = new Text(grpCluster, SWT.SINGLE | SWT.BORDER);
 		
 		// Combo (String) Field - Queue
 		(new Label(grpCluster, SWT.NONE)).setText("Queue");
-		Combo cboQueue = new Combo(grpCluster, SWT.READ_ONLY);
+		cboQueue = new Combo(grpCluster, SWT.READ_ONLY);
 		cboQueue.setItems(CLUSTER_QUEUE_LIST);
+		cboQueue.select(0);
 		
 		// Text (int) Field - Iterations
 		(new Label(grpCluster, SWT.NONE)).setText("No. of iterations");
-		Text txtIters = new Text(grpCluster, SWT.SINGLE | SWT.BORDER);
+		txtIters = new Text(grpCluster, SWT.SINGLE | SWT.BORDER);
 		
 		// Make components stretch to fill width of view
 		txtSlots.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -392,6 +414,31 @@ public class MainView extends ViewPart {
 		Button btnRun = new Button(grpCluster, SWT.PUSH);
 		btnRun.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 		btnRun.setText("Run");
+		
+		// On click, checks if all text widgets have values
+		// Then forwards arguments to Util.run() to call script to run optimisation
+		// Message printed in console indicating success or failure		
+		btnRun.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				try {
+					String[] arguments = getArguments();
+					String errorOutput = Util.run(Util.ScriptOpt.CLUSTER, arguments, workingDir, "");
+				
+					if (Util.exit_value == 0) {
+						Console.getInstance().newMessage(getWorkbenchPage(), 
+								"Job successfully submitted to cluster", Console.SUCCESS_COLOUR);
+						Console.getInstance().newMessage(getWorkbenchPage(), 
+								"Genomes will be generated in: " + workingDir + "/logs", Console.SUCCESS_COLOUR);
+					} else {
+						Console.getInstance().newMessage(getWorkbenchPage(), 
+								"Error submitting job to cluster", Console.ERROR_COLOUR);
+						Console.getInstance().newMessage(getWorkbenchPage(), errorOutput);
+					}
+				} catch (IllegalStateException e) {
+				}
+			}
+		});
 	}
 	
 	/**
@@ -423,6 +470,7 @@ public class MainView extends ViewPart {
 		// Reset generated file paths on close
 		propertyStore.setToDefault(PropertyConstants.P_ID_DESC_PATH);
 		propertyStore.setToDefault(PropertyConstants.P_MAG_STR_PATH);
+		propertyStore.setToDefault(PropertyConstants.P_LOOKUP_GEN_PATH);
 		
 		super.dispose();
     }
@@ -447,6 +495,143 @@ public class MainView extends ViewPart {
 		label.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
 		label.setCursor(new Cursor(Display.getCurrent(), SWT.CURSOR_ARROW));
 		label.removeHyperlinkListener(listener);
+	}
+	
+	/**
+	 * Initialise Text to String map
+	 */
+	private void initialiseMap() {
+		// Order of insertion corresponds to order of arguments for script
+		textDescMap.put(txtSlots, "No. of slots");
+		textDescMap.put(txtIters, "No. of iterations");
+	}
+	
+	/**
+	 * Returns array of arguments required by optimisation process
+	 * @return
+	 * @throws IllegalStateException
+	 */
+	private String[] getArguments() throws IllegalStateException {
+		List<String> arguments = new ArrayList<>();
+		// Text fields which have errors
+		List<String> errorArgs = new ArrayList<>();
+		
+		// Verification error in at least one of the Text widget values
+		boolean error = checkArguments(arguments, errorArgs, textDescMap);
+		
+		try {
+			// Check cboQueue
+			String queueValue = process(cboQueue.getText(), "Queue");
+			
+			// Convert to String accepted by script
+			String queueArg;
+			if (queueValue.equals("Low")) {
+				queueArg = "low.q";
+			} else if (queueValue.equals("Medium")){
+				queueArg = "medium.q";
+			} else {
+				queueArg = "high.q";
+			}
+			
+			if (!error) {
+				// Queue is 2nd argument in order
+				// Insertion at position 2 only guaranteed to work 
+				// if there were no previous errors
+				arguments.add(1, queueArg);
+			}
+		// No queue option selected
+		} catch(IllegalArgumentException e) {
+			errorArgs.add(e.getMessage());
+			error = true;
+		}
+		
+		try {
+			String lookupFile = process(lookupGenFilePath, "Lookup file");
+			arguments.add(lookupFile);
+		} catch(IllegalArgumentException e) {
+			errorArgs.add(e.getMessage());
+			error = true;
+		}
+		
+		try {
+			String idDescFile = process(idDescFilePath, "ID Descriptions file");
+			arguments.add(idDescFile);
+		} catch(IllegalArgumentException e) {
+			errorArgs.add(e.getMessage());
+			error = true;
+		}
+		
+		try {
+			String magStrFile = process(magStrFilePath, "Magnet Strengths file");
+			arguments.add(magStrFile);
+		} catch(IllegalArgumentException e) {
+			errorArgs.add(e.getMessage());
+			error = true;
+		}
+		
+		// Error then arguments list not valid so print message and throw exception
+		if (error) {
+			String msg = "";
+			for (String arg : errorArgs) {
+				msg += arg + "; ";
+			}
+			msg = msg.substring(0, msg.length() - 2); // Remove trailing '; '
+			Console.getInstance().newMessage(getWorkbenchPage(), 
+					"No value entered for: " + msg, Console.ERROR_COLOUR);
+			throw new IllegalStateException();
+		}
+
+		return arguments.toArray(new String[arguments.size()]);
+	}
+	
+	/**
+	 * Determines if Text values are valid and if so adds them to the list of arguments
+	 * @param arguments
+	 * @param map
+	 * @return boolean
+	 */
+	private boolean checkArguments(List<String> arguments, List<String> errorArgs, LinkedHashMap<Text, String> map) {
+		boolean error = false;
+		// Iterates over all <Text, Description> objects in map
+		for (Entry<Text, String> entry : map.entrySet()) {
+			try {
+				// Attempts to add Text value to list of arguments
+				arguments.add(process(entry));
+			} catch(IllegalArgumentException e) {
+				errorArgs.add(e.getMessage());
+				error = true;
+			}
+		}
+		return error;
+	}
+	
+	/**
+	 * Checks if Text value in entry is valid
+	 * @param entry
+	 * @return String
+	 * @throws IllegalArgumentException
+	 */
+	private String process(Entry<Text, String> entry) throws IllegalArgumentException {
+		String arg = entry.getKey().getText();
+		String desc = entry.getValue();
+		
+		return process(arg, desc);
+	}
+	
+	/**
+	 * Checks if arg is valid
+	 * @param arg
+	 * @param description
+	 * @return String
+	 * @throws IllegalArgumentException
+	 */
+	private String process(String arg, String description) throws IllegalArgumentException {
+		// No value entered
+		if (arg == null || arg.equals("")) {
+			throw new IllegalArgumentException(description);
+		}
+		
+		return arg;
 	}
 	
 }
