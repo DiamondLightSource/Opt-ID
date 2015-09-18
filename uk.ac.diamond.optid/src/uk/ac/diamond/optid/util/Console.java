@@ -1,4 +1,4 @@
-package uk.ac.diamond.optid;
+package uk.ac.diamond.optid.util;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;

@@ -40,9 +40,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.diamond.optid.Activator;
-import uk.ac.diamond.optid.Console;
-import uk.ac.diamond.optid.Util;
 import uk.ac.diamond.optid.properties.PropertyConstants;
+import uk.ac.diamond.optid.util.Console;
+import uk.ac.diamond.optid.util.Util;
 
 public class MainView extends ViewPart {
 	
