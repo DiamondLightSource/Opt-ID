@@ -43,6 +43,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.ac.diamond.optid.Activator;
+import uk.ac.diamond.optid.properties.LookupGenPropertyConstants;
+import uk.ac.diamond.optid.properties.MagStrPropertyConstants;
 import uk.ac.diamond.optid.properties.PropertyConstants;
 import uk.ac.diamond.optid.util.Console;
 import uk.ac.diamond.optid.util.Util;
@@ -348,6 +350,14 @@ public class LookupGenForm extends ViewPart {
 				}
 			}
 		});
+		
+		// Restores text fields with values from previous successful file generation
+		btnRestore.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				setFromPropertyStore();
+			}
+		});
 	}
 	
 	/**
@@ -471,6 +481,28 @@ public class LookupGenForm extends ViewPart {
 	}
 	
 	/**
+	 * Saves text field values to property store
+	 */
+	private void saveToPropertyStore() {
+		propertyStore.setValue(LookupGenPropertyConstants.P_LOOKUP_GEN_FILENAME, txtFilename.getText());
+		propertyStore.setValue(LookupGenPropertyConstants.P_LOOKUP_GEN_PERIODS, txtPeriods.getText());
+		propertyStore.setValue(LookupGenPropertyConstants.P_LOOKUP_GEN_JSON, txtJson.getText());
+		propertyStore.setValue(LookupGenPropertyConstants.P_LOOKUP_GEN_SYMMETRIC, btnSym.getSelection());
+		propertyStore.setValue(LookupGenPropertyConstants.P_LOOKUP_GEN_RANDOM, btnRan.getSelection());
+	}
+	
+	/**
+	 * Fills text fields with values from property store
+	 */
+	private void setFromPropertyStore() {
+		txtFilename.setText(propertyStore.getString(LookupGenPropertyConstants.P_LOOKUP_GEN_FILENAME));
+		txtPeriods.setText(propertyStore.getString(LookupGenPropertyConstants.P_LOOKUP_GEN_PERIODS));
+		txtJson.setText(propertyStore.getString(LookupGenPropertyConstants.P_LOOKUP_GEN_JSON));
+		btnSym.setSelection(propertyStore.getBoolean(LookupGenPropertyConstants.P_LOOKUP_GEN_SYMMETRIC));
+		btnRan.setSelection(propertyStore.getBoolean(LookupGenPropertyConstants.P_LOOKUP_GEN_RANDOM));
+	}
+	
+	/**
 	 * Returns active workbench page
 	 * @return
 	 */
@@ -526,6 +558,8 @@ public class LookupGenForm extends ViewPart {
 			if (Util.lookup_exit_value == 0) {
 				Console.getInstance().newMessage(page, 
 						filename + ".h5 generated successfully in " + workingDir, Console.SUCCESS_COLOUR);
+				// Fields only saved (long-term) if file generation successful
+				saveToPropertyStore();
 				// Update generated file's path in property store
 				// To notify MainView of new value
 				String filePath = Util.createFilePath(workingDir, filename + ".h5");
@@ -539,6 +573,6 @@ public class LookupGenForm extends ViewPart {
 			return Status.OK_STATUS;
 		}
 		
-	}
+	}	
 
 }

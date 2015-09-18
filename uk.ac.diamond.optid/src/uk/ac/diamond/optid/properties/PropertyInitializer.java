@@ -48,6 +48,13 @@ public class PropertyInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(MagStrPropertyConstants.P_MAG_STR_HE, "");
 		store.setDefault(MagStrPropertyConstants.P_MAG_STR_V, "");
 		store.setDefault(MagStrPropertyConstants.P_MAG_STR_VE, "");
+		
+		// Add Lookup Gen to store
+		store.setDefault(LookupGenPropertyConstants.P_LOOKUP_GEN_FILENAME, "");
+		store.setDefault(LookupGenPropertyConstants.P_LOOKUP_GEN_PERIODS, "");
+		store.setDefault(LookupGenPropertyConstants.P_LOOKUP_GEN_JSON, "");
+		store.setDefault(LookupGenPropertyConstants.P_LOOKUP_GEN_SYMMETRIC, false);
+		store.setDefault(LookupGenPropertyConstants.P_LOOKUP_GEN_RANDOM, false);
 	}
 
 }
