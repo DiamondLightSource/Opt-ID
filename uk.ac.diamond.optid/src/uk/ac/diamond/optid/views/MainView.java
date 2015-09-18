@@ -57,10 +57,12 @@ public class MainView extends ViewPart {
 	/* Generated file paths */
 	private String idDescFilePath;
 	private String magStrFilePath;
+	private String lookupGenFilePath;
 	
 	// Open generated file listeners
 	private HyperLinkListener idDescLinkListener;
 	private HyperLinkListener magStrLinkListener;
+	private HyperLinkListener lookupGenLinkListener;
 	
 	/* UI Components */
 	private Button btnIdDes;
@@ -68,6 +70,7 @@ public class MainView extends ViewPart {
 	private Button btnLookGen;
 	private Hyperlink lblIdDesStatus;
 	private Hyperlink lblMagStrStatus;
+	private Hyperlink lblLookGenStatus;
 		
 	private PerspectiveAdapter perspectiveListener = new PerspectiveAdapter() {
 		@Override
@@ -109,12 +112,19 @@ public class MainView extends ViewPart {
 				idDescLinkListener = new HyperLinkListener(idDescFilePath);
 				setLabelStatusComplete(lblIdDesStatus, idDescFilePath, idDescLinkListener);
 			} else if (event.getProperty().equals(PropertyConstants.P_MAG_STR_PATH)) {				
-				// Update ID Description file path to new value
+				// Update Magnet Strength file path to new value
 				magStrFilePath = (String) event.getNewValue();
 								
 				// Update status
 				magStrLinkListener = new HyperLinkListener(magStrFilePath);
 				setLabelStatusComplete(lblMagStrStatus, magStrFilePath, magStrLinkListener);
+			} else if (event.getProperty().equals(PropertyConstants.P_LOOKUP_GEN_PATH)) {
+				// Update Lookup Generator file path to new value
+				lookupGenFilePath = (String) event.getNewValue();
+				
+				// Update status
+				lookupGenLinkListener = new HyperLinkListener(lookupGenFilePath);
+				setLabelStatusComplete(lblLookGenStatus, lookupGenFilePath, lookupGenLinkListener);
 			}
 		}
 	};
@@ -281,6 +291,9 @@ public class MainView extends ViewPart {
 					
 					magStrFilePath = null;
 					setLabelStatusNotComplete(lblMagStrStatus, magStrLinkListener);
+					
+					lookupGenFilePath = null;
+					setLabelStatusNotComplete(lblLookGenStatus, lookupGenLinkListener);
 				}
 			}
 		});
@@ -335,10 +348,8 @@ public class MainView extends ViewPart {
 		// Show/hide respective form view
 		btnLookGen.addSelectionListener(new OpenViewSelectionListener(LookupGenForm.ID));
 		
-		Label lblLookGenStatus = new Label(grpOptFiles, SWT.NONE);
-		// Initial label status
-		lblLookGenStatus.setText("Not complete");
-		lblLookGenStatus.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
+		lblLookGenStatus = new Hyperlink(grpOptFiles, SWT.NONE);
+		setLabelStatusNotComplete(lblLookGenStatus, lookupGenLinkListener);
 	}
 	
 	/**
