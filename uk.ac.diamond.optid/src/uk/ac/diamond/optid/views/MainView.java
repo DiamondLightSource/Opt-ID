@@ -92,6 +92,7 @@ public class MainView extends ViewPart {
 	private Text txtSlots;
 	private Combo cboQueue;
 	private Text txtIters;
+	private Button btnRun;
 		
 	private PerspectiveAdapter perspectiveListener = new PerspectiveAdapter() {
 		@Override
@@ -303,10 +304,14 @@ public class MainView extends ViewPart {
 				// Save new directory value to property store
 				propertyStore.setValue(PropertyConstants.P_WORK_DIR, workingDir);
 				
-				// Enable form buttons
+				// Enable form buttons & cluster components
 				btnIdDes.setEnabled(true);
 				btnMagStr.setEnabled(true);
 				btnLookGen.setEnabled(true);
+				txtSlots.setEnabled(true);
+				cboQueue.setEnabled(true);
+				txtIters.setEnabled(true);
+				btnRun.setEnabled(true);
 				
 				// If value has actually changed
 				if (!workingDir.equals(oldWorkDir)) {
@@ -394,16 +399,19 @@ public class MainView extends ViewPart {
 		// Text (int) Field - Slots
 		(new Label(grpCluster, SWT.NONE)).setText("No. of slots");
 		txtSlots = new Text(grpCluster, SWT.SINGLE | SWT.BORDER);
+		txtSlots.setEnabled(false);
 		
 		// Combo (String) Field - Queue
 		(new Label(grpCluster, SWT.NONE)).setText("Queue");
 		cboQueue = new Combo(grpCluster, SWT.READ_ONLY);
+		cboQueue.setEnabled(false);
 		cboQueue.setItems(CLUSTER_QUEUE_LIST);
 		cboQueue.select(0);
 		
 		// Text (int) Field - Iterations
 		(new Label(grpCluster, SWT.NONE)).setText("No. of iterations");
 		txtIters = new Text(grpCluster, SWT.SINGLE | SWT.BORDER);
+		txtIters.setEnabled(false);
 		
 		// Make components stretch to fill width of view
 		txtSlots.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -411,9 +419,10 @@ public class MainView extends ViewPart {
 		txtIters.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
 		// Run
-		Button btnRun = new Button(grpCluster, SWT.PUSH);
+		btnRun = new Button(grpCluster, SWT.PUSH);
 		btnRun.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 		btnRun.setText("Run");
+		btnRun.setEnabled(false);
 		
 		// On click, checks if all text widgets have values
 		// Then forwards arguments to Util.run() to call script to run optimisation
