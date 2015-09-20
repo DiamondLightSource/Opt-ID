@@ -39,6 +39,14 @@
             name="Lookup Generator Form"
             restorable="false">
       </view>
+      <view
+            allowMultiple="false"
+            category="uk.ac.diamond.optid.idOptCategory"
+            class="uk.ac.diamond.optid.views.GenomeView"
+            id="uk.ac.diamond.optid.genomeView"
+            name="Genomes"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.perspectives">

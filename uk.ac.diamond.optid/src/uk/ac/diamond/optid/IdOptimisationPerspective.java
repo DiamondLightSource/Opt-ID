@@ -35,8 +35,10 @@ public class IdOptimisationPerspective implements IPerspectiveFactory {
 		leftFolder.addPlaceholder("uk.ac.diamond.optid.idDescForm");
 		leftFolder.addPlaceholder("uk.ac.diamond.optid.magStrForm");
 		leftFolder.addPlaceholder("uk.ac.diamond.optid.lookupGenForm");
-
 		
+		// Genome view
+		layout.addStandaloneView("uk.ac.diamond.optid.genomeView", true, IPageLayout.BOTTOM, 0.5f, "uk.ac.diamond.optid.mainView");
+
 		IViewLayout idDescFormLayout = layout.getViewLayout("uk.ac.diamond.optid.idDescForm");
 		idDescFormLayout.setCloseable(false);
 		idDescFormLayout.setMoveable(false);
