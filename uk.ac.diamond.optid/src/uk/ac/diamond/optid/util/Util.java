@@ -133,6 +133,23 @@ public class Util {
 		return output;
 	}
 	
+	public static String runFileList(String dir) {
+		// Get absolute path of file_list.py script
+		String script_dir = getAbsoluteScriptDirPath();
+		String pythonScript = "python/list_genomes.py";
+		String pythonPath = createFilePath(script_dir, pythonScript);
+
+		// Create process
+		ArrayList<String> processArray = new ArrayList<>();
+		processArray.add("python");
+		processArray.add(pythonPath);
+		processArray.add(dir); // Directory to display genomes from
+		
+		String output = execute(processArray);
+
+		return output;
+	}
+	
 	/**
 	 * Runs the created process
 	 * @param processArray
