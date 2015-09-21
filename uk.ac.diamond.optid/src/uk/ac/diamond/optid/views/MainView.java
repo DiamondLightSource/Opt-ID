@@ -140,9 +140,7 @@ public class MainView extends ViewPart {
 				// Update status
 				magStrLinkListener = new HyperLinkListener(magStrFilePath);
 				setLabelStatusComplete(lblMagStrStatus, magStrFilePath, magStrLinkListener);
-			} else if (event.getProperty().equals(PropertyConstants.P_LOOKUP_GEN_PATH)) {
-				logger.debug("** lookup file path: ");
-				
+			} else if (event.getProperty().equals(PropertyConstants.P_LOOKUP_GEN_PATH)) {				
 				// Update Lookup Generator file path to new value
 				lookupGenFilePath = (String) event.getNewValue();
 				
@@ -435,10 +433,13 @@ public class MainView extends ViewPart {
 					String errorOutput = Util.run(Util.ScriptOpt.CLUSTER, arguments, workingDir, "");
 				
 					if (Util.exit_value == 0) {
+						// Notify GenomeView of update to directory
+						String genomeDir = Util.createFilePath(workingDir, "logs");
 						Console.getInstance().newMessage(getWorkbenchPage(), 
 								"Job successfully submitted to cluster", Console.SUCCESS_COLOUR);
 						Console.getInstance().newMessage(getWorkbenchPage(), 
-								"Genomes will be generated in: " + workingDir + "/logs", Console.SUCCESS_COLOUR);
+								"Genomes will be generated in: " + genomeDir, Console.SUCCESS_COLOUR);
+						propertyStore.setValue(PropertyConstants.P_GENOME_DIR, genomeDir);
 					} else {
 						Console.getInstance().newMessage(getWorkbenchPage(), 
 								"Error submitting job to cluster", Console.ERROR_COLOUR);
@@ -480,6 +481,7 @@ public class MainView extends ViewPart {
 		propertyStore.setToDefault(PropertyConstants.P_ID_DESC_PATH);
 		propertyStore.setToDefault(PropertyConstants.P_MAG_STR_PATH);
 		propertyStore.setToDefault(PropertyConstants.P_LOOKUP_GEN_PATH);
+		propertyStore.setToDefault(PropertyConstants.P_GENOME_DIR);
 		
 		super.dispose();
     }

@@ -9,5 +9,7 @@ public class PropertyConstants {
 	public static final String P_MAG_STR_PATH = "uk.ac.diamond.optid.properties.mag_str_path";
 	
 	public static final String P_LOOKUP_GEN_PATH = "uk.ac.diamond.optid.properties.lookup_gen_path";
+	
+	public static final String P_GENOME_DIR = "uk.ac.diamond.optid.properties.genome_directory";
 
 }

@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 
 import uk.ac.diamond.optid.Activator;
 import uk.ac.diamond.optid.properties.LookupGenPropertyConstants;
-import uk.ac.diamond.optid.properties.MagStrPropertyConstants;
 import uk.ac.diamond.optid.properties.PropertyConstants;
 import uk.ac.diamond.optid.util.Console;
 import uk.ac.diamond.optid.util.Util;

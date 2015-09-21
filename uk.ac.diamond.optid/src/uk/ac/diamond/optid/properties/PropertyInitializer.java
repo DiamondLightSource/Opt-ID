@@ -15,6 +15,8 @@ public class PropertyInitializer extends AbstractPreferenceInitializer {
 		// Since file generated in runtime, no default value
 		store.setDefault(PropertyConstants.P_ID_DESC_PATH, "");
 		store.setDefault(PropertyConstants.P_MAG_STR_PATH, "");
+		store.setDefault(PropertyConstants.P_LOOKUP_GEN_PATH, "");
+		store.setDefault(PropertyConstants.P_GENOME_DIR, "");
 
 		// Add ID Description constants
 		store.setDefault(IdDescPropertyConstants.P_ID_DESC_NAME, IdDescPropertyConstants.DEF_ID_DESC_NAME);

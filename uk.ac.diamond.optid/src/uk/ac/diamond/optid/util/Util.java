@@ -8,11 +8,17 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Util {
+	
+	@SuppressWarnings("unused")
+	private static final Logger logger = LoggerFactory.getLogger(Util.class);
 	
 	public static int exit_value = -1;
 	// Lookup generator has own exit value
@@ -133,7 +139,13 @@ public class Util {
 		return output;
 	}
 	
-	public static String runFileList(String dir) {
+	/**
+	 * Runs list_genomes.py script with argument dir, 
+	 * directory which genomes will be displayed from
+	 * @param dir
+	 * @return String
+	 */
+	public static ArrayList<String> runListGenomes(String dir) {
 		// Get absolute path of file_list.py script
 		String script_dir = getAbsoluteScriptDirPath();
 		String pythonScript = "python/list_genomes.py";
@@ -146,8 +158,18 @@ public class Util {
 		processArray.add(dir); // Directory to display genomes from
 		
 		String output = execute(processArray);
-
-		return output;
+		
+		// No genomes in directory, return empty list
+		if (output.length() <= 7) {
+			return new ArrayList<String>();
+		}
+		
+		// Separate each line as an element in a list and sort
+		String lines[] = output.split("\\n");
+		ArrayList<String> genomes = new ArrayList<>(Arrays.asList(lines));
+		Collections.sort(genomes);
+		
+		return genomes;
 	}
 	
 	/**
@@ -166,7 +188,7 @@ public class Util {
 			System.out.println(ioe);
 			process = null;
 		}
-		
+				
 		String result = "";
 		if (process != null) {
 			BufferedReader brOut = new BufferedReader(new InputStreamReader(
