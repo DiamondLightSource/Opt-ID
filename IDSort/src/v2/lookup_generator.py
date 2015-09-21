@@ -32,7 +32,7 @@ if __name__ == "__main__":
     
     outfile = h5py.File(args[1], 'w')
     
-    if data['type'] == 'PPM_AntiSymmetric':
+    if data['type'] == 'PPM_AntiSymmetric' or data['type'] == 'Hybrid_Symmetric':
     
         for b in range(len(data['beams'])):
             count = 0

@@ -247,10 +247,10 @@ def create_type_list_symmetric_hybrid(nperiods):
     types.append('HT')
     types.append('HE')
 
-    start, stop = (2, (4*nperiods+5)-2)
+    start, stop = (2, (2*nperiods+4)-2)
 
     # now put in all the middle periods
-    for i in range(start, stop,2):
+    for i in range(start, stop):
         types.append('HH')
 
 
@@ -262,36 +262,32 @@ def create_type_list_symmetric_hybrid(nperiods):
 
 def create_direction_matrix_list_symmetric_hybrid_bottom(nperiods):
     direction = []
-    for i in range(0, (4 * nperiods + 5) - 1, 4):
+    for i in range(0, (2 * nperiods + 4), 2):
         direction.append(((1,0,0),(0,1,0),(0,0,1)))
         #no V magnet in Hybrids
         direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
         #no V magnets in hybrid
 
-    # Append last element
-    direction.append(((1,0,0),(0,1,0),(0,0,1)))
     return direction
 
 def create_direction_matrix_list_symmetric_hybrid_top(nperiods):
     direction = []
-    for i in range(0, (4 * nperiods + 5) - 1, 4):
+    for i in range(0, (2 * nperiods + 4), 2):
         direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
         #no V magnets in Hybrids
         direction.append(((1,0,0),(0,1,0),(0,0,1)))
         #no V magnets in Hybrids
 
-    # Append last element
-    direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
     return direction
 
 def create_flip_matrix_symmetric_hybrid_bottom_top(nperiods):
     flip = []
-    for i in range(0, (4 * nperiods + 5)):
+    for i in range(0, (2 * nperiods + 4)):
         flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
 
     return flip
 
-def create_location_list_symmetric_hybrid_top(period, nperiods,fullmagdims,hemagdims,htmagdims,poledims,mingap,endgapsym,terminalgapsymhybrid,interstice):
+def create_location_list_symmetric_hybrid_top(nperiods,fullmagdims,hemagdims,htmagdims,poledims,mingap,endgapsym,terminalgapsymhybrid,interstice):
     V1 = []
     length = nperiods * (2 * poledims[2]+2*fullmagdims[2]+4*interstice)+2*(poledims[2]+interstice + hemagdims[2] + endgapsym + terminalgapsymhybrid + htmagdims[2])
     x=-fullmagdims[0]/2.0
@@ -301,7 +297,7 @@ def create_location_list_symmetric_hybrid_top(period, nperiods,fullmagdims,hemag
     s+= (endgapsym + terminalgapsymhybrid + poledims[2]/2)
     V1.append((x,z,s))
     s+=hemagdims[2]+poledims[2]+2*interstice
-    for i in range(2,(2*nperiods)-2,1):
+    for i in range(2,(2*nperiods+4)-2,1):
         V1.append((x,z,s))
         s+=(fullmagdims[2]+poledims[2]+2*interstice)
     V1.append((x,z,s))
@@ -309,7 +305,7 @@ def create_location_list_symmetric_hybrid_top(period, nperiods,fullmagdims,hemag
     V1.append((x,z,s))
     return V1
 
-def create_location_list_symmetric_hybrid_bottom(period, nperiods,fullmagdims,hemagdims,htmagdims,poledims,mingap,endgapsym,terminalgapsymhybrid,interstice):
+def create_location_list_symmetric_hybrid_bottom(nperiods,fullmagdims,hemagdims,htmagdims,poledims,mingap,endgapsym,terminalgapsymhybrid,interstice):
     V1 = []
     length = nperiods * (2 * poledims[2]+2*fullmagdims[2]+4*interstice)+2*(poledims[2]+interstice + hemagdims[2] + endgapsym + terminalgapsymhybrid + htmagdims[2])
     x=-fullmagdims[0]/2.0
@@ -319,7 +315,7 @@ def create_location_list_symmetric_hybrid_bottom(period, nperiods,fullmagdims,he
     s+= (endgapsym + terminalgapsymhybrid + poledims[2]/2)
     V1.append((x,z,s))
     s+=hemagdims[2]+poledims[2]+2*interstice
-    for i in range(2,(2*nperiods)-2,1):
+    for i in range(2,(2*nperiods+4)-2,1):
         V1.append((x,z,s))
         s+=(fullmagdims[2]+poledims[2]+2*interstice)
     V1.append((x,z,s))
@@ -509,11 +505,10 @@ if __name__ == "__main__":
         types = create_type_list_symmetric_hybrid(options.periods)
         top_directions_matrix = create_direction_matrix_list_symmetric_hybrid_top(options.periods)
         bottom_directions_matrix = create_direction_matrix_list_symmetric_hybrid_bottom(options.periods)
-        top_positions = create_location_list_symmetric_hybrid_top(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
-        bottom_positions = create_location_list_symmetric_hybrid_bottom(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
+        top_positions = create_location_list_symmetric_hybrid_top(options.periods, options.fullmagdims, options.hemagdims, options.htmagdims, options.poledims, options.gap, options.endgapsym, options.terminalgapsymhyb, options.interstice)
+        bottom_positions = create_location_list_symmetric_hybrid_bottom(options.periods, options.fullmagdims, options.hemagdims, options.htmagdims, options.poledims, options.gap, options.endgapsym, options.terminalgapsymhyb,options.interstice)
         top_flip_matrix = create_flip_matrix_symmetric_hybrid_bottom_top(options.periods)
         bottom_flip_matrix = create_flip_matrix_symmetric_hybrid_bottom_top(options.periods)
-
         # output beams
         output['beams'] = []
         top_beam = {}
@@ -539,6 +534,8 @@ if __name__ == "__main__":
                 mag['dimensions'] = options.hemagdims
             elif types[i] == 'VE':
                 mag['dimensions'] = options.vemagdims
+            elif types[i] == 'HT':
+                mag['dimensions'] = options.htmagdims
             top_beam['mags'].append(mag)
 
         # bottom beam
@@ -556,6 +553,8 @@ if __name__ == "__main__":
                 mag['dimensions'] = options.hemagdims
             elif types[i] == 'VE':
                 mag['dimensions'] = options.vemagdims
+            elif types[i] == 'HT':
+                mag['dimensions'] = options.htmagdims
             bottom_beam['mags'].append(mag)
 
         output['beams'].append(top_beam)
