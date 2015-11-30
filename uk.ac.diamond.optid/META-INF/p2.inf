@@ -1,0 +1,12 @@
+# The install process does not preserve permissions, so set the execute permission where appropriate
+# Note that wildcards are not supported for the targetFile
+
+instructions.install = \
+chmod(targetDir:${artifact.location}/scripts,targetFile:cluster_mpi.sh,permissions:+x); \
+chmod(targetDir:${artifact.location}/scripts,targetFile:mpi_job.sh,permissions:+x); \
+chmod(targetDir:${artifact.location}/scripts,targetFile:run_id_setup.sh,permissions:+x); \
+chmod(targetDir:${artifact.location}/scripts,targetFile:run_lookup_generator.sh,permissions:+x); \
+chmod(targetDir:${artifact.location}/scripts,targetFile:run_magnets.sh,permissions:+x);
+
+instructions.install.import= \
+org.eclipse.equinox.p2.touchpoint.natives.chmod
