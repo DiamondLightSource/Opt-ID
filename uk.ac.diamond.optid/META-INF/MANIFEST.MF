@@ -4,7 +4,7 @@ Bundle-Name: Opt-ID
 Bundle-SymbolicName: uk.ac.diamond.optid;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: uk.ac.diamond.optid.Activator
-Bundle-Vendor: DLS
+Bundle-Vendor: Diamond Light Source
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.swt,
@@ -22,4 +22,4 @@ Import-Package: org.apache.commons.io;version="2.4.0",
  org.eclipse.ui.forms.events,
  org.eclipse.ui.forms.widgets,
  org.eclipse.ui.ide,
- org.slf4j;version="1.7.6"
+ org.slf4j;version="[1.7.2,2.0.0)"
