@@ -23,7 +23,7 @@ public class IdOptimisationPerspective implements IPerspectiveFactory {
 		IFolderLayout rightFolder = layout.createFolder("rightFolder", IPageLayout.RIGHT, 0.6f, IPageLayout.ID_EDITOR_AREA);
 		rightFolder.addView("org.dawb.workbench.views.dataSetView");
 		rightFolder.addView("org.dawb.workbench.plotting.views.toolPageView.2D");
-		rightFolder.addView("org.dawb.common.ui.views.headerTableView");
+		rightFolder.addView("org.dawb.common.ui.views.e4.headerTableView");
 		
 		// Progress & Console views
 		IFolderLayout bottomFolder = layout.createFolder("bottomFolder", IPageLayout.BOTTOM, 0.7f, IPageLayout.ID_EDITOR_AREA);
