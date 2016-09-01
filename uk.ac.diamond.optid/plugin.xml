@@ -58,27 +58,10 @@
       </perspective>
    </extension>
    <extension
-         point="org.dawnsci.introRegister">
-      <introPageRegister
-            class="uk.ac.diamond.optid.IdOptimisationPerspectiveLaunch"
-            description="Perform optimisation of IDs"
-            icon="icons/idOptimisation_intro.png"
-            id="uk.ac.diamond.optid.idOptimisationPerspectiveIntro"
-            name="ID Optimisation">
-      </introPageRegister>
-   </extension>
-   <extension
          point="org.eclipse.ui.perspectiveExtensions">
       <perspectiveExtension
             targetID="uk.ac.diamond.optid.idOptimisationPerspective">
       </perspectiveExtension>
-   </extension>
-   <extension
-         point="org.eclipse.ui.intro.configExtension">
-      <configExtension
-            configId="org.dawnsci.intro.universalConfig"
-            content="intro/introContribution.xml">
-      </configExtension>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">
