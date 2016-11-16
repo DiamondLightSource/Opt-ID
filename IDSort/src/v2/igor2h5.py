@@ -7,7 +7,7 @@ import numpy as np
 import h5py
 from scipy import signal
 
-nperiods=109
+'''nperiods=109
 nskip=8
 n_stp = 20
 n_s_stp = 2501
@@ -84,19 +84,30 @@ fw.create_dataset('pherrnew', data=pherrnew)
 
 fw.close()
 '''
-data1=np.genfromtxt('001.bfield')
-data2=np.genfromtxt('002.bfield')
-data3=np.genfromtxt('003.bfield')
-data4=np.genfromtxt('004.bfield')
-data5=np.genfromtxt('005.bfield')
+#Input Files in the format "Bx0C,Bz0C,Bs0C", copied out of Igor
+x0z0=np.genfromtxt('/home/gdy32713/shimming/I02J/X0Z0.bfield')
+x1z0=np.genfromtxt('/home/gdy32713/shimming/I02J/X1Z0.bfield')
+x2z0=np.genfromtxt('/home/gdy32713/shimming/I02J/X2Z0.bfield')
+x3z0=np.genfromtxt('/home/gdy32713/shimming/I02J/X3Z0.bfield')
+x4z0=np.genfromtxt('/home/gdy32713/shimming/I02J/X4Z0.bfield')
+x0z1=np.genfromtxt('/home/gdy32713/shimming/I02J/X0Z1.bfield')
+x1z1=np.genfromtxt('/home/gdy32713/shimming/I02J/X1Z1.bfield')
+x2z1=np.genfromtxt('/home/gdy32713/shimming/I02J/X2Z1.bfield')
+x3z1=np.genfromtxt('/home/gdy32713/shimming/I02J/X3Z1.bfield')
+x4z1=np.genfromtxt('/home/gdy32713/shimming/I02J/X4Z1.bfield')
 
-all_data=np.zeros((5,1,2501,3))
-all_data[0,0,:,:]=data1
-all_data[1,0,:,:]=data2
-all_data[2,0,:,:]=data3
-all_data[3,0,:,:]=data4
-all_data[4,0,:,:]=data5
-filname='shim6.meas.h5'
+all_data=np.zeros((5,2,2221,3))
+all_data[0,0,:,:]=x0z0
+all_data[1,0,:,:]=x1z0
+all_data[2,0,:,:]=x2z0
+all_data[3,0,:,:]=x3z0
+all_data[4,0,:,:]=x4z0
+all_data[0,1,:,:]=x0z1
+all_data[1,1,:,:]=x1z1
+all_data[2,1,:,:]=x2z1
+all_data[3,1,:,:]=x3z1
+all_data[4,1,:,:]=x4z1
+filname='/home/gdy32713/shimming/I02J/i02j.shim1.meas.h5'
 f=h5py.File(filname,'w')
 f.create_dataset('id_Bfield',data=all_data)
-f.close()'''
+f.close()

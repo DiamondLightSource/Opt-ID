@@ -6,6 +6,7 @@ Created on 5 Dec 2013
 import numpy as np
 import random
 import cPickle
+import logging
 
 
 class Magnets(object):
@@ -100,7 +101,7 @@ class MagLists():
             magdata = magdata.dot(flip)
         return magdata
     
-    def mutate(self, number_of_mutations, available={'VE':range(32), 'HE':range(64), 'HH':range(820), 'VV':range(820)}):
+    def mutate(self, number_of_mutations, available={'VE':range(12), 'HE':range(12), 'HH':range(420), 'VV':range(419)}):
         for i in range(number_of_mutations):
             # pick a list at random
             key = random.choice(available.keys())
@@ -120,10 +121,12 @@ class MagLists():
                 key = mutation[1]
                 p1 = mutation[2]
                 p2 = mutation[3]
+                #logging.debug("swapping key %s at %s and %s" % (key, p1, p2) )
                 self.swap(key, p1, p2)
             else :
                 key = mutation[1]
                 p1 = mutation[2]
+                #logging.debug("flipping key %s at %s" % (key, p1) )
                 self.flip(key , (p1,))
 
 
@@ -172,6 +175,13 @@ if __name__ == "__main__" :
     
     print "After swap"
     pprint.pprint(maglist.magnet_lists['HE'])
+    
+    for key in mags.magnet_sets.keys():
+        pprint.pprint(key)
+    #    maglist.flip('HH',(107,294,511,626))
+    available = {key : range(len(mags.magnet_sets[key])) for key in mags.magnet_sets.keys()}
+    
+    maglist.mutate(4,available)
     
 #    maglist.flip('HH',(107,294,511,626))
     

@@ -98,7 +98,12 @@ def calculate_phase_error(info, b_array):
     nperiods=info['periods']
     step=info['sstep']
     n_stp = (info['period_length']/step)
-    n_s_stp = (info['smax']-info['smin'])/step
+    n_s_stp = round(((info['smax']-info['smin'])/step))
+    
+#    logging.debug("step %s"%(str(info['sstep'])))
+#    logging.debug("smax %s"%(str(info['smax'])))
+#    logging.debug("smin %s"%(str(info['smin'])))
+#    logging.debug("N_S_Step %s"%(str(n_s_stp)))
     
     nskip=8
     
@@ -109,10 +114,10 @@ def calculate_phase_error(info, b_array):
 #    v2=np.zeros((4*nperiods-2*nskip))
     v2a=np.zeros((4*nperiods-2*nskip))
     
-    logging.debug("Barray shape %s"%(str(b_array.shape)))
+#    logging.debug("Barray shape %s"%(str(b_array.shape)))
     
     trap_b_array = np.roll(b_array, 1, 0)
-    logging.debug("trap_b_array shape %s"%(str(trap_b_array.shape)))
+#    logging.debug("trap_b_array shape %s"%(str(trap_b_array.shape)))
     trap_b_array[:,:,0,:]=0.0
     trap_b_array = (trap_b_array+b_array)*step/2
     
@@ -141,6 +146,7 @@ def calculate_phase_error(info, b_array):
     
     
     w=np.zeros([n_s_stp,2])
+#    logging.debug("w shape is %s"%(str(w.shape)))
     
     w[:,0]=np.square(trajectories[i,j,:,2])
     w[:,1]=np.square(trajectories[i,j,:,3])
@@ -159,6 +165,9 @@ def calculate_phase_error(info, b_array):
             
     #'linear fit'
     A=np.vstack([v1,np.ones(len(v1))]).T
+    
+#    logging.debug("A %s"%(str(len(v1))))
+#    logging.debug("v2 %s"%(str(len(v2))))
     
     m,intercept=np.linalg.lstsq(A, v2)[0]
     Omega0=2*np.pi/(m*n_stp)

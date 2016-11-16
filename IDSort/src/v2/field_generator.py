@@ -15,6 +15,8 @@ import threading
 
 import copy
 
+import logging
+
 
 def load_lookup(filename, beam):
     f = h5py.File(filename, 'r')
@@ -27,6 +29,7 @@ def generate_per_magnet_array(info, magnetlist, magnets):
     pos['VE'] = 0;
     pos['HH'] = 0;
     pos['HE'] = 0;
+    pos['HT'] = 0;
 
     beams = {}
 
@@ -251,7 +254,7 @@ if __name__ == "__main__" :
 #    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
     maglist0 = magnets.MagLists(mags)
     maglist0.sort_all()
-    maglist0.flip('HH', (107,294,511,626))
+#    maglist0.flip('HH', (107,294,511,626))
     per_beam_field = generate_per_beam_b_field(info, maglist0, mags, lookup)
     total_id_field = generate_id_field(info, maglist0, mags, lookup)
     pherr, trajectories = mt.calculate_phase_error(info,total_id_field)

@@ -294,7 +294,7 @@ def create_location_list_symmetric_hybrid_top(nperiods,fullmagdims,hemagdims,htm
     z= mingap/2.0
     s=-length/2.0
     V1.append((x,z,s))
-    s+= (endgapsym + terminalgapsymhybrid + poledims[2]/2)
+    s+= (htmagdims[2]+endgapsym + terminalgapsymhybrid + poledims[2]/2)
     V1.append((x,z,s))
     s+=hemagdims[2]+poledims[2]+2*interstice
     for i in range(2,(2*nperiods+4)-2,1):
@@ -312,7 +312,7 @@ def create_location_list_symmetric_hybrid_bottom(nperiods,fullmagdims,hemagdims,
     z= -fullmagdims[1]-mingap/2.0
     s=-length/2.0
     V1.append((x,z,s))
-    s+= (endgapsym + terminalgapsymhybrid + poledims[2]/2)
+    s+= (htmagdims[2]+endgapsym + terminalgapsymhybrid + poledims[2]/2)
     V1.append((x,z,s))
     s+=hemagdims[2]+poledims[2]+2*interstice
     for i in range(2,(2*nperiods+4)-2,1):
@@ -497,8 +497,9 @@ if __name__ == "__main__":
         output['zstep'] = options.z[2]
         length = (options.fullmagdims[2]+options.poledims[2]+2*options.interstice)*2*(options.periods+16)
         output['smin'] = -length/2.0
-        output['smax'] = (length/2.0)+((options.fullmagdims[2]+options.interstice)/options.steps)
-        output['sstep'] = (options.fullmagdims[2]+options.interstice)/options.steps
+        output['smax'] = (length/2.0)+2 * (options.fullmagdims[2]+options.poledims[2]+2*options.interstice)/(4*options.steps)
+        output['sstep'] = 2 * (options.fullmagdims[2]+options.poledims[2]+2*options.interstice)/(4*options.steps)
+        output['sstep'] = (int(round(output['sstep']*100000))/100000.)
         output['interstice'] = options.interstice
 
         # calculate all magnet values
@@ -583,6 +584,7 @@ if __name__ == "__main__":
         output['smin'] = -length/2.0
         output['smax'] = (length/2.0)+((options.fullmagdims[2]+options.interstice)/options.steps)
         output['sstep'] = (options.fullmagdims[2]+options.interstice)/options.steps
+        output['sstep'] = (int(round(output['sstep']*100000))/100000.)
         output['interstice'] = options.interstice
 
         # calculate all magnet values
@@ -670,6 +672,7 @@ if __name__ == "__main__":
         output['smin'] = -length/2.0
         output['smax'] = (length/2.0)+((options.fullmagdims[2]+options.interstice)/options.steps)
         output['sstep'] = (options.fullmagdims[2]+options.interstice)/options.steps
+        output['sstep'] = (int(round(output['sstep']*100000))/100000.)
         output['interstice'] = options.interstice
         output['end_gap'] = options.endgapsym
         output['phasing_gap'] = options.phasinggap

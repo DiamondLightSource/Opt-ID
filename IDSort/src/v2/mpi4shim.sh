@@ -1,7 +1,12 @@
 #!/bin/bash
+module load global/cluster
+module load python/ana
+source activate mpi2
+module load openmpi/1.6.5
+
 MPIRUN=/dls_sw/prod/tools/RHEL6-x86_64/openmpi/1-6-5/prefix/bin/mpirun
 PYTHON=/dls_sw/prod/tools/RHEL6-x86_64/defaults/bin/dls-python
-wdir=/home/ssg37927/ID/Opt-ID/IDSort/src/v2/
+wdir=/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2
 
 UNIQHOSTS=${TMPDIR}/machines-u
 awk '{print $1 }' ${PE_HOSTFILE} | uniq > ${UNIQHOSTS}
@@ -16,6 +21,6 @@ echo "Processes running are : ${processes}"
 
 $MPIRUN -np ${processes} \
         --hostfile ${UNIQHOSTS} \
-        --wd /dls/tmp/ssg37927/id/logs \
+        --wd /dls/tmp/gdy32713/I02J/I02j_analysis/logs \
         --tag-output \
-        $PYTHON /home/ssg37927/ID/Opt-ID/IDSort/src/v2/mpi_runner_for_shim.py $@
+        $PYTHON /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/mpi_runner_for_shim.py $@

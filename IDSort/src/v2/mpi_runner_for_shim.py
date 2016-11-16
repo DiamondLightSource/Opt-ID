@@ -18,7 +18,8 @@
 # First to pick up the DLS controls environment and versioned libraries
 from pkg_resources import require
 require('mpi4py==1.3.1')
-require('h5py==2.2.0')
+require('h5py')#==2.6.0
+require('scipy')
 require('numpy') # h5py need to be able to import numpy
 
 # Just to demonstrate that we have zmq in the environment as well

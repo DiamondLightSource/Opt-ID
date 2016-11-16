@@ -77,7 +77,8 @@ class ID_BCell(BCell):
 
         for i in range(number_of_children):
             maglist = copy.deepcopy(self.genome)
-            maglist.mutate(number_of_mutations)
+            available_magnets = {key : range(len(magnets.magnet_sets[key])) for key in magnets.magnet_sets.keys()}
+            maglist.mutate(number_of_mutations,available_magnets)
             new_magnets = fg.generate_per_magnet_array(info, maglist, magnets)
             update = fg.compare_magnet_arrays(original_magnets, new_magnets, lookup)
             child = ID_BCell()
@@ -116,7 +117,7 @@ class ID_Shim_BCell(BCell):
                 updated_bfield = updated_bfield - update[beam]
         self.fitness = fg.calculate_trajectory_fitness_from_array(updated_bfield, info, ref_trajectories)
 
-    def create_genome(self, number_of_mutations, available={'VE':range(12), 'HE':range(12), 'HH':range(506), 'VV':range(506)}):
+    def create_genome(self, number_of_mutations, available={'VE':range(12), 'HE':range(12), 'HH':range(420), 'VV':range(419)}):
         self.genome = []
         for i in range(number_of_mutations):
             # pick a list at random
@@ -132,7 +133,7 @@ class ID_Shim_BCell(BCell):
                 self.genome.append(('F', key, p1, p2))
 
 
-    def create_mutant(self, number_of_mutations, available={'VE':range(12), 'HE':range(12), 'HH':range(506), 'VV':range(506)}):
+    def create_mutant(self, number_of_mutations, available={'VE':range(12), 'HE':range(12), 'HH':range(420), 'VV':range(419)}):
         mutant = copy.deepcopy(self.genome)
         for i in range(number_of_mutations):
             position = random.randint(0,len(mutant)-1)
