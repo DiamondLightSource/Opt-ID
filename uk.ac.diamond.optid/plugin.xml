@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="false"
+            category="uk.ac.diamond.optid.idOptCategory"
+            class="uk.ac.diamond.optid.views.IdDescForm"
+            id="uk.ac.diamond.optid.idDescForm"
+            name="ID Description Form"
+            restorable="false">
+      </view>
+      <view
+            allowMultiple="false"
+            category="uk.ac.diamond.optid.idOptCategory"
+            class="uk.ac.diamond.optid.views.MainView"
+            id="uk.ac.diamond.optid.mainView"
+            name="ID Optimisation"
+            restorable="true">
+      </view>
+      <category
+            id="uk.ac.diamond.optid.idOptCategory"
+            name="ID Optimisation">
+      </category>
+      <view
+            allowMultiple="false"
+            category="uk.ac.diamond.optid.idOptCategory"
+            class="uk.ac.diamond.optid.views.MagStrForm"
+            id="uk.ac.diamond.optid.magStrForm"
+            name="Magnet Strengths Form"
+            restorable="false">
+      </view>
+      <view
+            allowMultiple="false"
+            category="uk.ac.diamond.optid.idOptCategory"
+            class="uk.ac.diamond.optid.views.LookupGenForm"
+            id="uk.ac.diamond.optid.lookupGenForm"
+            name="Lookup Generator Form"
+            restorable="false">
+      </view>
+      <view
+            allowMultiple="false"
+            category="uk.ac.diamond.optid.idOptCategory"
+            class="uk.ac.diamond.optid.views.GenomeView"
+            id="uk.ac.diamond.optid.genomeView"
+            name="Genomes"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="uk.ac.diamond.optid.IdOptimisationPerspective"
+            icon="icons/idOptimisation_perspective.png"
+            id="uk.ac.diamond.optid.idOptimisationPerspective"
+            name="ID Optimisation">
+      </perspective>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="uk.ac.diamond.optid.idOptimisationPerspective">
+      </perspectiveExtension>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="uk.ac.diamond.optid.properties.PropertyInitializer">
+      </initializer>
+   </extension>
+
+</plugin>
