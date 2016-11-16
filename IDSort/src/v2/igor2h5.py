@@ -85,6 +85,7 @@ fw.create_dataset('pherrnew', data=pherrnew)
 fw.close()
 '''
 #Input Files in the format "Bx0C,Bz0C,Bs0C", copied out of Igor
+'''
 x0z0=np.genfromtxt('/home/gdy32713/shimming/I02J/X0Z0.bfield')
 x1z0=np.genfromtxt('/home/gdy32713/shimming/I02J/X1Z0.bfield')
 x2z0=np.genfromtxt('/home/gdy32713/shimming/I02J/X2Z0.bfield')
@@ -95,18 +96,19 @@ x1z1=np.genfromtxt('/home/gdy32713/shimming/I02J/X1Z1.bfield')
 x2z1=np.genfromtxt('/home/gdy32713/shimming/I02J/X2Z1.bfield')
 x3z1=np.genfromtxt('/home/gdy32713/shimming/I02J/X3Z1.bfield')
 x4z1=np.genfromtxt('/home/gdy32713/shimming/I02J/X4Z1.bfield')
+'''
 
 all_data=np.zeros((5,2,2221,3))
-all_data[0,0,:,:]=x0z0
-all_data[1,0,:,:]=x1z0
-all_data[2,0,:,:]=x2z0
-all_data[3,0,:,:]=x3z0
-all_data[4,0,:,:]=x4z0
-all_data[0,1,:,:]=x0z1
-all_data[1,1,:,:]=x1z1
-all_data[2,1,:,:]=x2z1
-all_data[3,1,:,:]=x3z1
-all_data[4,1,:,:]=x4z1
+all_data[0,0,:,:]=np.genfromtxt('/home/gdy32713/shimming/I02J/X0Z0.bfield')
+all_data[1,0,:,:]=np.genfromtxt('/home/gdy32713/shimming/I02J/X1Z0.bfield')
+all_data[2,0,:,:]=np.genfromtxt('/home/gdy32713/shimming/I02J/X2Z0.bfield')
+all_data[3,0,:,:]=np.genfromtxt('/home/gdy32713/shimming/I02J/X3Z0.bfield')
+all_data[4,0,:,:]=np.genfromtxt('/home/gdy32713/shimming/I02J/X4Z0.bfield')
+all_data[0,1,:,:]=np.genfromtxt('/home/gdy32713/shimming/I02J/X0Z1.bfield')
+all_data[1,1,:,:]=np.genfromtxt('/home/gdy32713/shimming/I02J/X1Z1.bfield')
+all_data[2,1,:,:]=np.genfromtxt('/home/gdy32713/shimming/I02J/X2Z1.bfield')
+all_data[3,1,:,:]=np.genfromtxt('/home/gdy32713/shimming/I02J/X3Z1.bfield')
+all_data[4,1,:,:]=np.genfromtxt('/home/gdy32713/shimming/I02J/X4Z1.bfield')
 filname='/home/gdy32713/shimming/I02J/i02j.shim1.meas.h5'
 f=h5py.File(filname,'w')
 f.create_dataset('id_Bfield',data=all_data)
