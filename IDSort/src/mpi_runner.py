@@ -1,3 +1,18 @@
+# Copyright 2017 Diamond Light Source
+# 
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, 
+# software distributed under the License is distributed on an 
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, 
+# either express or implied. See the License for the specific 
+# language governing permissions and limitations under the License.
+
+
 # Run this script with a suitable mpirun command. 
 # The DLS controls installation of h5py is built against openmpi version 1.6.5.
 # Note that the current default mpirun in the controls environment (module load controls-tools)
@@ -15,16 +30,6 @@
 # qsub -pe openmpi 80 -q low.q -l release=rhel6 /home/ssg37927/ID/Opt-ID/IDSort/src/v2/mpijob.sh --iterations 100
 #
 #
-# First to pick up the DLS controls environment and versioned libraries
-#from pkg_resources import require
-#require('mpi4py==1.3.1')
-#require('h5py==2.2.0')
-#require('numpy') # h5py need to be able to import numpy
-#require('scipy')
-
-# Just to demonstrate that we have zmq in the environment as well
-#require('pyzmq==13.1.0')
-#import zmq
 
 from mpi4py import MPI
 import h5py

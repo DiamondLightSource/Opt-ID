@@ -1,10 +1,23 @@
+# Copyright 2017 Diamond Light Source
+# 
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, 
+# software distributed under the License is distributed on an 
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, 
+# either express or implied. See the License for the specific 
+# language governing permissions and limitations under the License.
+
 '''
 Created on 9 Dec 2013
 
 @author: ssg37927
 '''
 
-import magnets as mag
 import field_generator as fg
 import binascii
 import os
@@ -117,7 +130,6 @@ class ID_Shim_BCell(BCell):
                 updated_bfield = updated_bfield - update[beam]
         self.fitness = fg.calculate_trajectory_fitness_from_array(updated_bfield, info, ref_trajectories)
 
-   # def create_genome(self, number_of_mutations, available={'VE':range(12), 'HE':range(12), 'HH':range(420), 'VV':range(419)}):
     def create_genome(self, number_of_mutations, available={'HH':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,420,1)), 'VV':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,419,1))}):
         self.genome = []
         for i in range(number_of_mutations):
@@ -134,7 +146,6 @@ class ID_Shim_BCell(BCell):
                 self.genome.append(('F', key, p1, p2))
 
 
-#    def create_mutant(self, number_of_mutations, available={'VE':range(12), 'HE':range(12), 'HH':range(420), 'VV':range(419)}):
     def create_mutant(self, number_of_mutations, available={'HH':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,420,1)), 'VV':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,419,1))}):
         mutant = copy.deepcopy(self.genome)
         for i in range(number_of_mutations):

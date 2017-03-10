@@ -1,3 +1,17 @@
+# Copyright 2017 Diamond Light Source
+# 
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, 
+# software distributed under the License is distributed on an 
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, 
+# either express or implied. See the License for the specific 
+# language governing permissions and limitations under the License.
+
 '''
 Created on 5 Dec 2013
 
@@ -14,8 +28,6 @@ import magnet_tools as mt
 import threading
 
 import copy
-
-import logging
 
 
 def load_lookup(filename, beam):
@@ -43,6 +55,7 @@ def generate_per_magnet_array(info, magnetlist, magnets):
         beams[beam['name']] = np.transpose(np.vstack(magvalues))
     return beams
 
+
 def compare_magnet_arrays(mag_array_a, mag_array_b, lookup):
     difference_map = {}
     for beam in mag_array_a.keys():
@@ -53,7 +66,6 @@ def compare_magnet_arrays(mag_array_a, mag_array_b, lookup):
     return difference_map
 
 
-
 def generate_sub_array(beam_array, eval_list, lookup, beam, results):
     # This sum is calculated like this to avoid memory errors
     result = np.sum(lookup[beam][:, :, :, :, :, eval_list[0]] * beam_array[:,eval_list[0]], 4)
@@ -61,6 +73,7 @@ def generate_sub_array(beam_array, eval_list, lookup, beam, results):
         tmp = np.sum(lookup[beam][:, :, :, :, :, m] * beam_array[:,m], 4)
         result += tmp
     results.append(result)
+
 
 def generate_per_beam_b_field(info, maglist, mags, lookup):
     beam_arrays = generate_per_magnet_array(info, maglist, mags)
@@ -98,6 +111,7 @@ def generate_id_field(info, maglist, mags, f1):
         id_fields+=fields[beam]
     return id_fields
 
+
 def generate_id_field_cost(field, ref_field):
     cost=field-ref_field
     cost=np.square(cost)
@@ -105,6 +119,7 @@ def generate_id_field_cost(field, ref_field):
     cost=np.sum(cost[:,:,:,2:4])
     
     return cost
+
 
 def generate_reference_magnets(mags):
     ref_mags=magnets.Magnets()
@@ -126,6 +141,7 @@ def calculate_cached_trajectory_fitness(info, lookup, magnets, maglist, ref_traj
     total_id_field = generate_id_field(info, maglist, magnets, lookup)
     pherr, test_array = mt.calculate_phase_error(info, total_id_field)
     return (total_id_field, generate_id_field_cost(test_array, ref_trajectories))
+
 
 def calculate_trajectory_fitness_from_array(total_id_field, info, ref_trajectories):
     pherr, test_array = mt.calculate_phase_error(info, total_id_field)
@@ -245,30 +261,12 @@ if __name__ == "__main__" :
         
         print("Estimated fitness error is %2.10e %2.10e %2.10e"%(maglist2_fitness_estimate, maglist2_fitness, fitness_error))
 
-#     f1 = h5py.File('/dls/science/groups/das/ID/I13j/unit_chunks.h5', 'r')
-# 
-#     ref_mags=generate_reference_magnets(mags)
-#     ref_maglist = magnets.MagLists(ref_mags)
-#f1.close()
-#    per_mag_field = generate_sub_array(beam_array, eval_list, lookup, beam, per_mag_field)
-#    per_mag_field = generate_per_magnet_b_field(info, maglist, mags, f1)
     maglist0 = magnets.MagLists(mags)
     maglist0.sort_all()
 #    maglist0.flip('HH', (107,294,511,626))
     per_beam_field = generate_per_beam_b_field(info, maglist0, mags, lookup)
     total_id_field = generate_id_field(info, maglist0, mags, lookup)
     pherr, trajectories = mt.calculate_phase_error(info,total_id_field)
-#     
-#     
-#     ref_magarrays = generate_per_magnet_array(info, ref_maglist, ref_mags)
-# #    ref_per_mag_field = generate_per_magnet_b_field(info, ref_maglist, ref_mags, f1)
-#     ref_per_beam_field = generate_per_beam_b_field(info, ref_maglist, ref_mags, f1)
-#     ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, f1)
-#     ref_trajectories = mt.calculate_phase_error(info,ref_total_id_field)
-#     
-#     
-#     cost_total_id_field=generate_id_field_cost(total_id_field,ref_total_id_field)
-# 
 
     f3 = h5py.File('real_data.h5', 'w')
     for name in per_beam_field.keys():
@@ -283,8 +281,6 @@ if __name__ == "__main__" :
     
     if info['type']=='APPLE_Symmetric':
         
-        #TODO make a proper function somewhere
-        #generate idlist here
         a=0
         vv=0
         hh=0
@@ -327,12 +323,4 @@ if __name__ == "__main__" :
         
         f4.close()
     
-#     
-#     f4 = h5py.File('reference.h5', 'w')
-#     for name in ref_per_beam_field.keys():
-# #        f4.create_dataset("%s_per_magnet" % (name), data=ref_per_mag_field[name])
-#         f4.create_dataset("%s_per_beam" % (name), data=ref_per_beam_field[name])
-#     f4.create_dataset('id_Bfield',data=ref_total_id_field)
-#     f4.create_dataset('id_phase_error',data=ref_trajectories[0])
-#     f4.create_dataset('id_trajectories',data=ref_trajectories[1])
-#     f4.close()
+
