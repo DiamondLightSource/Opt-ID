@@ -117,8 +117,10 @@ class ID_Shim_BCell(BCell):
                 updated_bfield = updated_bfield - update[beam]
         self.fitness = fg.calculate_trajectory_fitness_from_array(updated_bfield, info, ref_trajectories)
 
-   # def create_genome(self, number_of_mutations, available={'VE':range(12), 'HE':range(12), 'HH':range(420), 'VV':range(419)}):
-    def create_genome(self, number_of_mutations, available={'HH':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,420,1)), 'VV':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,419,1))}):
+#     Hardcoded numbers! Based on length of sim file available for shimming! Warning!
+    def create_genome(self, number_of_mutations, available={'HH':range(102)}):
+#    def create_genome(self, number_of_mutations, available={'VE':range(12), 'HE':range(12), 'HH':range(420), 'VV':range(419)}):
+   # def create_genome(self, number_of_mutations, available={'HH':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,420,1)), 'VV':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,419,1))}):
         self.genome = []
         for i in range(number_of_mutations):
             # pick a list at random
@@ -133,9 +135,10 @@ class ID_Shim_BCell(BCell):
             else :
                 self.genome.append(('F', key, p1, p2))
 
-
+#     Hardcoded numbers! Based on length of sim file available for shimming! Warning!
+    def create_mutant(self, number_of_mutations, available={'HH':range(102)}):
 #    def create_mutant(self, number_of_mutations, available={'VE':range(12), 'HE':range(12), 'HH':range(420), 'VV':range(419)}):
-    def create_mutant(self, number_of_mutations, available={'HH':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,420,1)), 'VV':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,419,1))}):
+    #def create_mutant(self, number_of_mutations, available={'HH':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,420,1)), 'VV':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,419,1))}):
         mutant = copy.deepcopy(self.genome)
         for i in range(number_of_mutations):
             position = random.randint(0,len(mutant)-1)
@@ -173,9 +176,9 @@ class ID_Shim_BCell(BCell):
             logging.debug("Using real bfield")
         
         original_magnets = fg.generate_per_magnet_array(info, self.maglist, magnets)
-
+        available = magnets.availability()
         maglist = copy.deepcopy(self.maglist)
-        mutation_list = self.create_mutant(number_of_mutations)
+        mutation_list = self.create_mutant(number_of_mutations,available)
         maglist.mutate_from_list(mutation_list)
         new_magnets = fg.generate_per_magnet_array(info, maglist, magnets)
         update = fg.compare_magnet_arrays(original_magnets, new_magnets, lookup)
@@ -187,7 +190,7 @@ class ID_Shim_BCell(BCell):
 
         for i in range(number_of_children):
             maglist = copy.deepcopy(self.maglist)
-            mutation_list = self.create_mutant(number_of_mutations)
+            mutation_list = self.create_mutant(number_of_mutations,available)
             maglist.mutate_from_list(mutation_list)
             new_magnets = fg.generate_per_magnet_array(info, maglist, magnets)
             update = fg.compare_magnet_arrays(original_magnets, new_magnets, lookup)
