@@ -57,6 +57,14 @@ class Magnets(object):
         fp = open(filename, 'r')
         (self.magnet_sets, self.magnet_flip, self.mean_field) = cPickle.load(fp)
         fp.close()
+        
+    def availability(self):
+        availability={}
+
+        for key in self.magnet_sets:
+            availability[key]=range(np.alen(self.magnet_sets[key]))
+            
+        return availability
 
 
 class MagLists():
@@ -121,12 +129,12 @@ class MagLists():
                 key = mutation[1]
                 p1 = mutation[2]
                 p2 = mutation[3]
-                #logging.debug("swapping key %s at %s and %s" % (key, p1, p2) )
+                logging.debug("swapping key %s at %s and %s" % (key, p1, p2) )
                 self.swap(key, p1, p2)
             else :
                 key = mutation[1]
                 p1 = mutation[2]
-                #logging.debug("flipping key %s at %s" % (key, p1) )
+                logging.debug("flipping key %s at %s" % (key, p1) )
                 self.flip(key , (p1,))
 
 

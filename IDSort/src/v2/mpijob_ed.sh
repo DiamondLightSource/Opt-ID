@@ -22,6 +22,6 @@ echo "Processes running are : ${processes}"
 mpirun -np ${processes} \
         -x LD_LIBRARY_PATH \
         --hostfile ${UNIQHOSTS} \
-        --wd /dls/tmp/gdy32713/I21sort \
+        --wd /dls/tmp/gdy32713/miniID \
         --tag-output \
         python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/mpi_runner.py $@

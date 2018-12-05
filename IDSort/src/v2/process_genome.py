@@ -65,7 +65,7 @@ def human_output(id_info, filename):
                 if mag_type==5:
                     mag_num=int(maglists.magnet_lists['HT'][ht][0])
                     mag_flip=maglists.magnet_lists['HT'][ht][1]
-                    he+=1
+                    ht+=1
                 
                 line= ("%5i %4i %4i %4i %4i %03i\n"%(b+1,a+1,mag_type,info['beams'][b]['mags'][a]['direction_matrix'][2][2],mag_flip, mag_num))
                 f3.write(line)
