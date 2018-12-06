@@ -15,33 +15,40 @@ Then what is needed is to actually run the sort, which is to be run on a cluster
 
 ## Command line commands
   0. module load python/ana
+     This is a python anaconda instalation with mpi4py
 
   1. Manually create .sim files
+     or use the ones in the data folder for testing
   
-  2. python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/id_setup.py -p 109 --fullmagdims 41. 16. 6.22 --vemagdims 41. 16. 3.12 --hemagdims 41. 16. 4.0 -i 0.03 -g 6.15 -t "PPM_AntiSymmetric" -n "J13" -x -5.0  5.1  2.5 -z -0.0 .1 0.1 -s 5 myfilename.json
+  2. export IDHOME=/path/to/Opt-ID/IDSort/src
+     export IDDATA=/path/to/Opt-ID/IDSort/data
+  
+  3. python $IDHOME/id_setup.py -p 109 --fullmagdims 41. 16. 6.22 --vemagdims 41. 16. 3.12 --hemagdims 41. 16. 4.0 -i 0.03 -g 6.15 -t "PPM_AntiSymmetric" -n "J13" -x -5.0  5.1  2.5 -z -0.0 .1 0.1 -s 5 myfilename.json
 
-  (Choose your own 'myfilename.json' and type 'python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/id_setup.py -h' for meaning of tags)
+  (Choose your own 'myfilename.json' and type 'python $IDHOME/id_setup.py -h' for meaning of tags)
   
-  3. python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/magnets.py -H '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13H.sim' --HE '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13HEA.sim' -V '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13V.sim' --VE '/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13VE.sim' mymagnets.mag
+  4. python $IDHOME/magnets.py -H $IDDATA/J13H.sim --HE $IDDATA/J13HEA.sim -V $IDDATA/J13V.sim --VE $IDDATA/J13VE.sim mymagnets.mag
 
-  (Choose your own 'mymagnets.mag' and type 'python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/magnets.py -h' for meaning of tags)
+  (Choose your own 'mymagnets.mag' and type 'python $IDHOME/magnets.py -h' for meaning of tags)
   
-  4. python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/lookup_generator.py -p 109 -r myfilename.json mylookupfilename.h5
+  5. python $IDHOME/lookup_generator.py -p 109 -r myfilename.json mylookupfilename.h5
 
-  (Use 'myfilename.json' from earlier and choose your own 'mylookupfilename.h5'. Type 'python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/lookup_generator.py -h' for meaning of tags)
+  (Use 'myfilename.json' from earlier and choose your own 'mylookupfilename.h5'. Type 'python $IDHOME/lookup_generator.py -h' for meaning of tags)
   
-  5. mkdir mylogs
+  6. mkdir mylogs; cd mylogs
   
-  6. module load global/cluster
+  7. module load global/cluster
   (This loads the cluster and gives access to qsub command)
   
-  [7a. Open another terminal and type: 'module load global/cluster' and then 'qstat' This will let you watch the job on the cluster]
+  [8a. Open another terminal and type: 'module load global/cluster' and then 'qstat' This will let you watch the job on the cluster]
   
-  7. qsub -pe openmpi 24 -q medium.q -l release=rhel6 /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/mpijob_ed.sh --iterations 5 -l mylookupfilename.h5 -i myfilename.json -m mymagnets.mag -s 24 -r --param_c 1 mylogs
+  8. qsub -pe openmpi 24 -q medium.q -l release=rhel6 -v IDHOME=$IDHOME $IDHOME/mpijob.sh --iterations 5 -l mylookupfilename.h5 -i myfilename.json -m mymagnets.mag -s 24 --param_c 1 mylogs
 
-  (Use 'myfilename.json', 'mymagnets.mag', and 'mylookupfilename.h5' from earlier and the 'mylogs' directory created in step 5.   Type 'python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/mpi_runner.py -h' for meaning of tags. Genomes will be created in the mylogs directory with their cost as the first part of the filename - e.g. 4.62409644e-07_000_00bc026cfae7.genome is cost_generation_unique-id.genome)
+  (Use 'myfilename.json', 'mymagnets.mag', and 'mylookupfilename.h5' from earlier and the 'mylogs' directory created in step 5.   Type 'python $IDHOME/mpi_runner.py -h' for meaning of tags. Genomes will be created in the mylogs directory with their cost as the first part of the filename - e.g. 4.62409644e-07_000_00bc026cfae7.genome is cost_generation_unique-id.genome)
   
-  8. python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/process_genome.py -a -r -i myfilename.json -m mymagnets.mag -t mylookupfilename.h5 mylogs/4.62409644e-07_000_00bc026cfae7.genome
+  (use the -r flag to start again if you want to resume from a previous best fit)
+  
+  9. python $IDHOME/process_genome.py -a -r -i myfilename.json -m mymagnets.mag -t mylookupfilename.h5 mylogs/4.62409644e-07_000_00bc026cfae7.genome
 
-  (Use 'myfilename.json', 'mymagnets.mag', and 'mylookupfilename.h5' from earlier, and the genome of interest within 'mylogs', e.g. 'mylogs/4.62409644e-07_000_00bc026cfae7.genome'. Multiple genomes can be analysed at once, just add extra file locations to the end of the command.  Type 'python /home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/process_genome.py -h' for meaning of tags.)
+  (Use 'myfilename.json', 'mymagnets.mag', and 'mylookupfilename.h5' from earlier, and the genome of interest within 'mylogs', e.g. 'mylogs/4.62409644e-07_000_00bc026cfae7.genome'. Multiple genomes can be analysed at once, just add extra file locations to the end of the command.  Type 'python $IDHOME/process_genome.py -h' for meaning of tags.)
   

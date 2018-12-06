@@ -139,7 +139,7 @@ if options.restart and (rank == 0) :
         for child in children:
             population.append(child)
 else :
-    # make the initial population
+    logging.debug("make the initial population")
     for i in range(options.setup):
         # create a fresh maglist
         maglist = magnets.MagLists(mags)
@@ -147,6 +147,8 @@ else :
         genome = ID_BCell()
         genome.create(info, lookup, mags, maglist, ref_trajectories)
         population.append(genome)
+
+logging.debug("Initial population created")
 
 # gather the population
 trans = []
