@@ -20,7 +20,7 @@ Created on 16 Jan 2012
 
 import numpy as np
 from scipy import signal
-
+import logging
 
 def generate_B_array(xmin, xmax, xstep, zmin, zmax, zstep, smin, smax, sstep, magdims, V1):
     '''
@@ -127,7 +127,8 @@ def calculate_phase_error(info, b_array):
 #    v2=np.zeros((4*nperiods-2*nskip))
     v2a=np.zeros((4*nperiods-2*nskip))
     
-#    logging.debug("Barray shape %s"%(str(b_array.shape)))
+    logging.debug("Barray shape %s"%(str(b_array.shape)))
+    logging.debug("Barray 3rd element shape %s"%(str(b_array.shape[2])))
     
     trap_b_array = np.roll(b_array, 1, 0)
 #    logging.debug("trap_b_array shape %s"%(str(trap_b_array.shape)))
@@ -159,8 +160,8 @@ def calculate_phase_error(info, b_array):
     
     
     w=np.zeros([n_s_stp,2])
-#    logging.debug("w shape is %s"%(str(w.shape)))
-    
+    #logging.debug("w shape is %s"%(str(w.shape)))
+    #logging.debug("trajectories shape is %s"%(str(trajectories[i,j,:,2].shape)))
     w[:,0]=np.square(trajectories[i,j,:,2])
     w[:,1]=np.square(trajectories[i,j,:,3])
     

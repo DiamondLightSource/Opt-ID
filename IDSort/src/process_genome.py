@@ -253,7 +253,7 @@ if __name__ == '__main__':
             human_output(options.id_filename, filename)
         
     if options.analysis:
-        for filename in args[0::]:
+        for filename in args[0::]:  
             print("Processing file %s" % (filename))
             # load the genome
             maglists = pickle.load( open( filename, "rb" ) )

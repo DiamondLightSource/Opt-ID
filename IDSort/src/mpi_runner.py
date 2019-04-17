@@ -109,6 +109,8 @@ mags.load(options.magnets_filename)
 ref_mags = fg.generate_reference_magnets(mags)
 ref_maglist = magnets.MagLists(ref_mags)
 ref_total_id_field = fg.generate_id_field(info, ref_maglist, ref_mags, lookup)
+#logging.debug("before phase calculate error call")
+#logging.debug(ref_total_id_field.shape())
 pherr, ref_trajectories = mt.calculate_phase_error(info, ref_total_id_field)
 
 MPI.COMM_WORLD.Barrier()

@@ -134,9 +134,19 @@ if __name__ == "__main__":
     fp.close()
 
     # create calculation array
-    
-    testpoints=np.mgrid[data['xmin']:data['xmax']:data['xstep'],data['zmin']:data['zmax']:data['zstep'],data['smin']:data['smax']:data['sstep']]
-    
+    #meshgrid modified 18/02/19 ZP+MB to calculate no of points in each direction properly (avoid floating point errors)
+    testpoints=np.mgrid[data['xmin']:data['xmax']-(data['xstep']/100.0):data['xstep'],
+                        data['zmin']:data['zmax']-(data['zstep']/100.0):data['zstep'],
+                        data['smin']:data['smax']-(data['sstep']/100.0):data['sstep']]
+    print("xmin %f"%(data['xmin']))
+    print("xmax %f"%(data['xmax']))
+    print("xstep %f"%(data['xstep']))
+    print("zmin %f"%(data['zmin']))
+    print("zmax %f"%(data['zmax']))
+    print("zstep %f"%(data['zstep']))
+    print("smin %f"%(data['smin']))
+    print("smax %f"%(data['smax']))
+    print("sstep %f"%(data['sstep']))
     outfile = h5py.File(args[1], 'w')
     
     if data['type'] == 'PPM_AntiSymmetric' or data['type'] == 'Hybrid_Symmetric':
@@ -145,8 +155,9 @@ if __name__ == "__main__":
             count = 0
             print("Processing beam %02i" % (b))
             datashape = (testpoints.shape[1], testpoints.shape[2], testpoints.shape[3], 3, 3, len(data['beams'][b]['mags']))
+            #print("testpoints.shape[3] %s"%(testpoints.shape[3]))
             chunkshape = (testpoints.shape[1], testpoints.shape[2], testpoints.shape[3], 3, 3, 1)
-            print ("datashape is : " + str(datashape))
+            #print ("datashape is : " + s(datashape))
             ds = outfile.create_dataset(data['beams'][b]['name'], shape=datashape, dtype=np.float64, chunks=chunkshape)
     
             for mag in data['beams'][b]['mags']:
@@ -164,7 +175,7 @@ if __name__ == "__main__":
             print("Processing beam %02i" % (b))
             datashape = (testpoints.shape[1], testpoints.shape[2], testpoints.shape[3], 3, 3, len(data['beams'][b]['mags']))
             chunkshape = (testpoints.shape[1], testpoints.shape[2], testpoints.shape[3], 3, 3, 1)
-            print ("datashape is : " + str(datashape))
+            #print ("datashape is : " + str(datashape))
             ds = outfile.create_dataset(data['beams'][b]['name'], shape=datashape, dtype=np.float64, chunks=chunkshape)
     
             for mag in data['beams'][b]['mags']:

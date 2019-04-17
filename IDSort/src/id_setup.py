@@ -255,8 +255,8 @@ def create_location_list_symmetric_apple_q3(period, nperiods, fullmagdims, vemag
 def create_type_list_symmetric_hybrid(nperiods):
     # do the first end
     types = []
-    start = 0
-    stop = 0
+    #start = 0
+    #stop = 0
 
     types.append('HT')
     types.append('HE')
@@ -287,9 +287,11 @@ def create_direction_matrix_list_symmetric_hybrid_bottom(nperiods):
 def create_direction_matrix_list_symmetric_hybrid_top(nperiods):
     direction = []
     for i in range(0, (2 * nperiods + 4), 2):
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+        range(0, (2 * nperiods + 4), 2)
+        {direction.append(((-1,0,0),(0,1,0),(0,0,-1))),
         #no V magnets in Hybrids
         direction.append(((1,0,0),(0,1,0),(0,0,1)))
+        }
         #no V magnets in Hybrids
 
     return direction
@@ -340,8 +342,8 @@ def create_location_list_symmetric_hybrid_bottom(nperiods,fullmagdims,hemagdims,
 def create_type_list_antisymetric_ppm(nperiods):
     # do the first end
     types = []
-    start = 0
-    stop = 0
+    #start = 0
+    #stop = 0
     vertical = False
 
     types.append('HE')
@@ -468,7 +470,7 @@ def create_location_list_antisymmetric_ppm_bottom(period, nperiods,fullmagdims,v
     V1.append((x,z,s))
     return V1
 
-if __name__ == "__main__":
+if __name__ == "__main__":  #program starts here
     import optparse
     usage = "%prog [options] OutputFile"
     parser = optparse.OptionParser(usage=usage)
@@ -485,9 +487,9 @@ if __name__ == "__main__":
     parser.add_option("-n", "--name", dest="name", help="PPM name", default="J13", type="string")
     parser.add_option("-x", "--xstartstopstep", dest="x", help="X start stop and step", nargs=3, default=(-5.0, 5.1, 2.5), type="float")
     parser.add_option("-z", "--zstartstopstep", dest="z", help="Z start stop and step", nargs=3, default=(-0.0,.1, 0.1), type="float")
-    parser.add_option("-s", "--stepsperperiod", dest="steps", help="Number of steps in S per magnet", default=5, type="float")
+    parser.add_option("-s", "--stepsperperiod", dest="steps", help="Number of steps in S per quarter period", default=5, type="float")
     parser.add_option("--endgapsym", dest="endgapsym", help="Symmetric PPM or APPLE devices require an end gap in the termination structure, set gap length in mm", default=5.0, type="float")
-    parser.add_option("--terminalgapsymhyb", dest="terminalgapsymhyb", help="Symmetric hybrid devices require a terminal end gap betwenn the final half pole and the terminal H magnet in the termination structure, set gap length in mm", default=5.0, type="float")
+    parser.add_option("--terminalgapsymhyb", dest="terminalgapsymhyb", help="Symmetric hybrid devices require a terminal end gap between the final half pole and the terminal H magnet in the termination structure, set gap length in mm", default=5.0, type="float")
     parser.add_option("--phasinggap", dest="phasinggap", help="Gap between Quadrants 1/2 and 3/4 that allow these axes to phase past each other; in mm. APPLES only", default=0.5, type="float")
     parser.add_option("--clampcut", dest="clampcut", help="Square corners removed to allow magnets to be clamped, dimensioned in mm. APPLEs only", default = 5.0, type="float")
     

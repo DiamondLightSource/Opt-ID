@@ -115,6 +115,7 @@ class ID_Shim_BCell(BCell):
         self.mutations = 0
 
     def create(self, info, lookup, magnets, maglist, ref_trajectories, number_of_changes, original_bfield):
+        self.magnets = magnets #added 22/03/19 ZP
         self.maglist = maglist
         self.changes = number_of_changes
         self.create_genome(number_of_changes)
@@ -132,9 +133,16 @@ class ID_Shim_BCell(BCell):
         self.fitness = fg.calculate_trajectory_fitness_from_array(updated_bfield, info, ref_trajectories)
 
 #     Hardcoded numbers! Based on length of sim file available for shimming! Warning!
-    def create_genome(self, number_of_mutations, available={'HH':range(102)}):
-#    def create_genome(self, number_of_mutations, available={'VE':range(12), 'HE':range(12), 'HH':range(420), 'VV':range(419)}):
-   # def create_genome(self, number_of_mutations, available={'HH':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,420,1)), 'VV':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,419,1))}):
+#     Removed hardcoded numbers, available based on magnet input file. 18/02/19 ZP+MB
+    def create_genome(self, number_of_mutations, available=None):
+#   def create_genome(self, number_of_mutations, available={'HH':range(102)}):
+#   def create_genome(self, number_of_mutations, available={'VE':range(20), 'HE':range(20), 'HH':range(420), 'VV':range(419)}):
+#   def create_genome(self, number_of_mutations, available={'HH':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,420,1)), 'VV':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,419,1))}):
+        
+        if (available == None):
+            #available = self.maglist.availability() maglist doesn't have an availability attribute
+            available = self.magnets.availability() #added 22/03/19 ZP
+            logging.debug("availability is %s"%(available))
         self.genome = []
         for i in range(number_of_mutations):
             # pick a list at random
@@ -150,9 +158,14 @@ class ID_Shim_BCell(BCell):
                 self.genome.append(('F', key, p1, p2))
 
 #     Hardcoded numbers! Based on length of sim file available for shimming! Warning!
-    def create_mutant(self, number_of_mutations, available={'HH':range(102)}):
+#     Removed hardcoded numbers, available based on magnet input file. 18/02/19 ZP+MB
+    def create_mutant(self, number_of_mutations, available=None):
 #    def create_mutant(self, number_of_mutations, available={'VE':range(12), 'HE':range(12), 'HH':range(420), 'VV':range(419)}):
     #def create_mutant(self, number_of_mutations, available={'HH':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,420,1)), 'VV':(range(36,44,1)+range(22,27,1)+range(226,234,1)+range(212,217,1)+range(382,419,1))}):
+        if (available == None):
+            #available = self.maglist.availability()
+            available = self.magnets.availability() #added 22/03/19 ZP
+        
         mutant = copy.deepcopy(self.genome)
         for i in range(number_of_mutations):
             position = random.randint(0,len(mutant)-1)

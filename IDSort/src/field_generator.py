@@ -24,7 +24,7 @@ import json
 
 import magnets
 import magnet_tools as mt
-
+import logging
 import threading
 
 import copy
@@ -53,6 +53,8 @@ def generate_per_magnet_array(info, magnetlist, magnets):
             pos[mag['type']] += 1
             magvalues.append(magarray)
         beams[beam['name']] = np.transpose(np.vstack(magvalues))
+        #logging.debug("beam keys is %s"%(beam.keys())) # mags, name
+        #logging.debug("beams keys are %s"%(beams.keys())) # Bottom Beam, Top Beam
     return beams
 
 
@@ -69,6 +71,12 @@ def compare_magnet_arrays(mag_array_a, mag_array_b, lookup):
 def generate_sub_array(beam_array, eval_list, lookup, beam, results):
     # This sum is calculated like this to avoid memory errors
     result = np.sum(lookup[beam][:, :, :, :, :, eval_list[0]] * beam_array[:,eval_list[0]], 4)
+    #logging.debug("result shape is %s"%(s(result.shape)))
+    #logging.debug("beam shape is %s"%(s(beam.shape))) doesn't work, beam shape = is a unicode object
+    #logging.debug("beam is %s"%(s(beam)))
+    #logging.debug("eval_list shape is %s"%(s(eval_list.shape))) doesn't work, eval_list is a list object
+    #logging.debug("eval_list is %s"%(s(eval_list)))
+    #logging.debug("beam_array shape is %s"%(s(beam_array.shape)))
     for m in eval_list[1:]:
         tmp = np.sum(lookup[beam][:, :, :, :, :, m] * beam_array[:,m], 4)
         result += tmp
@@ -76,14 +84,20 @@ def generate_sub_array(beam_array, eval_list, lookup, beam, results):
 
 
 def generate_per_beam_b_field(info, maglist, mags, lookup):
-    beam_arrays = generate_per_magnet_array(info, maglist, mags)
+    beam_arrays = generate_per_magnet_array(info, maglist, mags) #beam_arrays is a dictionary
     procs = 8
     fields = {}
-    for beam in beam_arrays.keys():
+    for beam in beam_arrays.keys(): #go over Bottom Beam key then Top Beam key
+        #logging.debug("beam arrays keys are %s"%(beam_arrays.keys())) #Bottom Beam & Top Beam
         beam_array = beam_arrays[beam]
-        indexes = range(lookup[beam].shape[5])
+        #logging.debug("beam array shape is %s"%(s(beam_array.shape))) #(3,234)
+        indexes = range(lookup[beam].shape[5]) #lookup is a dictionary
+        #logging.debug("lookup[beam] shape is %s"%(s(lookup[beam].shape))) #(17, 5, 2622, 3, 3, 234) 
+        #logging.debug("indexes is %s"%(indexes)) #indexes is a list of numbers 0-233
         length = len(indexes)/procs
+        #logging.debug("length is %s"%(s(length)))
         chunks=[indexes[x:x+length] for x in xrange(0, len(indexes), length)]
+        #logging.debug("chunks shape is %s"%(s(chunks.shape))) doesn't work
         results = []
         pp = []
         for i in range(len(chunks)):
@@ -100,16 +114,23 @@ def generate_per_beam_b_field(info, maglist, mags, lookup):
         result = results[0]
         for m in range(1, len(results)):
             result += results[m]
+        #logging.debug("results is %d"%(len(results))) #Length = 9
+        #logging.debug("result shape is %s"%(result.shape())) "tuple object is not callable
         fields[beam] = result
-    return fields
+        #logging.debug("fields is %d"%(len(fields))) #Length = 2 
+        #logging.debug("fields keys are %s"%(fields.keys())) #Bottom Beam and Top Beam
+        #logging.debug("fields values are %s"%(fields.items())) gives truncated arrays, not helpful
+    return fields #returns a dictionary containing keys Bottom Beam and Top Beam
 
 
 def generate_id_field(info, maglist, mags, f1):
     fields = generate_per_beam_b_field(info, maglist, mags, f1)
-    id_fields = np.zeros(fields.itervalues().next().shape)
+    id_fields = np.zeros(fields.itervalues().next().shape) #iterates over the values in the dictionary fields to create the array id_fields
+    #logging.debug("id fields shape is %s"%(str(id_fields.shape))) #(17,5,2622,3)
     for beam in fields.keys():
         id_fields+=fields[beam]
-    return id_fields
+    #logging.debug("id_fields %s"%(str(id_fields.shape))) #(17,5,2622,3)
+    return id_fields #returns an array (17,5,2622,3)
 
 
 def generate_id_field_cost(field, ref_field):
@@ -129,6 +150,7 @@ def generate_reference_magnets(mags):
         unit[mag_dir] = mags.mean_field[magtype]
         #ref_mags.add_perfect_magnet_set(magtype, len(mags.magnet_sets[magtype]) , unit, mags.magnet_flip[magtype])
         ref_mags.add_perfect_magnet_set_duplicate(magtype, mags.magnet_sets[magtype] , unit, mags.magnet_flip[magtype])
+        #logging.debug("ref_mags shape %s"%(str(ref_mags.shape))) magnets object has no attribute shape
     return ref_mags
 
 

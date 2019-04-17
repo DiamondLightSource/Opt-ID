@@ -20,7 +20,7 @@ Created on 5 Dec 2013
 import numpy as np
 import random
 import cPickle
-
+import logging
 
 class Magnets(object):
     '''
@@ -86,6 +86,7 @@ class MagLists():
     '''
     
     def __init__(self, magnets):
+        self.raw_magnets = magnets
         self.magnet_lists = {}
         for magnet_set in magnets.magnet_sets.keys():
             mags = []
@@ -122,7 +123,15 @@ class MagLists():
             magdata = magdata.dot(flip)
         return magdata
     
-    def mutate(self, number_of_mutations, available={'VE':range(12), 'HE':range(12), 'HH':range(420), 'VV':range(419)}):
+    def mutate(self, number_of_mutations, available=None):
+        #     Removed hardcoded numbers, available based on magnet input file. 18/02/19 ZP+MB
+#    def mutate(self, number_of_mutations, available={'VE':range(20), 'HE':range(20), 'HH':range(576), 'VV':range(419), 'HT':range(20)}):
+        if (available == None):
+            #logging.debug("No available list specified, getting from magnet list")
+            available = self.raw_magnets.availability
+        
+        #logging.debug("Magnet keys are %s"%(available.keys()))    
+        
         for i in range(number_of_mutations):
             # pick a list at random
             key = random.choice(available.keys())

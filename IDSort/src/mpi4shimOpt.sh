@@ -18,4 +18,4 @@ echo "Processes running are : ${processes}"
 mpirun -np ${processes} \
         --hostfile ${UNIQHOSTS} \
         --tag-output \
-        $PYTHON $IDHOME/mpi_runner_for_shim_opt.py $@
+        python $IDHOME/mpi_runner_for_shim_opt.py $@
