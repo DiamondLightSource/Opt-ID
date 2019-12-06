@@ -54,3 +54,5 @@ Then what is needed is to actually run the sort, which is to be run on a cluster
 
   (Use 'myfilename.json', 'mymagnets.mag', and 'mylookupfilename.h5' from earlier, and the genome of interest within 'mylogs', e.g. 'mylogs/4.62409644e-07_000_00bc026cfae7.genome'. Multiple genomes can be analysed at once, just add extra file locations to the end of the command.  Type 'python $IDHOME/process_genome.py -h' for meaning of tags.)
   
+
+[![](https://codescene.io/projects/6289/status.svg) Get more details at **codescene.io**.](https://codescene.io/projects/6289/jobs/latest-successful/results)
