@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/DiamondLightSource/Opt-ID.svg?branch=master)](https://travis-ci.org/DiamondLightSource/Opt-ID)  [![Coverage Status](https://coveralls.io/repos/github/DiamondLightSource/Opt-ID/badge.svg?branch=master)](https://coveralls.io/github/DiamondLightSource/Opt-ID?branch=master)
+
 # Opt-ID
 Code for the Optimisation of ID's using Python and Opt-AI
 
