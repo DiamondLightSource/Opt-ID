@@ -470,32 +470,7 @@ def create_location_list_antisymmetric_ppm_bottom(period, nperiods,fullmagdims,v
     V1.append((x,z,s))
     return V1
 
-if __name__ == "__main__":  #program starts here
-    import optparse
-    usage = "%prog [options] OutputFile"
-    parser = optparse.OptionParser(usage=usage)
-    parser.add_option("-p", "--periods", dest="periods", help="Set the number of full periods for the Device", default=109, type="int")
-    parser.add_option("--fullmagdims", dest="fullmagdims", help="Set the dimensions of the full magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 6.22), type="float")
-    parser.add_option("--vemagdims", dest="vemagdims", help="Set the dimensions of the VE magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 3.12), type="float")
-    parser.add_option("--hemagdims", dest="hemagdims", help="Set the dimensions of the HE magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 4.0), type="float")
-    parser.add_option("--htmagdims", dest="htmagdims", help="Set the dimensions of the HT magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 4.0), type="float")
-    parser.add_option("--poledims", dest="poledims", help="Set the dimensions of the iron pole blocks (x,z,s) in mm", nargs=3, default=(41., 16., 4.0), type="float")
-    parser.add_option("-i", dest="interstice", help="Set the dimensions of the slack between adjacent magnets (interstice) in mm", default=0.03, type="float")
-    parser.add_option("-g", "--gap", dest="gap", help="Set the gap for the device to be created at", default=6.15, type="float")
-    parser.add_option("-t", "--type", dest="type", help="Set the device type", type="string", default="PPM_AntiSymmetric")
-    parser.add_option("-v", "--verbose", dest="verbose", help="display debug information", action="store_true", default=False)
-    parser.add_option("-n", "--name", dest="name", help="PPM name", default="J13", type="string")
-    parser.add_option("-x", "--xstartstopstep", dest="x", help="X start stop and step", nargs=3, default=(-5.0, 5.1, 2.5), type="float")
-    parser.add_option("-z", "--zstartstopstep", dest="z", help="Z start stop and step", nargs=3, default=(-0.0,.1, 0.1), type="float")
-    parser.add_option("-s", "--stepsperperiod", dest="steps", help="Number of steps in S per quarter period", default=5, type="float")
-    parser.add_option("--endgapsym", dest="endgapsym", help="Symmetric PPM or APPLE devices require an end gap in the termination structure, set gap length in mm", default=5.0, type="float")
-    parser.add_option("--terminalgapsymhyb", dest="terminalgapsymhyb", help="Symmetric hybrid devices require a terminal end gap between the final half pole and the terminal H magnet in the termination structure, set gap length in mm", default=5.0, type="float")
-    parser.add_option("--phasinggap", dest="phasinggap", help="Gap between Quadrants 1/2 and 3/4 that allow these axes to phase past each other; in mm. APPLES only", default=0.5, type="float")
-    parser.add_option("--clampcut", dest="clampcut", help="Square corners removed to allow magnets to be clamped, dimensioned in mm. APPLEs only", default = 5.0, type="float")
-    
-
-    (options, args) = parser.parse_args()
-
+def process(options, args):
     if options.type == 'Hybrid_Symmetric':
         output = {}
         output['name'] = options.name
@@ -577,9 +552,8 @@ if __name__ == "__main__":  #program starts here
         output['beams'].append(top_beam)
         output['beams'].append(bottom_beam)
 
-        fp = open(args[0], 'w')
-        json.dump(output, fp, indent=4)
-        fp.close()
+        with open(args[0], 'w') as fp:
+            json.dump(output, fp, indent=4)
         
     if options.type == 'PPM_AntiSymmetric':
         output = {}
@@ -663,12 +637,9 @@ if __name__ == "__main__":  #program starts here
         output['beams'].append(top_beam)
         output['beams'].append(bottom_beam)
 
-        fp = open(args[0], 'w')
-        json.dump(output, fp, indent=4)
-        fp.close()
-        
-        
-        
+        with open(args[0], 'w') as fp:
+            json.dump(output, fp, indent=4)
+
     if options.type == 'APPLE_Symmetric':
         output = {}
         output['name'] = options.name
@@ -794,13 +765,37 @@ if __name__ == "__main__":  #program starts here
                 mag['dimensions'] = options.vemagdims
             q4_beam['mags'].append(mag)
 
-
-
         output['beams'].append(q1_beam)
         output['beams'].append(q2_beam)
         output['beams'].append(q3_beam)
         output['beams'].append(q4_beam)
 
-        fp = open(args[0], 'w')
-        json.dump(output, fp, indent=4)
-        fp.close()
+        with open(args[0], 'w') as fp:
+            json.dump(output, fp, indent=4)
+
+
+if __name__ == "__main__":  #program starts here
+    import optparse
+    usage = "%prog [options] OutputFile"
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option("-p", "--periods", dest="periods", help="Set the number of full periods for the Device", default=109, type="int")
+    parser.add_option("--fullmagdims", dest="fullmagdims", help="Set the dimensions of the full magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 6.22), type="float")
+    parser.add_option("--vemagdims", dest="vemagdims", help="Set the dimensions of the VE magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 3.12), type="float")
+    parser.add_option("--hemagdims", dest="hemagdims", help="Set the dimensions of the HE magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 4.0), type="float")
+    parser.add_option("--htmagdims", dest="htmagdims", help="Set the dimensions of the HT magnet blocks (x,z,s) in mm", nargs=3, default=(41., 16., 4.0), type="float")
+    parser.add_option("--poledims", dest="poledims", help="Set the dimensions of the iron pole blocks (x,z,s) in mm", nargs=3, default=(41., 16., 4.0), type="float")
+    parser.add_option("-i", dest="interstice", help="Set the dimensions of the slack between adjacent magnets (interstice) in mm", default=0.03, type="float")
+    parser.add_option("-g", "--gap", dest="gap", help="Set the gap for the device to be created at", default=6.15, type="float")
+    parser.add_option("-t", "--type", dest="type", help="Set the device type", type="string", default="PPM_AntiSymmetric")
+    parser.add_option("-v", "--verbose", dest="verbose", help="display debug information", action="store_true", default=False)
+    parser.add_option("-n", "--name", dest="name", help="PPM name", default="J13", type="string")
+    parser.add_option("-x", "--xstartstopstep", dest="x", help="X start stop and step", nargs=3, default=(-5.0, 5.1, 2.5), type="float")
+    parser.add_option("-z", "--zstartstopstep", dest="z", help="Z start stop and step", nargs=3, default=(-0.0,.1, 0.1), type="float")
+    parser.add_option("-s", "--stepsperperiod", dest="steps", help="Number of steps in S per quarter period", default=5, type="float")
+    parser.add_option("--endgapsym", dest="endgapsym", help="Symmetric PPM or APPLE devices require an end gap in the termination structure, set gap length in mm", default=5.0, type="float")
+    parser.add_option("--terminalgapsymhyb", dest="terminalgapsymhyb", help="Symmetric hybrid devices require a terminal end gap between the final half pole and the terminal H magnet in the termination structure, set gap length in mm", default=5.0, type="float")
+    parser.add_option("--phasinggap", dest="phasinggap", help="Gap between Quadrants 1/2 and 3/4 that allow these axes to phase past each other; in mm. APPLES only", default=0.5, type="float")
+    parser.add_option("--clampcut", dest="clampcut", help="Square corners removed to allow magnets to be clamped, dimensioned in mm. APPLEs only", default = 5.0, type="float")
+
+    (options, args) = parser.parse_args()
+    process(options, args)
