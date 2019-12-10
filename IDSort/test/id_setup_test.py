@@ -1,8 +1,6 @@
 import unittest
 import json
-import os
-from tempfile import TemporaryFile
-from mock import patch
+from tempfile import NamedTemporaryFile
 from collections import namedtuple
 from IDSort.src.id_setup import process
 
@@ -29,15 +27,11 @@ class IDSetupTest(unittest.TestCase):
         }
 
         options_named = namedtuple("options", options.keys())(*options.values())
-        args = ['test_cpmu_new.json']
         test_data_filepath = 'IDSort/data/test_data/test_cpmu.json'
 
         with open(test_data_filepath) as old_json_file, \
-                patch('__builtin__.open', create=True) as mock_json_file:
-            mock_json_file.return_value.__enter__.return_value = TemporaryFile('w+')
-            process(options_named, args)
-            mock_json_file.return_value.__enter__.return_value.seek(0)
-            new_json = json.loads(mock_json_file.return_value.__enter__.return_value.read())
-            mock_json_file.return_value.__enter__.return_value.seek(0, os.SEEK_END)
+                NamedTemporaryFile() as new_json_file:
+            process(options_named, [new_json_file.name])
+            new_json = json.load(new_json_file)
             old_json = json.load(old_json_file)
             assert new_json == old_json
