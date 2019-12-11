@@ -19,9 +19,9 @@ class IDSetupTest(unittest.TestCase):
             'gap': 5.1,
             'type': 'Hybrid_Symmetric',
             'name': 'test_cpmu',
-            'x': (-5.0, 5.1, 2.5),
+            'x': (-2.0, 2.1, 2.5),
             'z': (-0.0, 0.1, 0.1),
-            'steps': 5,
+            'steps': 1,
             'endgapsym': 5.0,
             'terminalgapsymhyb': 5.0
         }
