@@ -89,8 +89,13 @@ parser.add_option("--param_scale", dest="scale", help="Set the OPT-AI parameter 
 parser.add_option("-r", "--restart", dest="restart", help="Don't recreate initial data", action="store_true", default=False)
 parser.add_option("--iterations", dest="iterations", help="Number of Iterations to run", default=1, type='int')
 parser.add_option("--singlethreaded", dest="singlethreaded", help="Set the program to run as singlethreaded", action="store_true", default=False)
+parser.add_option("--seed", dest="seed", help="Seed the random number generator or not", action="store_true", default=False)
+parser.add_option("--seed_value", dest="seed_value", help="Seed value for the random number generator")
 
 (options, args) = parser.parse_args()
+
+if options.seed:
+    random.seed(int(options.seed_value))
 
 if options.singlethreaded:
     rank = 0
