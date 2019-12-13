@@ -59,6 +59,18 @@ def mutations(c, e_star, fitness, scale):
     hypermacromuation = abs((a-b) * scale)
     return int(inverse_proportional_hypermutation + hypermacromuation)
 
+def barrier(is_single_threaded):
+    if is_single_threaded:
+        pass
+    else:
+        MPI.COMM_WORLD.Barrier()
+
+def alltoall(is_single_threaded, trans):
+    if is_single_threaded:
+        return trans
+    else:
+        return MPI.COMM_WORLD.alltoall(trans)
+
 import optparse
 
 usage = "%prog [options] run_directory"
@@ -76,17 +88,24 @@ parser.add_option("--param_e", dest="e", help="Set the OPT-AI parameter eStar", 
 parser.add_option("--param_scale", dest="scale", help="Set the OPT-AI parameter scale", default=10.0, type='float')
 parser.add_option("-r", "--restart", dest="restart", help="Don't recreate initial data", action="store_true", default=False)
 parser.add_option("--iterations", dest="iterations", help="Number of Iterations to run", default=1, type='int')
+parser.add_option("--singlethreaded", dest="singlethreaded", help="Set the program to run as singlethreaded", action="store_true", default=False)
 
 (options, args) = parser.parse_args()
 
-rank = MPI.COMM_WORLD.rank  # The process ID (integer 0-3 for 4-process run)
-size = MPI.COMM_WORLD.size  # The number of processes in the job.
+if options.singlethreaded:
+    rank = 0
+    size = 1
+else:
+    rank = MPI.COMM_WORLD.rank  # The process ID (integer 0-3 for 4-process run)
+    size = MPI.COMM_WORLD.size  # The number of processes in the job.
 
 # get the hostname
-ip = socket.gethostbyname(socket.gethostname())
+if options.singlethreaded:
+    ip = 'localhost'
+else:
+    ip = socket.gethostbyname(socket.gethostname())
 
 logging.debug("Process %d ip address is : %s" % (rank, ip))
-
 
 f2 = open(options.id_filename, 'r')
 info = json.load(f2)
@@ -100,7 +119,7 @@ for beam in info['beams']:
     lookup[beam['name']] = f1[beam['name']][...]
 f1.close()
 
-MPI.COMM_WORLD.Barrier()
+barrier(options.singlethreaded)
 
 logging.debug("Loading magnets")
 mags = magnets.Magnets()
@@ -113,7 +132,7 @@ ref_total_id_field = fg.generate_id_field(info, ref_maglist, ref_mags, lookup)
 #logging.debug(ref_total_id_field.shape())
 pherr, ref_trajectories = mt.calculate_phase_error(info, ref_total_id_field)
 
-MPI.COMM_WORLD.Barrier()
+barrier(options.singlethreaded)
 
 #epoch_path = os.path.join(args[0], 'epoch')
 #next_epoch_path = os.path.join(args[0], 'nextepoch')
@@ -157,9 +176,9 @@ trans = []
 for i in range(size):
     trans.append(population)
 
-allpop = MPI.COMM_WORLD.alltoall(trans) 
+allpop = alltoall(options.singlethreaded, trans)
 
-MPI.COMM_WORLD.Barrier()
+barrier(options.singlethreaded)
 
 newpop = []
 for pop in allpop:
@@ -194,7 +213,7 @@ if rank == 0:
 # now run the processing
 for i in range(options.iterations):
     
-    MPI.COMM_WORLD.Barrier()
+    barrier(options.singlethreaded)
     logging.debug("Starting itteration %i" % (i))
 
     nextpop = []
@@ -220,7 +239,7 @@ for i in range(options.iterations):
     for i in range(size):
         trans.append(nextpop)
     
-    allpop = MPI.COMM_WORLD.alltoall(trans) 
+    allpop = alltoall(options.singlethreaded, trans)
     
     newpop = []
     for pop in allpop:
@@ -254,16 +273,16 @@ for i in range(options.iterations):
     for genome in newpop:
         logging.debug("genome fitness: %1.8E   Age : %2i   Mutations : %4i" % (genome.fitness, genome.age, genome.mutations))
     
-    MPI.COMM_WORLD.Barrier()
+    barrier(options.singlethreaded)
 
-MPI.COMM_WORLD.Barrier()
+barrier(options.singlethreaded)
 
 # gather the population
 trans = []
 for i in range(size):
     trans.append(nextpop)
 
-allpop = MPI.COMM_WORLD.alltoall(trans) 
+allpop = alltoall(options.singlethreaded, trans)
 
 newpop = []
 for pop in allpop:
