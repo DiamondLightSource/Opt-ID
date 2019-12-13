@@ -110,8 +110,8 @@ def calculate_phase_error(info, b_array):
     
     nperiods=info['periods']
     step=info['sstep']
-    n_stp = (info['period_length']/step)
-    n_s_stp = round(((info['smax']-info['smin'])/step))
+    n_stp = int(info['period_length']/step)
+    n_s_stp = int(round((info['smax']-info['smin'])/step))
     
 #    logging.debug("step %s"%(str(info['sstep'])))
 #    logging.debug("smax %s"%(str(info['smax'])))
@@ -218,8 +218,8 @@ def calculate_phase_error2(info, b_array):
     
     nperiods=info['periods']
     step=info['sstep']
-    n_stp = (info['period_length']/step)
-    n_s_stp = (info['smax']-info['smin'])/step
+    n_stp = int(info['period_length']/step)
+    n_s_stp = int(round((info['smax']-info['smin'])/step))
     
     nskip=8
     
@@ -306,8 +306,8 @@ def calculate_phase_error3(info, b_array):
     
     nperiods=info['periods']
     step=info['sstep']
-    n_stp = (info['period_length']/step)
-    n_s_stp = (info['smax']-info['smin'])/step
+    n_stp = int(info['period_length']/step)
+    n_s_stp = int(round((info['smax']-info['smin'])/step))
     
     nskip=8
     
