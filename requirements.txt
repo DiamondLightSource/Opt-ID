@@ -4,3 +4,4 @@ coverage>=3.7.1
 numpy>=1.14.2
 h5py>=2.9.0
 mpi4py>=2.0.0
+scipy==1.0.0
