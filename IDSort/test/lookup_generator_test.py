@@ -23,5 +23,7 @@ class LookupGeneratorTest(unittest.TestCase):
                 NamedTemporaryFile() as mock_h5_file:
             process(options, [test_json_filepath, mock_h5_file])
             new_h5_file = h5py.File(mock_h5_file.name)
-            assert np.allclose(new_h5_file['Top Beam'], old_h5_file['Top Beam'])
-            assert np.allclose(new_h5_file['Bottom Beam'], old_h5_file['Bottom Beam'])
+            for dataset in new_h5_file:
+                new_data = new_h5_file.get(dataset).value
+                old_data = old_h5_file.get(dataset).value
+                assert np.allclose(new_data, old_data)
