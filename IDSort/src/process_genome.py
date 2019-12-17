@@ -174,6 +174,78 @@ def human_output(id_info, filename):
         
         f3.close()
 
+def process(options, args):
+    if options.create_genome:
+        for filename in args[0::]:
+            print("Turning file %s from Human Readable to Genome" % (filename))
+
+            f2 = open(filename, 'r')
+            buildlist = np.genfromtxt(filename, dtype=str)
+            f2.close()
+
+            mags=magnets.Magnets()
+            mags.load(options.magnets_filename)
+
+            maglist = magnets.MagLists(mags)
+
+            heswap = 0
+            veswap = 0
+            hhswap = 0
+            vvswap = 0
+
+            for line in range(buildlist.shape[0]):
+
+                if int(buildlist[line,2])==4:
+                    #maglist.magnet_lists['HE'][heswap][0]=buildlist[line,5]
+                    maglist.swap('HE',maglist.magnet_lists['HE'].index([buildlist[line,5],1,0]) , heswap)
+                    maglist.magnet_lists['HE'][heswap][1]=int(buildlist[line,4])
+
+                    heswap+=1
+
+
+                elif int(buildlist[line,2])==3:
+                    #maglist.magnet_lists['VE'][veswap][0]=buildlist[line,5]
+                    maglist.swap('VE',maglist.magnet_lists['VE'].index([buildlist[line,5],1,0]) , veswap)
+                    maglist.magnet_lists['VE'][veswap][1]=int(buildlist[line,4])
+                    veswap+=1
+
+                elif int(buildlist[line,2])==2:
+                    #maglist.magnet_lists['HH'][hhswap][0]=buildlist[line,5]
+                    maglist.swap('HH',maglist.magnet_lists['HH'].index([buildlist[line,5],1,0]) , hhswap)
+                    maglist.magnet_lists['HH'][hhswap][1]=int(buildlist[line,4])
+
+                    hhswap+=1
+
+                elif int(buildlist[line,2])==1:
+                    #maglist.magnet_lists['VV'][vvswap][0]=buildlist[line,5]
+                    maglist.swap('VV',maglist.magnet_lists['VV'].index([buildlist[line,5],1,0]) , vvswap)
+                    maglist.magnet_lists['VV'][vvswap][1]=int(buildlist[line,4])
+
+                    vvswap+=1
+
+            outfile = (os.path.split(filename)[1]+'.h5')
+            #fg.output_fields(outfile, options.id_filename, options.id_template, options.magnets_filename, maglist)
+            fp = open(os.path.split(filename)[1]+'.genome','w')
+            pickle.dump(maglist, fp)
+            fp.close()
+
+    if options.readable:
+
+        for filename in args[0::]:
+            print("Making file %s human readable." % (filename))
+
+            human_output(options.id_filename, filename)
+
+    if options.analysis:
+        for filename in args[0::]:  
+            print("Processing file %s" % (filename))
+            # load the genome
+            maglists = pickle.load( open( filename, "rb" ) )
+
+            outfile = (os.path.split(filename)[1]+'.h5')
+            fg.output_fields(outfile, options.id_filename, options.id_template, options.magnets_filename, maglists)
+
+
 if __name__ == '__main__':
     import optparse
     usage = "%prog [options] Genome_filenames"
@@ -185,78 +257,5 @@ if __name__ == '__main__':
     parser.add_option("-m", "--magnets", dest="magnets_filename", help="Set the path to the magnet description file", default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/magnets.mag', type="string")
     parser.add_option("-t", "--template", dest="id_template", help="Set the path to the magnet description file", default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015test.h5', type="string")
 
-    
     (options, args) = parser.parse_args()
-    
-    if options.create_genome:
-        for filename in args[0::]:
-            print("Turning file %s from Human Readable to Genome" % (filename))
-            
-            f2 = open(filename, 'r')
-            buildlist = np.genfromtxt(filename, dtype=str)
-            f2.close()
-            
-            mags=magnets.Magnets()
-            mags.load(options.magnets_filename)
-            
-            maglist = magnets.MagLists(mags)
-            
-            heswap = 0
-            veswap = 0
-            hhswap = 0
-            vvswap = 0
-            
-            for line in range(buildlist.shape[0]):
-                
-                if int(buildlist[line,2])==4:
-                    #maglist.magnet_lists['HE'][heswap][0]=buildlist[line,5]
-                    maglist.swap('HE',maglist.magnet_lists['HE'].index([buildlist[line,5],1,0]) , heswap)
-                    maglist.magnet_lists['HE'][heswap][1]=int(buildlist[line,4])
-                    
-                    heswap+=1
-                    
-                
-                elif int(buildlist[line,2])==3:
-                    #maglist.magnet_lists['VE'][veswap][0]=buildlist[line,5]
-                    maglist.swap('VE',maglist.magnet_lists['VE'].index([buildlist[line,5],1,0]) , veswap)
-                    maglist.magnet_lists['VE'][veswap][1]=int(buildlist[line,4])
-                    veswap+=1
-                    
-                elif int(buildlist[line,2])==2:
-                    #maglist.magnet_lists['HH'][hhswap][0]=buildlist[line,5]
-                    maglist.swap('HH',maglist.magnet_lists['HH'].index([buildlist[line,5],1,0]) , hhswap)
-                    maglist.magnet_lists['HH'][hhswap][1]=int(buildlist[line,4])
-                    
-                    hhswap+=1
-            
-                elif int(buildlist[line,2])==1:
-                    #maglist.magnet_lists['VV'][vvswap][0]=buildlist[line,5]
-                    maglist.swap('VV',maglist.magnet_lists['VV'].index([buildlist[line,5],1,0]) , vvswap)
-                    maglist.magnet_lists['VV'][vvswap][1]=int(buildlist[line,4])
-                    
-                    vvswap+=1
-            
-            outfile = (os.path.split(filename)[1]+'.h5')
-            #fg.output_fields(outfile, options.id_filename, options.id_template, options.magnets_filename, maglist)
-            fp = open(os.path.split(filename)[1]+'.genome','w')
-            pickle.dump(maglist, fp)
-            fp.close()
-            
-        
-        
-    
-    if options.readable:
-        
-        for filename in args[0::]:
-            print("Making file %s human readable." % (filename))
-            
-            human_output(options.id_filename, filename)
-        
-    if options.analysis:
-        for filename in args[0::]:  
-            print("Processing file %s" % (filename))
-            # load the genome
-            maglists = pickle.load( open( filename, "rb" ) )
-            
-            outfile = (os.path.split(filename)[1]+'.h5')
-            fg.output_fields(outfile, options.id_filename, options.id_template, options.magnets_filename, maglists)
+    process(options, args)
