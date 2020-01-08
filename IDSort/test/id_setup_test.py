@@ -50,7 +50,7 @@ class IDSetupTest(unittest.TestCase):
             'name': 'test_cpmu_shim',
             'x': (0, 0.1, 1),
             'z': (0, 0.1, 1),
-            'steps': 5,
+            'steps': 1,
             'endgapsym': 3.0,
             'terminalgapsymhyb': 3.0
         }

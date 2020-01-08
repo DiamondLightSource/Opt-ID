@@ -1,6 +1,6 @@
 {
     "interstice": 0.0625, 
-    "smax": 1140.5985, 
+    "smax": 1144.1325000000002, 
     "zmax": 0.1, 
     "name": "test_cpmu_shim", 
     "period_length": 17.67, 
@@ -21644,7 +21644,7 @@
     "xmax": 0.1, 
     "number_of_beams": 2, 
     "xmin": 0.0, 
-    "sstep": 0.8835, 
+    "sstep": 4.4175, 
     "type": "Hybrid_Symmetric", 
     "smin": -1139.7150000000001
 }
