@@ -28,42 +28,25 @@
 
 # rn this with the following command
 # qsub -pe openmpi 80 -q low.q -l release=rhel6 /home/ssg37927/ID/Opt-ID/IDSort/src/v2/mpijob.sh --iterations 100
-#
-#
-# First to pick up the DLS controls environment and versioned libraries
-from pkg_resources import require
-#require('mpi4py==1.3.1')
-require('h5py')#==2.2.0')
-require('scipy')
-require('numpy') # h5py need to be able to import numpy
-
-# Just to demonstrate that we have zmq in the environment as well
-require('pyzmq')#==13.1.0')
-import zmq
-
-from mpi4py import MPI
-import h5py
-import numpy as np
-import socket
-
-import time
-import copy
-
-from field_generator import generate_reference_magnets, generate_id_field
-
-import logging
-logging.basicConfig(level=0,format=' %(asctime)s.%(msecs)03d %(threadName)-16s %(levelname)-6s %(message)s', datefmt='%H:%M:%S')
-
-import magnets
-from genome_tools import ID_Shim_BCell, ID_BCell
-import field_generator as fg
-import magnet_tools as mt
-
-import json
 
 import os
-
 import random
+import socket
+import logging
+import json
+
+import h5py
+import numpy as np
+from mpi4py import MPI
+
+import field_generator as fg
+import magnets
+import magnet_tools as mt
+from field_generator import generate_reference_magnets, generate_id_field
+from genome_tools import ID_Shim_BCell, ID_BCell
+
+
+logging.basicConfig(level=0,format=' %(asctime)s.%(msecs)03d %(threadName)-16s %(levelname)-6s %(message)s', datefmt='%H:%M:%S')
 
 def mutations(c, e_star, fitness, scale):
     inverse_proportional_hypermutation =  abs(((1.0-(e_star/fitness)) * c) + c)
