@@ -16,8 +16,8 @@ class LookupGeneratorTest(unittest.TestCase):
         }
 
         options_named = namedtuple("options", options.keys())(*options.values())
-        test_json_filepath = 'IDSort/data/test_data/test_cpmu.json'
-        test_h5_filepath = 'IDSort/data/test_data/test_cpmu.h5'
+        test_json_filepath = 'IDSort/data/test_data/sort/test_cpmu.json'
+        test_h5_filepath = 'IDSort/data/test_data/sort/test_cpmu.h5'
 
         with h5py.File(test_h5_filepath, 'r') as old_h5_file, \
                 NamedTemporaryFile() as mock_h5_file:
@@ -36,8 +36,8 @@ class LookupGeneratorTest(unittest.TestCase):
         }
 
         options_named = namedtuple("options", options.keys())(*options.values())
-        test_json_shim_filepath = 'IDSort/data/test_data/test_cpmu_shim.json'
-        test_h5_shim_filepath = 'IDSort/data/test_data/test_cpmu_shim.h5'
+        test_json_shim_filepath = 'IDSort/data/test_data/shim/test_cpmu_shim.json'
+        test_h5_shim_filepath = 'IDSort/data/test_data/shim/test_cpmu_shim.h5'
 
         with h5py.File(test_h5_shim_filepath, 'r') as old_h5_shim_file, \
                 NamedTemporaryFile() as mock_h5_shim_file:

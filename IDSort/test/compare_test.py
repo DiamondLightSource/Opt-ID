@@ -9,9 +9,9 @@ class CompareTest(unittest.TestCase):
 
     def test_process(self):
 
-        test_original_genome_filepath = 'IDSort/data/test_data/1.07788212e-08_000_c0833a96b82c.genome'
-        test_shimmed_genome_filepath = 'IDSort/data/test_data/1.21718320e-07_000_A5bd3ebe937ee.genome'
-        test_shim_filepath =  'IDSort/data/test_data/test_shim.txt'
+        test_original_genome_filepath = 'IDSort/data/test_data/sort/1.07788212e-08_000_c0833a96b82c.genome'
+        test_shimmed_genome_filepath = 'IDSort/data/test_data/shim/1.21718320e-07_000_A5bd3ebe937ee.genome'
+        test_shim_filepath =  'IDSort/data/test_data/shim/test_shim.txt'
         new_shim_filename = 'shim'
         options = {}
         options_named = namedtuple("options", options.keys())(*options.values())

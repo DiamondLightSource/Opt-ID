@@ -12,12 +12,12 @@ class MpiRunnerForShimOptTest(unittest.TestCase):
 
     def test_process(self):
 
-        test_json_filepath = 'IDSort/data/test_data/test_cpmu_shim.json'
-        test_mag_filepath = 'IDSort/data/test_data/test_cpmu.mag'
-        test_h5_filepath = 'IDSort/data/test_data/test_cpmu_shim.h5'
-        test_genome_filepath = 'IDSort/data/test_data/1.07788212e-08_000_c0833a96b82c.genome'
+        test_json_filepath = 'IDSort/data/test_data/shim/test_cpmu_shim.json'
+        test_mag_filepath = 'IDSort/data/test_data/sort/test_cpmu.mag'
+        test_h5_filepath = 'IDSort/data/test_data/shim/test_cpmu_shim.h5'
+        test_genome_filepath = 'IDSort/data/test_data/sort/1.07788212e-08_000_c0833a96b82c.genome'
         test_genome_copy_filepath = '1.0_000_test_genome.genome'
-        test_bfield_filepath = 'IDSort/data/test_data/1.07788212e-08_000_c0833a96b82c.genome.h5'
+        test_bfield_filepath = 'IDSort/data/test_data/sort/1.07788212e-08_000_c0833a96b82c.genome.h5'
 
         shutil.copyfile(test_genome_filepath, test_genome_copy_filepath)
 
@@ -46,24 +46,24 @@ class MpiRunnerForShimOptTest(unittest.TestCase):
         new_genome_dir = mkdtemp()
         args = [new_genome_dir]
 
-        test_genome_filepath_default = 'IDSort/data/test_data/1.00000000e+00_001_test.genome'
+        test_genome_filepath_default = 'IDSort/data/test_data/shim/1.00000000e+00_001_test.genome'
         test_genome_filepaths = [
-            'IDSort/data/test_data/1.21718320e-07_000_5bd3ebe937ee.genome',
-            'IDSort/data/test_data/1.21768535e-07_000_cd5fba3a36ae.genome',
-            'IDSort/data/test_data/1.21818136e-07_000_5ff34ab877e0.genome',
-            'IDSort/data/test_data/1.23936830e-07_000_8bcddb88074d.genome'
+            'IDSort/data/test_data/shim/1.21718320e-07_000_5bd3ebe937ee.genome',
+            'IDSort/data/test_data/shim/1.21768535e-07_000_cd5fba3a36ae.genome',
+            'IDSort/data/test_data/shim/1.21818136e-07_000_5ff34ab877e0.genome',
+            'IDSort/data/test_data/shim/1.23936830e-07_000_8bcddb88074d.genome'
         ]
 
         test_genome_A_filepaths = [
-            'IDSort/data/test_data/1.21718320e-07_000_A5bd3ebe937ee.genome',
-            'IDSort/data/test_data/1.21768535e-07_000_Acd5fba3a36ae.genome',
-            'IDSort/data/test_data/1.21818136e-07_000_A5ff34ab877e0.genome'
+            'IDSort/data/test_data/shim/1.21718320e-07_000_A5bd3ebe937ee.genome',
+            'IDSort/data/test_data/shim/1.21768535e-07_000_Acd5fba3a36ae.genome',
+            'IDSort/data/test_data/shim/1.21818136e-07_000_A5ff34ab877e0.genome'
         ]
 
         test_h5_filepaths = [
-            'IDSort/data/test_data/test-A5bd3ebe937ee.h5',
-            'IDSort/data/test_data/test-A5ff34ab877e0.h5',
-            'IDSort/data/test_data/test-Acd5fba3a36ae.h5'
+            'IDSort/data/test_data/shim/test-A5bd3ebe937ee.h5',
+            'IDSort/data/test_data/shim/test-A5ff34ab877e0.h5',
+            'IDSort/data/test_data/shim/test-Acd5fba3a36ae.h5'
         ]
 
         try:

@@ -27,7 +27,7 @@ class IDSetupTest(unittest.TestCase):
         }
 
         options_named = namedtuple("options", options.keys())(*options.values())
-        test_data_filepath = 'IDSort/data/test_data/test_cpmu.json'
+        test_data_filepath = 'IDSort/data/test_data/sort/test_cpmu.json'
 
         with open(test_data_filepath) as old_json_file, \
                 NamedTemporaryFile() as new_json_file:
@@ -56,7 +56,7 @@ class IDSetupTest(unittest.TestCase):
         }
 
         options_named = namedtuple("options", options.keys())(*options.values())
-        test_data_filepath = 'IDSort/data/test_data/test_cpmu_shim.json'
+        test_data_filepath = 'IDSort/data/test_data/shim/test_cpmu_shim.json'
 
         with open(test_data_filepath) as old_json_shim_file, \
                 NamedTemporaryFile() as new_json_shim_file:

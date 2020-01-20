@@ -17,7 +17,7 @@ class MagnetsTest(unittest.TestCase):
         }
 
         options_named = namedtuple("options", options.keys())(*options.values())
-        test_mag_filepath = 'IDSort/data/test_data/test_cpmu.mag'
+        test_mag_filepath = 'IDSort/data/test_data/sort/test_cpmu.mag'
 
         with open(test_mag_filepath) as old_mag_file, \
                 NamedTemporaryFile() as new_mag_file:
@@ -35,7 +35,7 @@ class MagnetsTest(unittest.TestCase):
         }
 
         options_named = namedtuple("options", options.keys())(*options.values())
-        test_mag_shim_filepath = 'IDSort/data/test_data/test_cpmu_shim.mag'
+        test_mag_shim_filepath = 'IDSort/data/test_data/shim/test_cpmu_shim.mag'
 
         with open(test_mag_shim_filepath) as old_mag_shim_file, \
                 NamedTemporaryFile() as new_mag_shim_file:

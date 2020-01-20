@@ -10,9 +10,9 @@ class MpiRunnerTest(unittest.TestCase):
 
     def test_process(self):
 
-        test_json_filepath = 'IDSort/data/test_data/test_cpmu.json'
-        test_mag_filepath = 'IDSort/data/test_data/test_cpmu.mag'
-        test_h5_filepath = 'IDSort/data/test_data/test_cpmu.h5'
+        test_json_filepath = 'IDSort/data/test_data/sort/test_cpmu.json'
+        test_mag_filepath = 'IDSort/data/test_data/sort/test_cpmu.mag'
+        test_h5_filepath = 'IDSort/data/test_data/sort/test_cpmu.h5'
         options = {
             'iterations': 3,
             'id_filename': test_json_filepath,
@@ -34,10 +34,10 @@ class MpiRunnerTest(unittest.TestCase):
         args = [new_genome_dir]
 
         test_genome_filepaths = [
-            'IDSort/data/test_data/1.07788212e-08_000_c0833a96b82c.genome',
-            'IDSort/data/test_data/1.13540850e-08_000_98451f1c78c2.genome',
-            'IDSort/data/test_data/1.49284583e-08_000_92fab60b32fe.genome',
-            'IDSort/data/test_data/1.93191576e-08_000_d67a4cf9dfac.genome'
+            'IDSort/data/test_data/sort/1.07788212e-08_000_c0833a96b82c.genome',
+            'IDSort/data/test_data/sort/1.13540850e-08_000_98451f1c78c2.genome',
+            'IDSort/data/test_data/sort/1.49284583e-08_000_92fab60b32fe.genome',
+            'IDSort/data/test_data/sort/1.93191576e-08_000_d67a4cf9dfac.genome'
         ]
 
         try:
