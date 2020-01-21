@@ -15,9 +15,9 @@ class MpiRunnerForShimOptTest(unittest.TestCase):
         test_json_filepath = 'IDSort/data/test_data/shim/test_cpmu_shim.json'
         test_mag_filepath = 'IDSort/data/test_data/sort/test_cpmu.mag'
         test_h5_filepath = 'IDSort/data/test_data/shim/test_cpmu_shim.h5'
-        test_genome_filepath = 'IDSort/data/test_data/sort/1.07788212e-08_000_c0833a96b82c.genome'
+        test_genome_filepath = 'IDSort/data/test_data/sort/mpi_runner_output/1.07788212e-08_000_c0833a96b82c.genome'
         test_genome_copy_filepath = '1.0_000_test_genome.genome'
-        test_bfield_filepath = 'IDSort/data/test_data/sort/1.07788212e-08_000_c0833a96b82c.genome.h5'
+        test_bfield_filepath = 'IDSort/data/test_data/sort/process_genome_analyse_output/1.07788212e-08_000_c0833a96b82c.genome.h5'
 
         shutil.copyfile(test_genome_filepath, test_genome_copy_filepath)
 

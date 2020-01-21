@@ -34,10 +34,10 @@ class MpiRunnerTest(unittest.TestCase):
         args = [new_genome_dir]
 
         test_genome_filepaths = [
-            'IDSort/data/test_data/sort/1.07788212e-08_000_c0833a96b82c.genome',
-            'IDSort/data/test_data/sort/1.13540850e-08_000_98451f1c78c2.genome',
-            'IDSort/data/test_data/sort/1.49284583e-08_000_92fab60b32fe.genome',
-            'IDSort/data/test_data/sort/1.93191576e-08_000_d67a4cf9dfac.genome'
+            'IDSort/data/test_data/sort/mpi_runner_output/1.07788212e-08_000_c0833a96b82c.genome',
+            'IDSort/data/test_data/sort/mpi_runner_output/1.13540850e-08_000_98451f1c78c2.genome',
+            'IDSort/data/test_data/sort/mpi_runner_output/1.49284583e-08_000_92fab60b32fe.genome',
+            'IDSort/data/test_data/sort/mpi_runner_output/1.93191576e-08_000_d67a4cf9dfac.genome'
         ]
 
         try:
@@ -82,14 +82,14 @@ class MpiRunnerTest(unittest.TestCase):
         }
 
         options_named = namedtuple("options", options.keys())(*options.values())
-        genome_dir = 'IDSort/data/test_data/sort'
+        genome_dir = 'IDSort/data/test_data/sort/mpi_runner_output'
         args = [genome_dir]
 
         test_genome_filepaths = [
             'IDSort/data/test_data/sort/mpi_runner_initial_population/1.07788212e-08_001_c0833a96b82c.genome',
-            'IDSort/data/test_data/sort/mpi_runner_initial_population/8.37148991e-09_000_a17c6ae2b0ca.genome',
-            'IDSort/data/test_data/sort/mpi_runner_initial_population/8.92986660e-09_000_dfdeaff6511d.genome',
-            'IDSort/data/test_data/sort/mpi_runner_initial_population/9.97165603e-09_000_c9331df26c93.genome'
+            'IDSort/data/test_data/sort/mpi_runner_initial_population/8.62681680e-09_000_5ffd95460060.genome',
+            'IDSort/data/test_data/sort/mpi_runner_initial_population/8.86225773e-09_000_910c79ca1fc4.genome',
+            'IDSort/data/test_data/sort/mpi_runner_initial_population/9.90050079e-09_000_5c3b9f36eca8.genome'
         ]
 
         try:

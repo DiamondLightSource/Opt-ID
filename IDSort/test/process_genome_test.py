@@ -24,16 +24,16 @@ class ProcessGenomeTest(unittest.TestCase):
         }
 
         options_named = namedtuple("options", options.keys())(*options.values())
-        old_genome_filepath = 'IDSort/data/test_data/sort/1.07788212e-08_000_c0833a96b82c.genome'
+        old_genome_filepath = 'IDSort/data/test_data/sort/mpi_runner_output/1.07788212e-08_000_c0833a96b82c.genome'
         args = [old_genome_filepath]
 
         new_genome_h5_filename = os.path.split(old_genome_filepath)[1] + '.h5'
         new_genome_inp_filename = os.path.split(old_genome_filepath)[1] + '.inp'
 
         new_genome_h5_filepath = os.path.join(os.getcwd(), new_genome_h5_filename)
-        old_genome_h5_filepath = old_genome_filepath + '.h5'
+        old_genome_h5_filepath = 'IDSort/data/test_data/sort/process_genome_analyse_output/1.07788212e-08_000_c0833a96b82c.genome.h5'
         new_genome_inp_filepath = os.path.join(os.getcwd(), new_genome_inp_filename)
-        old_genome_inp_filepath = old_genome_filepath + '.inp'
+        old_genome_inp_filepath = 'IDSort/data/test_data/sort/process_genome_analyse_output/1.07788212e-08_000_c0833a96b82c.genome.inp'
 
         try:
             process(options_named, args)
@@ -59,7 +59,7 @@ class ProcessGenomeTest(unittest.TestCase):
         test_json_filepath = 'IDSort/data/test_data/sort/test_cpmu.json'
         test_mag_filepath = 'IDSort/data/test_data/sort/test_cpmu.mag'
         test_h5_filepath = 'IDSort/data/test_data/sort/test_cpmu.h5'
-        test_inp_filepath = 'IDSort/data/test_data/sort/1.07788212e-08_000_c0833a96b82c.genome.inp'
+        test_inp_filepath = 'IDSort/data/test_data/sort/process_genome_analyse_output/1.07788212e-08_000_c0833a96b82c.genome.inp'
 
         options = {
             'create_genome': True,
