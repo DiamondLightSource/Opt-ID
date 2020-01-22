@@ -128,7 +128,14 @@ def process(options, args):
 
 
     if options.restart and (rank == 0) :
-        for filename in os.listdir(args[0]):
+        filenames = os.listdir(args[0])
+        # sort the genome filenames to ensure that when given the same set of
+        # files in a directory, population[0] is the same across different
+        # orderings of the listed directory contents: this is to fix the test
+        # MpiRunnerTest.test_process_initial_population() in mpi_runner_test.py
+        # when run on travis
+        filenames.sort()
+        for filename in filenames:
             fullpath = os.path.join(args[0],filename)
             try :
                 logging.debug("Trying to load %s" % (fullpath))
