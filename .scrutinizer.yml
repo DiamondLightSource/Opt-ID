@@ -1,6 +1,25 @@
+checks:
+  python:
+    code_rating: true
+    duplicate_code: true
 build:
+  nodes:
+    analysis:
+      project_setup:
+        override:
+          - 'true'
+      tests:
+        override:
+          - py-scrutinizer-run
+          - command: pylint-run
+            use_website_config: true
   dependencies:
     before:
       - sudo apt-get update
       - sudo apt-get -y install libopenmpi-dev
       - sudo apt-get -y install openmpi-bin
+filter:
+  excluded_paths:
+    - '*/test/*'
+  dependency_paths:
+    - 'lib/*'
