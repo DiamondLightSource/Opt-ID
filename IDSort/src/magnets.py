@@ -159,22 +159,7 @@ class MagLists():
                 logging.debug("flipping key %s at %s" % (key, p1) )
                 self.flip(key , (p1,))
 
-
-if __name__ == "__main__" :
-    import optparse
-    usage = "%prog [options] OutputFile"
-    parser = optparse.OptionParser(usage=usage)
-    parser.add_option("-H", "--hmaglist", dest="hmags", help="Set the path to the H magnet data", default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13H.sim', type="string")
-    parser.add_option("--HE", "--hemaglist", dest="hemags", help="Set the path to the HE magnet data", default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13HEA.sim', type="string")
-    parser.add_option("-V", "--vmaglist", dest="vmags", help="Set the path to the V magnet data", default=None, type="string")
-    parser.add_option("--VE", "--vemaglist", dest="vemags", help="Set the path to the VE magnet data", default=None, type="string")
-    parser.add_option("--HT", "--htmaglist", dest="htmags", help="Set the path to the HT magnet data", default=None, type="string")
-
-    (options, args) = parser.parse_args()
-    
-    
-    
-    
+def process(options, args):
     mags = Magnets()
     if options.hmags:
         mags.add_magnet_set('HH', options.hmags, (-1.,-1.,1.))
@@ -219,3 +204,16 @@ if __name__ == "__main__" :
     pprint.pprint(maglist.magnet_lists['HH'])
     
     mags.save(args[0])
+
+if __name__ == "__main__" :
+    import optparse
+    usage = "%prog [options] OutputFile"
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option("-H", "--hmaglist", dest="hmags", help="Set the path to the H magnet data", default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13H.sim', type="string")
+    parser.add_option("--HE", "--hemaglist", dest="hemags", help="Set the path to the HE magnet data", default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13HEA.sim', type="string")
+    parser.add_option("-V", "--vmaglist", dest="vmags", help="Set the path to the V magnet data", default=None, type="string")
+    parser.add_option("--VE", "--vemaglist", dest="vemags", help="Set the path to the VE magnet data", default=None, type="string")
+    parser.add_option("--HT", "--htmaglist", dest="htmags", help="Set the path to the HT magnet data", default=None, type="string")
+
+    (options, args) = parser.parse_args()
+    process(options, args)

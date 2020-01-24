@@ -7,14 +7,8 @@ Takes 3 arguments:
 
 from genome_tools import ID_BCell
 
-if __name__ == '__main__' :
-    
-    import optparse
-    import os
-    usage = "%prog [options] OutputFile"
-    parser = optparse.OptionParser(usage=usage)
-    (options, args) = parser.parse_args()
-    
+
+def process(options, args):
     g1 = ID_BCell()
     g2 = ID_BCell()
     g1.load(args[0])
@@ -35,3 +29,10 @@ if __name__ == '__main__' :
                 f1.write("\n")
                 
     f1.close()
+
+if __name__ == '__main__' :
+    import optparse
+    usage = "%prog [options] OutputFile"
+    parser = optparse.OptionParser(usage=usage)
+    (options, args) = parser.parse_args()
+    process(options, args)

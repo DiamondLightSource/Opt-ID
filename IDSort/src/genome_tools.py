@@ -191,7 +191,7 @@ class ID_Shim_BCell(BCell):
         # Generate the IDfiled for the parent, as we need to calculate it fully here.
         original_bfield = None
         original_fitness = None
-        if real_bfield == None:
+        if real_bfield is None:
             original_bfield, original_fitness = fg.calculate_cached_trajectory_fitness(info, lookup, magnets, self.genome, ref_trajectories)
             fitness_error = abs(self.fitness - original_fitness)
             logging.debug("Estimated fitness to real fitness error %2.10e"%(fitness_error))
