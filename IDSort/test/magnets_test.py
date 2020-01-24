@@ -19,7 +19,7 @@ class MagnetsTest(unittest.TestCase):
         options_named = namedtuple("options", options.keys())(*options.values())
         test_mag_filepath = 'IDSort/data/test_data/sort/test_cpmu.mag'
 
-        with open(test_mag_filepath) as old_mag_file, \
+        with open(test_mag_filepath, 'rb') as old_mag_file, \
                 NamedTemporaryFile() as new_mag_file:
             process(options_named, [new_mag_file.name])
             assert new_mag_file.read() == old_mag_file.read()

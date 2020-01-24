@@ -19,7 +19,7 @@ Created on 5 Dec 2013
 '''
 import numpy as np
 import random
-import cPickle
+import pickle
 import logging
 
 class Magnets(object):
@@ -36,7 +36,7 @@ class Magnets(object):
         magnets = {}
         for line in f:
             vals = line.split()
-            print vals[0]
+            print(vals[0])
             magnets[vals[0]] = np.array((float(vals[1]), float(vals[2]), float(vals[3])))
         self.magnet_sets[name] = magnets
         self.magnet_flip[name] = np.array(flip_vector)
@@ -62,13 +62,13 @@ class Magnets(object):
         self.magnet_flip[name] = np.array(flip_vector)
     
     def save(self, filename):
-        fp = open(filename, 'w')
-        cPickle.dump((self.magnet_sets, self.magnet_flip, self.mean_field), fp)
+        fp = open(filename, 'wb')
+        pickle.dump((self.magnet_sets, self.magnet_flip, self.mean_field), fp)
         fp.close()
     
     def load(self, filename):
-        fp = open(filename, 'r')
-        (self.magnet_sets, self.magnet_flip, self.mean_field) = cPickle.load(fp)
+        fp = open(filename, 'rb')
+        (self.magnet_sets, self.magnet_flip, self.mean_field) = pickle.load(fp)
         fp.close()
         
     def availability(self):
@@ -134,7 +134,7 @@ class MagLists():
         
         for i in range(number_of_mutations):
             # pick a list at random
-            key = random.choice(available.keys())
+            key = random.choice(list(available.keys()))
             # pick a flip or swap
             if random.random() > 0.5 :
                 # swap
@@ -183,12 +183,12 @@ def process(options, args):
     maglist = MagLists(mags)
     
     maglist.sort_all()
-    print "Now for the lists"
+    print("Now for the lists")
     pprint.pprint(maglist.magnet_lists['HE'])
     
     maglist.swap('HE', 0, 1)
     
-    print "After swap"
+    print("After swap")
     pprint.pprint(maglist.magnet_lists['HE'])
     
     for key in mags.magnet_sets.keys():
@@ -200,7 +200,7 @@ def process(options, args):
     
 #    maglist.flip('HH',(107,294,511,626))
     
-    print "After flips"
+    print("After flips")
     pprint.pprint(maglist.magnet_lists['HH'])
     
     mags.save(args[0])
