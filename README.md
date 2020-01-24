@@ -2,7 +2,7 @@
 Code for the Optimisation of ID's using Python and Opt-AI
 
 ## Order of things
-  1. From the Excel files supplied by the supplier, create tab delimited .sim files of magnetisation. This is a manual procedure done only on Windows.
+  1. From the Excel files supplied by the supplier, create tab delimited .sim files of magnetisation. This is a manual procedure done only on Windows. Note that, currently, Opt-ID requires the magnet names in the .sim files to have leading zeros that pad out the name to 3 digits. For example, instead of '1' it should be '001'.
   2. Run id_setup.py to create a description of the ID - it creates a json.
   3. Run magnets.py - this creates the data files for the magnets - a .mag file. It requires the raw .sim input files.
   4. Run lookup_generator.py. This generates what we could call the ID operator that acts on the real magnet data to create a real ID field. It requires the .json file created by setup.py and it creates a .h5 file
