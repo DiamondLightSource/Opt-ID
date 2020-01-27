@@ -87,10 +87,10 @@ class MpiRunnerTest(unittest.TestCase):
         args = [genome_dir]
 
         test_genome_filepaths = [
-            'IDSort/data/test_data/sort/mpi_runner_initial_population/1.07788212e-08_001_c0833a96b82c.genome',
-            'IDSort/data/test_data/sort/mpi_runner_initial_population/8.62681680e-09_000_5ffd95460060.genome',
-            'IDSort/data/test_data/sort/mpi_runner_initial_population/8.86225773e-09_000_910c79ca1fc4.genome',
-            'IDSort/data/test_data/sort/mpi_runner_initial_population/9.90050079e-09_000_5c3b9f36eca8.genome'
+            'IDSort/data/test_data/sort/mpi_runner_initial_population/1.09170425e-08_000_88d39698a4f7.genome',
+            'IDSort/data/test_data/sort/mpi_runner_initial_population/6.42786056e-09_000_aaf866db3206.genome',
+            'IDSort/data/test_data/sort/mpi_runner_initial_population/7.03009938e-09_000_a90b37ecedb9.genome',
+            'IDSort/data/test_data/sort/mpi_runner_initial_population/7.06840992e-09_000_a12a86932596.genome'
         ]
 
         try:
@@ -111,8 +111,8 @@ class MpiRunnerTest(unittest.TestCase):
 
                 assert genome_to_compare_with is not None
 
-                with open(os.path.join(genome_dir, genome_to_compare_with)) as new_genome_file, \
-                        open(test_genome_filepath) as test_genome_file:
+                with open(os.path.join(genome_dir, genome_to_compare_with), 'rb') as new_genome_file, \
+                        open(test_genome_filepath, 'rb') as test_genome_file:
                     assert new_genome_file.read() == test_genome_file.read()
 
         finally:

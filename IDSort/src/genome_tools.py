@@ -51,7 +51,7 @@ class BCell(object):
         fp.close()
 
     def load(self, filename):
-        fp = open(filename, 'r')
+        fp = open(filename, 'rb')
         self.genome = pickle.load(fp)
         fp.close()
         params = os.path.split(filename)[1].split('_')
