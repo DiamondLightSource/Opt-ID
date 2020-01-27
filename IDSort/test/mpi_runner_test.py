@@ -3,6 +3,7 @@ import shutil
 import os
 from tempfile import mkdtemp
 from collections import namedtuple
+
 from IDSort.src.mpi_runner import process
 
 
@@ -34,10 +35,10 @@ class MpiRunnerTest(unittest.TestCase):
         args = [new_genome_dir]
 
         test_genome_filepaths = [
-            'IDSort/data/test_data/sort/mpi_runner_output/1.07788212e-08_000_c0833a96b82c.genome',
-            'IDSort/data/test_data/sort/mpi_runner_output/1.13540850e-08_000_98451f1c78c2.genome',
-            'IDSort/data/test_data/sort/mpi_runner_output/1.49284583e-08_000_92fab60b32fe.genome',
-            'IDSort/data/test_data/sort/mpi_runner_output/1.93191576e-08_000_d67a4cf9dfac.genome'
+            'IDSort/data/test_data/sort/mpi_runner_output/1.12875826e-08_000_7c51ecd01f73.genome',
+            'IDSort/data/test_data/sort/mpi_runner_output/1.49788342e-08_000_b6059e1c0884.genome',
+            'IDSort/data/test_data/sort/mpi_runner_output/1.81441854e-08_000_645a52b2bb2d.genome',
+            'IDSort/data/test_data/sort/mpi_runner_output/4.05007630e-08_000_47a4f43ecf86.genome'
         ]
 
         try:
@@ -53,8 +54,8 @@ class MpiRunnerTest(unittest.TestCase):
 
                 assert genome_to_compare_with is not None
 
-                with open(os.path.join(new_genome_dir, new_genome_filename)) as new_genome_file, \
-                        open(genome_to_compare_with) as test_genome_file:
+                with open(os.path.join(new_genome_dir, new_genome_filename), 'rb') as new_genome_file, \
+                        open(genome_to_compare_with, 'rb') as test_genome_file:
                     assert new_genome_file.read() == test_genome_file.read()
 
         finally:

@@ -31,26 +31,22 @@
 #
 #
 
-from mpi4py import MPI
-import h5py
-import numpy as np
+import os
 import socket
-
-import time
-
 import logging
-logging.basicConfig(level=0,format=' %(asctime)s.%(msecs)03d %(threadName)-16s %(levelname)-6s %(message)s', datefmt='%H:%M:%S')
-
-import magnets
-from genome_tools import ID_BCell
-import field_generator as fg
-import magnet_tools as mt
-
+import random
 import json
 
-import os
+import h5py
+from mpi4py import MPI
 
-import random
+from IDSort.src.magnets import Magnets, MagLists
+from IDSort.src.genome_tools import ID_BCell
+import IDSort.src.field_generator as fg
+import IDSort.src.magnet_tools as mt
+
+
+logging.basicConfig(level=0,format=' %(asctime)s.%(msecs)03d %(threadName)-16s %(levelname)-6s %(message)s', datefmt='%H:%M:%S')
 
 def mutations(c, e_star, fitness, scale):
     inverse_proportional_hypermutation =  abs(((1.0-(e_star/fitness)) * c) + c)
@@ -107,11 +103,11 @@ def process(options, args):
     barrier(options.singlethreaded)
 
     logging.debug("Loading magnets")
-    mags = magnets.Magnets()
+    mags = Magnets()
     mags.load(options.magnets_filename)
 
     ref_mags = fg.generate_reference_magnets(mags)
-    ref_maglist = magnets.MagLists(ref_mags)
+    ref_maglist = MagLists(ref_mags)
     ref_total_id_field = fg.generate_id_field(info, ref_maglist, ref_mags, lookup)
     #logging.debug("before phase calculate error call")
     #logging.debug(ref_total_id_field.shape())
@@ -155,7 +151,7 @@ def process(options, args):
         logging.debug("make the initial population")
         for i in range(options.setup):
             # create a fresh maglist
-            maglist = magnets.MagLists(mags)
+            maglist = MagLists(mags)
             maglist.shuffle_all()
             genome = ID_BCell()
             genome.create(info, lookup, mags, maglist, ref_trajectories)

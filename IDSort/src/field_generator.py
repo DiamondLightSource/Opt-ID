@@ -17,17 +17,16 @@ Created on 5 Dec 2013
 
 @author: ssg37927
 '''
-import numpy as np
-
-import h5py
-import json
-
-import magnets
-import magnet_tools as mt
 import logging
 import threading
-
 import copy
+import json
+
+import numpy as np
+import h5py
+
+from IDSort.src.magnets import Magnets, MagLists
+import IDSort.src.magnet_tools as mt
 
 
 def load_lookup(filename, beam):
@@ -94,9 +93,9 @@ def generate_per_beam_b_field(info, maglist, mags, lookup):
         indexes = range(lookup[beam].shape[5]) #lookup is a dictionary
         #logging.debug("lookup[beam] shape is %s"%(s(lookup[beam].shape))) #(17, 5, 2622, 3, 3, 234) 
         #logging.debug("indexes is %s"%(indexes)) #indexes is a list of numbers 0-233
-        length = len(indexes)/procs
+        length = len(indexes)//procs
         #logging.debug("length is %s"%(s(length)))
-        chunks=[indexes[x:x+length] for x in xrange(0, len(indexes), length)]
+        chunks=[indexes[x : x+length] for x in range(0, len(indexes), length)]
         #logging.debug("chunks shape is %s"%(s(chunks.shape))) doesn't work
         results = []
         pp = []
@@ -125,7 +124,7 @@ def generate_per_beam_b_field(info, maglist, mags, lookup):
 
 def generate_id_field(info, maglist, mags, f1):
     fields = generate_per_beam_b_field(info, maglist, mags, f1)
-    id_fields = np.zeros(fields.itervalues().next().shape) #iterates over the values in the dictionary fields to create the array id_fields
+    id_fields = np.zeros(next(iter(fields.values())).shape) #iterates over the values in the dictionary fields to create the array id_fields
     #logging.debug("id fields shape is %s"%(str(id_fields.shape))) #(17,5,2622,3)
     for beam in fields.keys():
         id_fields+=fields[beam]
@@ -143,9 +142,9 @@ def generate_id_field_cost(field, ref_field):
 
 
 def generate_reference_magnets(mags):
-    ref_mags=magnets.Magnets()
-    for magtype in mags.magnet_sets.keys():
-        mag_dir = mags.magnet_sets[magtype].values()[0].argmax()
+    ref_mags = Magnets()
+    for magtype in list(mags.magnet_sets.keys()):
+        mag_dir = list(mags.magnet_sets[magtype].values())[0].argmax()
         unit = np.zeros(3)
         unit[mag_dir] = mags.mean_field[magtype]
         #ref_mags.add_perfect_magnet_set(magtype, len(mags.magnet_sets[magtype]) , unit, mags.magnet_flip[magtype])
@@ -177,11 +176,11 @@ def calculate_fitness(id_filename, lookup_filename, magnets_filename, maglist):
     info = json.load(f2)
     f2.close()
 
-    mags = magnets.Magnets()
+    mags = Magnets()
     mags.load(magnets_filename)
 
     ref_mags = generate_reference_magnets(mags)
-    ref_maglist = magnets.MagLists(ref_mags)
+    ref_maglist = MagLists(ref_mags)
     ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, lookup)
 
     result = calculate_cached_fitness(info, lookup, magnets, maglist, ref_total_id_field)
@@ -200,7 +199,7 @@ def output_fields(filename, id_filename, lookup_filename, magnets_filename, magl
         lookup[beam['name']] = f1[beam['name']][...]
     f1.close()
 
-    mags = magnets.Magnets()
+    mags = Magnets()
     mags.load(magnets_filename)
     ref_mags=generate_reference_magnets(mags)
 
@@ -247,16 +246,16 @@ if __name__ == "__main__" :
     f1.close()
     
 
-    mags = magnets.Magnets()
+    mags = Magnets()
     #mags.load('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/magnets.mag')
     mags.load(args[2])
     
     ref_mags = generate_reference_magnets(mags)
-    ref_maglist = magnets.MagLists(ref_mags)
+    ref_maglist = MagLists(ref_mags)
     ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, lookup)
     ref_pherr, ref_trajectories = mt.calculate_phase_error(info, ref_total_id_field)
 
-    maglist = magnets.MagLists(mags)
+    maglist = MagLists(mags)
     maglist.shuffle_all()
     original_bfield, maglist_fitness = calculate_cached_trajectory_fitness(info, lookup, mags, maglist, ref_trajectories)
     
@@ -283,7 +282,7 @@ if __name__ == "__main__" :
         
         print("Estimated fitness error is %2.10e %2.10e %2.10e"%(maglist2_fitness_estimate, maglist2_fitness, fitness_error))
 
-    maglist0 = magnets.MagLists(mags)
+    maglist0 = MagLists(mags)
     maglist0.sort_all()
 #    maglist0.flip('HH', (107,294,511,626))
     per_beam_field = generate_per_beam_b_field(info, maglist0, mags, lookup)

@@ -17,10 +17,11 @@ Created on 16 Jan 2012
 
 @author: ssg37927
 '''
+import logging
 
 import numpy as np
 from scipy import signal
-import logging
+
 
 def generate_B_array(xmin, xmax, xstep, zmin, zmax, zstep, smin, smax, sstep, magdims, V1):
     '''
@@ -150,10 +151,10 @@ def calculate_phase_error(info, b_array):
     #wx=np.cumsum(np.square(trajectories[:,2])*1e-3)
     #wz=np.cumsum(np.square(trajectories[:,3])*1e-3)
 
-    i=b_array.shape[0]
-    i=(i+1)/2-1
-    j=b_array.shape[1]
-    j=(j+1)/2-1
+    i = b_array.shape[0]
+    i = (i+1)//2 - 1
+    j = b_array.shape[1]
+    j = (j+1)//2 - 1
     
     b_array=b_array[i,j,:,:]
     
@@ -173,8 +174,8 @@ def calculate_phase_error(info, b_array):
     ph2=(step*1e-3/(2.0*c*Gamma**2))*np.arange(n_s_stp)+ph
     
     
-    v1=(n_stp/4)*np.arange(4*nperiods-2*nskip)+n_s_stp/2-nperiods*n_stp/2+(nskip-1)*n_stp/4
-    v2=ph2[v1[0]:v1[-1]+n_stp/4:n_stp/4]
+    v1 = (n_stp//4)*np.arange(4*nperiods - 2*nskip) + n_s_stp//2 - nperiods*n_stp//2 + (nskip-1)*n_stp//4
+    v2 = ph2[v1[0] : v1[-1] + n_stp//4 : n_stp//4]
             
             
     #'linear fit'
@@ -186,7 +187,7 @@ def calculate_phase_error(info, b_array):
     m,intercept=np.linalg.lstsq(A, v2)[0]
     Omega0=2*np.pi/(m*n_stp)
     
-    v2=ph[v1[0]:v1[-1]+n_stp/4:n_stp/4]
+    v2 = ph[v1[0] : v1[-1] + n_stp//4 : n_stp//4]
     
         
     #'fit function'
