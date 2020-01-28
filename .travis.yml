@@ -12,7 +12,7 @@ install:
   - pip install coveralls coverage
 
 script:
-  - python -m pytest IDSort/test -v --cov savu --cov-report term-missing
+  - python -m pytest --cov=IDSort --log-format='%(asctime)s.%(msecs)03d %(filename)-25s %(lineno)4d %(levelname)-8s %(message)s' --log-date-format='%Y-%m-%d %H:%M:%S' IDSort/test
 
 after_script:
   - coveralls
