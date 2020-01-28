@@ -61,7 +61,7 @@ class ProcessGenomeTest(unittest.TestCase):
         test_json_filepath = 'IDSort/data/test_data/sort/test_cpmu.json'
         test_mag_filepath = 'IDSort/data/test_data/sort/test_cpmu.mag'
         test_h5_filepath = 'IDSort/data/test_data/sort/test_cpmu.h5'
-        test_inp_filepath = 'IDSort/data/test_data/sort/process_genome_analyse_output/1.07788212e-08_000_c0833a96b82c.genome.inp'
+        test_inp_filepath = 'IDSort/data/test_data/sort/process_genome_analyse_output/1.12875826e-08_000_7c51ecd01f73.genome.inp'
 
         options = {
             'create_genome': True,
@@ -75,14 +75,14 @@ class ProcessGenomeTest(unittest.TestCase):
         options_named = namedtuple("options", options.keys())(*options.values())
         args = [test_inp_filepath]
 
-        old_genome_filepath = 'IDSort/data/test_data/sort/1.07788212e-08_000_c0833a96b82c.genome.inp.genome'
+        old_genome_filepath = 'IDSort/data/test_data/sort/1.12875826e-08_000_7c51ecd01f73.genome.inp.genome'
         new_genome_filename = os.path.split(test_inp_filepath)[1] + '.genome'
         new_genome_filepath = os.path.join(os.getcwd(), new_genome_filename)
 
         try:
             process(options_named, args)
-            with open(old_genome_filepath) as old_genome_file, \
-                    open(new_genome_filepath) as new_genome_file:
+            with open(old_genome_filepath, 'rb') as old_genome_file, \
+                    open(new_genome_filepath, 'rb') as new_genome_file:
                 assert new_genome_file.read() == old_genome_file.read()
         finally:
             os.remove(new_genome_filepath)

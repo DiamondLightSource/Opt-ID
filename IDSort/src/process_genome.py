@@ -228,7 +228,7 @@ def process(options, args):
 
             outfile = (os.path.split(filename)[1]+'.h5')
             #fg.output_fields(outfile, options.id_filename, options.id_template, options.magnets_filename, maglist)
-            fp = open(os.path.split(filename)[1]+'.genome','w')
+            fp = open(os.path.split(filename)[1]+'.genome','wb')
             pickle.dump(maglist, fp)
             fp.close()
 
