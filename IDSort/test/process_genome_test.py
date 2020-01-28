@@ -1,8 +1,10 @@
 import unittest
 import os
+from collections import namedtuple
+
 import h5py
 import numpy as np
-from collections import namedtuple
+
 from IDSort.src.process_genome import process
 
 
@@ -24,16 +26,16 @@ class ProcessGenomeTest(unittest.TestCase):
         }
 
         options_named = namedtuple("options", options.keys())(*options.values())
-        old_genome_filepath = 'IDSort/data/test_data/sort/mpi_runner_output/1.07788212e-08_000_c0833a96b82c.genome'
+        old_genome_filepath = 'IDSort/data/test_data/sort/mpi_runner_output/1.12875826e-08_000_7c51ecd01f73.genome'
         args = [old_genome_filepath]
 
         new_genome_h5_filename = os.path.split(old_genome_filepath)[1] + '.h5'
         new_genome_inp_filename = os.path.split(old_genome_filepath)[1] + '.inp'
 
         new_genome_h5_filepath = os.path.join(os.getcwd(), new_genome_h5_filename)
-        old_genome_h5_filepath = 'IDSort/data/test_data/sort/process_genome_analyse_output/1.07788212e-08_000_c0833a96b82c.genome.h5'
+        old_genome_h5_filepath = 'IDSort/data/test_data/sort/process_genome_analyse_output/1.12875826e-08_000_7c51ecd01f73.genome.h5'
         new_genome_inp_filepath = os.path.join(os.getcwd(), new_genome_inp_filename)
-        old_genome_inp_filepath = 'IDSort/data/test_data/sort/process_genome_analyse_output/1.07788212e-08_000_c0833a96b82c.genome.inp'
+        old_genome_inp_filepath = 'IDSort/data/test_data/sort/process_genome_analyse_output/1.12875826e-08_000_7c51ecd01f73.genome.inp'
 
         try:
             process(options_named, args)

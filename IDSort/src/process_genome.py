@@ -6,10 +6,13 @@ Created on 23 Apr 2015
 
 import os
 import json
-import field_generator as fg
-import cPickle as pickle
+import pickle
+
 import numpy as np
-import magnets
+
+from IDSort.src.magnets import Magnets, MagLists
+import IDSort.src.field_generator as fg
+
 
 def human_output(id_info, filename):
     
@@ -183,10 +186,10 @@ def process(options, args):
             buildlist = np.genfromtxt(filename, dtype=str)
             f2.close()
 
-            mags=magnets.Magnets()
+            mags = Magnets()
             mags.load(options.magnets_filename)
 
-            maglist = magnets.MagLists(mags)
+            maglist = MagLists(mags)
 
             heswap = 0
             veswap = 0
