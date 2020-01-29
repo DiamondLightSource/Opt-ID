@@ -39,11 +39,11 @@ import h5py
 import numpy as np
 from mpi4py import MPI
 
-import field_generator as fg
-import magnets
-import magnet_tools as mt
-from field_generator import generate_reference_magnets, generate_id_field
-from genome_tools import ID_Shim_BCell, ID_BCell
+import IDSort.src.field_generator as fg
+import IDSort.src.magnet_tools as mt
+from IDSort.src.magnets import Magnets, MagLists
+from IDSort.src.field_generator import generate_reference_magnets, generate_id_field
+from IDSort.src.genome_tools import ID_Shim_BCell, ID_BCell
 
 
 logging.basicConfig(level=0,format=' %(asctime)s.%(msecs)03d %(threadName)-16s %(levelname)-6s %(message)s', datefmt='%H:%M:%S')
@@ -149,13 +149,13 @@ def process(options, args):
     barrier(options.singlethreaded)
 
     logging.debug("Loading magnets")
-    mags = magnets.Magnets()
+    mags = Magnets()
     mags.load(options.magnets_filename)
 
     logging.debug('mpi runenr calling fg.generate_reference_magnets()')
     ref_mags = fg.generate_reference_magnets(mags)
     logging.debug('mpi runenr calling MagLists()')
-    ref_maglist = magnets.MagLists(ref_mags)
+    ref_maglist = MagLists(ref_mags)
     logging.debug('after ref_maglist')
     ref_total_id_field = fg.generate_id_field(info, ref_maglist, ref_mags, lookup)
     pherr, ref_trajectories = mt.calculate_phase_error(info, ref_total_id_field)

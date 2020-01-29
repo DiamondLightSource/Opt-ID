@@ -148,7 +148,7 @@ class ID_Shim_BCell(BCell):
         self.genome = []
         for i in range(number_of_mutations):
             # pick a list at random
-            key = random.choice(available.keys())
+            key = random.choice(list(available.keys()))
             # pick a flip or swap
             p1 = random.choice(available[key])
             p2 = random.choice(available[key])
@@ -172,7 +172,7 @@ class ID_Shim_BCell(BCell):
         for i in range(number_of_mutations):
             position = random.randint(0,len(mutant)-1)
             # pick a list at random
-            key = random.choice(available.keys())
+            key = random.choice(list(available.keys()))
             # pick a flip or swap
             p1 = random.choice(available[key])
             p2 = random.choice(available[key])
