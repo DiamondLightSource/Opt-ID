@@ -22,10 +22,10 @@ class LookupGeneratorTest(unittest.TestCase):
         with h5py.File(test_h5_filepath, 'r') as old_h5_file, \
                 NamedTemporaryFile() as mock_h5_file:
             process(options, [test_json_filepath, mock_h5_file])
-            new_h5_file = h5py.File(mock_h5_file.name)
+            new_h5_file = h5py.File(mock_h5_file.name, 'r')
             for dataset in new_h5_file:
-                new_data = new_h5_file.get(dataset).value
-                old_data = old_h5_file.get(dataset).value
+                new_data = new_h5_file.get(dataset)[()]
+                old_data = old_h5_file.get(dataset)[()]
                 assert np.allclose(new_data, old_data)
 
     def test_process_shim(self):
@@ -42,8 +42,8 @@ class LookupGeneratorTest(unittest.TestCase):
         with h5py.File(test_h5_shim_filepath, 'r') as old_h5_shim_file, \
                 NamedTemporaryFile() as mock_h5_shim_file:
             process(options_named, [test_json_shim_filepath, mock_h5_shim_file.name])
-            new_h5_shim_file = h5py.File(mock_h5_shim_file.name)
+            new_h5_shim_file = h5py.File(mock_h5_shim_file.name, 'r')
             for dataset in new_h5_shim_file:
-                new_data = new_h5_shim_file.get(dataset).value
-                old_data = old_h5_shim_file.get(dataset).value
+                new_data = new_h5_shim_file.get(dataset)[()]
+                old_data = old_h5_shim_file.get(dataset)[()]
                 assert np.allclose(new_data, old_data)

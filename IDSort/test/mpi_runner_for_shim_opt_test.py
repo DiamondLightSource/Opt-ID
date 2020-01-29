@@ -134,8 +134,8 @@ class MpiRunnerForShimOptTest(unittest.TestCase):
                 with h5py.File(test_h5_filepath, 'r') as test_h5_file, \
                         h5py.File(os.path.join(new_genome_dir, h5_file_to_compare_with), 'r') as new_h5_file:
                     for dataset in new_h5_file:
-                        new_data = new_h5_file.get(dataset).value
-                        old_data = test_h5_file.get(dataset).value
+                        new_data = new_h5_file.get(dataset)[()]
+                        old_data = test_h5_file.get(dataset)[()]
                         assert np.allclose(new_data, old_data)
         finally:
             shutil.rmtree(new_genome_dir)

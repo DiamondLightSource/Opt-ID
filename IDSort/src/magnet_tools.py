@@ -184,7 +184,7 @@ def calculate_phase_error(info, b_array):
 #    logging.debug("A %s"%(str(len(v1))))
 #    logging.debug("v2 %s"%(str(len(v2))))
     
-    m,intercept=np.linalg.lstsq(A, v2)[0]
+    m,intercept=np.linalg.lstsq(A, v2, rcond=None)[0]
     Omega0=2*np.pi/(m*n_stp)
     
     v2 = ph[v1[0] : v1[-1] + n_stp//4 : n_stp//4]
@@ -193,7 +193,7 @@ def calculate_phase_error(info, b_array):
     #'fit function'
     A=np.vstack([v1,np.ones(len(v1))]).T
     
-    m,intercept=np.linalg.lstsq(A, v2)[0]
+    m,intercept=np.linalg.lstsq(A, v2, rcond=None)[0]
 
     phfit=intercept+m*v1
     
@@ -272,7 +272,7 @@ def calculate_phase_error2(info, b_array):
     #'linear fit'
     A=np.vstack([v1,np.ones(len(v1))]).T
     
-    m,intercept=np.linalg.lstsq(A, v2)[0]
+    m,intercept=np.linalg.lstsq(A, v2, rcond=None)[0]
     Omega0=2*np.pi/(m*n_stp)
     
     v2=ph[v1[0]:v1[-1]+n_stp/4:n_stp/4]
@@ -281,7 +281,7 @@ def calculate_phase_error2(info, b_array):
     #'fit function'
     A=np.vstack([v1,np.ones(len(v1))]).T
     
-    m,intercept=np.linalg.lstsq(A, v2)[0]
+    m,intercept=np.linalg.lstsq(A, v2, rcond=None)[0]
 
     phfit=intercept+m*v1
     
@@ -353,7 +353,7 @@ def calculate_phase_error3(info, b_array):
     #'linear fit'
     A=np.vstack([v1,np.ones(len(v1))]).T
     
-    m,intercept=np.linalg.lstsq(A, v2)[0]
+    m,intercept=np.linalg.lstsq(A, v2, rcond=None)[0]
     Omega0=2*np.pi/(m*n_stp)
     
     v2=ph[v1[0]:v1[-1]+n_stp/2:n_stp/2]
@@ -362,7 +362,7 @@ def calculate_phase_error3(info, b_array):
     #'fit function'
     A=np.vstack([v1,np.ones(len(v1))]).T
     
-    m,intercept=np.linalg.lstsq(A, v2)[0]
+    m,intercept=np.linalg.lstsq(A, v2, rcond=None)[0]
 
     phfit=intercept+m*v1
     

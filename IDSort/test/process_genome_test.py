@@ -46,8 +46,8 @@ class ProcessGenomeTest(unittest.TestCase):
 
                 for dataset in new_h5_file:
                     if 'perfect' not in dataset:
-                        new_data = new_h5_file.get(dataset).value
-                        old_data = old_h5_file.get(dataset).value
+                        new_data = new_h5_file.get(dataset)[()]
+                        old_data = old_h5_file.get(dataset)[()]
                         assert np.allclose(new_data, old_data)
 
                 assert new_inp_file.read() == old_inp_file.read()
