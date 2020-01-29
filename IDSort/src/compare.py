@@ -5,7 +5,7 @@ Takes 3 arguments:
 3. The path and name of the file to output eg. $IDDATA/shim1.txt
 '''
 
-from genome_tools import ID_BCell
+from IDSort.src.genome_tools import ID_BCell
 
 
 def process(options, args):
