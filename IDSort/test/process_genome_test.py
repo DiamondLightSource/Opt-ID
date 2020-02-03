@@ -1,6 +1,8 @@
 import unittest
 import os
+import shutil
 from collections import namedtuple
+from tempfile import mkdtemp
 
 import h5py
 import numpy as np
@@ -15,6 +17,7 @@ class ProcessGenomeTest(unittest.TestCase):
         test_json_filepath = 'IDSort/data/test_data/sort/test_cpmu.json'
         test_mag_filepath = 'IDSort/data/test_data/sort/test_cpmu.mag'
         test_h5_filepath = 'IDSort/data/test_data/sort/test_cpmu.h5'
+        output_dir = mkdtemp()
 
         options = {
             'analysis': True,
@@ -22,7 +25,8 @@ class ProcessGenomeTest(unittest.TestCase):
             'id_filename': test_json_filepath,
             'magnets_filename': test_mag_filepath,
             'id_template': test_h5_filepath,
-            'create_genome': False
+            'create_genome': False,
+            'output_dir': output_dir
         }
 
         options_named = namedtuple("options", options.keys())(*options.values())
@@ -32,9 +36,9 @@ class ProcessGenomeTest(unittest.TestCase):
         new_genome_h5_filename = os.path.split(old_genome_filepath)[1] + '.h5'
         new_genome_inp_filename = os.path.split(old_genome_filepath)[1] + '.inp'
 
-        new_genome_h5_filepath = os.path.join(os.getcwd(), new_genome_h5_filename)
+        new_genome_h5_filepath = os.path.join(output_dir, new_genome_h5_filename)
         old_genome_h5_filepath = 'IDSort/data/test_data/sort/process_genome_analyse_output/1.12875826e-08_000_7c51ecd01f73.genome.h5'
-        new_genome_inp_filepath = os.path.join(os.getcwd(), new_genome_inp_filename)
+        new_genome_inp_filepath = os.path.join(output_dir, new_genome_inp_filename)
         old_genome_inp_filepath = 'IDSort/data/test_data/sort/process_genome_analyse_output/1.12875826e-08_000_7c51ecd01f73.genome.inp'
 
         try:
@@ -53,8 +57,7 @@ class ProcessGenomeTest(unittest.TestCase):
                 assert new_inp_file.read() == old_inp_file.read()
 
         finally:
-            os.remove(new_genome_h5_filepath)
-            os.remove(new_genome_inp_filepath)
+            shutil.rmtree(output_dir)
 
     def test_process_create_genome(self):
 
@@ -62,6 +65,7 @@ class ProcessGenomeTest(unittest.TestCase):
         test_mag_filepath = 'IDSort/data/test_data/sort/test_cpmu.mag'
         test_h5_filepath = 'IDSort/data/test_data/sort/test_cpmu.h5'
         test_inp_filepath = 'IDSort/data/test_data/sort/process_genome_analyse_output/1.12875826e-08_000_7c51ecd01f73.genome.inp'
+        output_dir = mkdtemp()
 
         options = {
             'create_genome': True,
@@ -69,7 +73,8 @@ class ProcessGenomeTest(unittest.TestCase):
             'analysis': False,
             'id_filename': test_json_filepath,
             'magnets_filename': test_mag_filepath,
-            'id_template': test_h5_filepath
+            'id_template': test_h5_filepath,
+            'output_dir': output_dir
         }
 
         options_named = namedtuple("options", options.keys())(*options.values())
@@ -77,7 +82,7 @@ class ProcessGenomeTest(unittest.TestCase):
 
         old_genome_filepath = 'IDSort/data/test_data/sort/1.12875826e-08_000_7c51ecd01f73.genome.inp.genome'
         new_genome_filename = os.path.split(test_inp_filepath)[1] + '.genome'
-        new_genome_filepath = os.path.join(os.getcwd(), new_genome_filename)
+        new_genome_filepath = os.path.join(output_dir, new_genome_filename)
 
         try:
             process(options_named, args)
@@ -85,4 +90,4 @@ class ProcessGenomeTest(unittest.TestCase):
                     open(new_genome_filepath, 'rb') as new_genome_file:
                 assert new_genome_file.read() == old_genome_file.read()
         finally:
-            os.remove(new_genome_filepath)
+            shutil.rmtree(output_dir)

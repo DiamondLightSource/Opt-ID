@@ -14,15 +14,16 @@ from IDSort.src.magnets import Magnets, MagLists
 import IDSort.src.field_generator as fg
 
 
-def human_output(id_info, filename):
+def human_output(id_info, filepath, output_dir):
     
-    maglists = pickle.load( open( filename, "rb" ) )
+    maglists = pickle.load(open(filepath, "rb"))
     
     f2 = open(id_info, 'r')
     info = json.load(f2)
     f2.close()
     
-    readable_outfile = (os.path.split(filename)[1]+'.inp')
+    readable_filename = os.path.split(filepath)[1]+'.inp'
+    readable_outfile = (os.path.join(output_dir, readable_filename))
     
     f3 = open(readable_outfile,'w')
     
@@ -179,11 +180,11 @@ def human_output(id_info, filename):
 
 def process(options, args):
     if options.create_genome:
-        for filename in args[0::]:
-            print("Turning file %s from Human Readable to Genome" % (filename))
+        for filepath in args[0::]:
+            print("Turning file %s from Human Readable to Genome" % (filepath))
 
-            f2 = open(filename, 'r')
-            buildlist = np.genfromtxt(filename, dtype=str)
+            f2 = open(filepath, 'r')
+            buildlist = np.genfromtxt(filepath, dtype=str)
             f2.close()
 
             mags = Magnets()
@@ -226,26 +227,26 @@ def process(options, args):
 
                     vvswap+=1
 
-            outfile = (os.path.split(filename)[1]+'.h5')
-            #fg.output_fields(outfile, options.id_filename, options.id_template, options.magnets_filename, maglist)
-            fp = open(os.path.split(filename)[1]+'.genome','wb')
+            genome_filename = os.path.split(filepath)[1]+'.genome'
+            fp = open(os.path.join(options.output_dir, genome_filename),'wb')
             pickle.dump(maglist, fp)
             fp.close()
 
     if options.readable:
 
-        for filename in args[0::]:
-            print("Making file %s human readable." % (filename))
+        for filepath in args[0::]:
+            print("Making file %s human readable." % (filepath))
 
-            human_output(options.id_filename, filename)
+            human_output(options.id_filename, filepath, options.output_dir)
 
     if options.analysis:
-        for filename in args[0::]:  
-            print("Processing file %s" % (filename))
+        for filepath in args[0::]:
+            print("Processing file %s" % (filepath))
             # load the genome
-            maglists = pickle.load( open( filename, "rb" ) )
+            maglists = pickle.load(open(filepath, "rb"))
 
-            outfile = (os.path.split(filename)[1]+'.h5')
+            analysis_filename = os.path.split(filepath)[1]+'.h5'
+            outfile = (os.path.join(options.output_dir, analysis_filename))
             fg.output_fields(outfile, options.id_filename, options.id_template, options.magnets_filename, maglists)
 
 
@@ -259,6 +260,7 @@ if __name__ == '__main__':
     parser.add_option("-i", "--info", dest="id_filename", help="Set the path to the id data", default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015test.json', type="string")
     parser.add_option("-m", "--magnets", dest="magnets_filename", help="Set the path to the magnet description file", default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/magnets.mag', type="string")
     parser.add_option("-t", "--template", dest="id_template", help="Set the path to the magnet description file", default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015test.h5', type="string")
+    parser.add_option("-o", "--output-dir", dest="output_dir", help="Set the path of the directory that the output files are written to")
 
     (options, args) = parser.parse_args()
     process(options, args)
