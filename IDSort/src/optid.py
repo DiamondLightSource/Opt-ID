@@ -7,14 +7,7 @@ from IDSort.src import id_setup, magnets, lookup_generator, mpi_runner, \
         mpi_runner_for_shim_opt, process_genome, compare
 
 
-def extract_params(config, data_dir):
-    genome_dir = 'genomes/'
-    genome_dirpath = os.path.join(data_dir, genome_dir)
-    shimmed_genome_dir = 'shimmed_genomes/'
-    shimmed_genome_dirpath = os.path.join(data_dir, shimmed_genome_dir)
-    process_genome_output_dir = 'process_genome_output/'
-    processed_data_dir = os.path.join(data_dir, process_genome_output_dir)
-
+def run_job(config, data_dir):
     json_filename = config['id_setup'].pop('output_filename', None)
     json_filepath = os.path.join(data_dir, json_filename)
     run_id_setup(config['id_setup'], [json_filepath])
@@ -30,29 +23,44 @@ def extract_params(config, data_dir):
     config['lookup_generator']['periods'] = config['id_setup']['periods']
     run_lookup_generator(config['lookup_generator'], [json_filepath, h5_filepath])
 
-    # shimming typically involves creating a genome from an inp before the mpi
-    # runner generates the genome
-    if config['process_genome']['create_genome']:
-        run_process_genome(config['process_genome'], config['process_genome']['readable_genome_file'][0], json_filepath, mag_filepath, h5_filepath, processed_data_dir)
+    filepaths = {
+        'json': json_filepath,
+        'mag': mag_filepath,
+        'h5': h5_filepath
+    }
 
-    if 'mpi_runner' in config:
-        if config['mpi_runner']['restart']:
-            initial_population_dir = config['mpi_runner']['initial_population_dir']
-            run_mpi_runner(config['mpi_runner'], [initial_population_dir], json_filepath, mag_filepath, h5_filepath)
-        else:
-            run_mpi_runner(config['mpi_runner'], [genome_dirpath], json_filepath, mag_filepath, h5_filepath)
+    return filepaths
 
-    if 'mpi_runner_for_shim_opt' in config:
-        genome_filename = os.path.split(config['process_genome']['readable_genome_file'][0])[1] + '.genome'
-        config['mpi_runner_for_shim_opt']['genome_filename'] = os.path.join(processed_data_dir, genome_filename)
-        run_mpi_runner_for_shim_opt(config['mpi_runner_for_shim_opt'], [shimmed_genome_dirpath], json_filepath, mag_filepath, h5_filepath)
+def run_sort_job(config, processed_data_dir, data_dir):
+    genome_dir = 'genomes/'
+    genome_dirpath = os.path.join(data_dir, genome_dir)
+
+    if config['mpi_runner']['restart']:
+        initial_population_dir = config['mpi_runner']['initial_population_dir']
+        run_mpi_runner(config['mpi_runner'], [initial_population_dir])
+    else:
+        run_mpi_runner(config['mpi_runner'], [genome_dirpath])
 
     # sorting typically involves creating genome.h5 or genome.inp files from a
     # genome after the mpi runner generates the genomes
     if config['process_genome']['analysis'] or config['process_genome']['readable']:
         best_genome_filename = find_best_genome(genome_dirpath)
         genome_path = os.path.join(genome_dirpath, best_genome_filename)
-        run_process_genome(config['process_genome'], genome_path, json_filepath, mag_filepath, h5_filepath, processed_data_dir)
+        run_process_genome(config['process_genome'], genome_path, processed_data_dir)
+
+def run_shim_job(config, processed_data_dir, data_dir):
+    shimmed_genome_dir = 'shimmed_genomes/'
+    shimmed_genome_dirpath = os.path.join(data_dir, shimmed_genome_dir)
+
+    # shimming typically involves creating a genome from an inp before the mpi
+    # runner generates the genome
+    if config['process_genome']['create_genome']:
+        run_process_genome(config['process_genome'], config['process_genome']['readable_genome_file'][0], processed_data_dir)
+
+    if 'mpi_runner_for_shim_opt' in config:
+        genome_filename = os.path.split(config['process_genome']['readable_genome_file'][0])[1] + '.genome'
+        config['mpi_runner_for_shim_opt']['genome_filename'] = os.path.join(processed_data_dir, genome_filename)
+        run_mpi_runner_for_shim_opt(config['mpi_runner_for_shim_opt'], [shimmed_genome_dirpath])
 
     if 'compare' in config:
         best_shimmed_genome_filename = find_best_genome(shimmed_genome_dirpath)
@@ -75,23 +83,15 @@ def run_lookup_generator(options, args):
     options_named = namedtuple("options", options.keys())(*options.values())
     lookup_generator.process(options_named, args)
 
-def run_mpi_runner(params, args, json_filepath, mag_filepath, h5_filepath):
-    options = params
-    options['id_filename'] = json_filepath
-    options['magnets_filename'] = mag_filepath
-    options['lookup_filename'] = h5_filepath
+def run_mpi_runner(options, args):
     options_named = namedtuple("options", options.keys())(*options.values())
 
-    if not params['restart'] and not os.path.exists(args[0]):
+    if not options['restart'] and not os.path.exists(args[0]):
         os.makedirs(args[0])
 
     mpi_runner.process(options_named, args)
 
-def run_mpi_runner_for_shim_opt(params, args, json_filepath, mag_filepath, h5_filepath):
-    options = params
-    options['id_filename'] = json_filepath
-    options['magnets_filename'] = mag_filepath
-    options['lookup_filename'] = h5_filepath
+def run_mpi_runner_for_shim_opt(options, args):
     options_named = namedtuple("options", options.keys())(*options.values())
 
     if not os.path.exists(args[0]):
@@ -99,16 +99,11 @@ def run_mpi_runner_for_shim_opt(params, args, json_filepath, mag_filepath, h5_fi
 
     mpi_runner_for_shim_opt.process(options_named, args)
 
-def run_process_genome(params, input_file, json_filepath, mag_filepath, h5_filepath, output_dir):
-    options = params
-    options['id_filename'] = json_filepath
-    options['magnets_filename'] = mag_filepath
-    options['id_template'] = h5_filepath
-
+def run_process_genome(options, input_file, output_dir):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    options['output_dir'] = output_dir
 
+    options['output_dir'] = output_dir
     options_named = namedtuple("options", options.keys())(*options.values())
     args = [input_file]
     process_genome.process(options_named, args)
@@ -141,9 +136,34 @@ if __name__ == "__main__":
     from optparse import OptionParser
     usage = "%prog [options] ConfigFile OutputDataDir"
     parser = OptionParser(usage=usage)
+    parser.add_option("--sort", dest="sort", help="Run a sort job", action="store_true", default=False)
+    parser.add_option("--shim", dest="shim", help="Run a shim job", action="store_true", default=False)
     (options, args) = parser.parse_args()
+
+    if options.sort and options.shim:
+        raise ValueError('A sort and shim job cannot be done simultaneously, please choose only one')
 
     yaml = YAML(typ='safe')
     with open(args[0], 'r') as config_file:
         config = yaml.load(config_file)
-        extract_params(config, args[1])
+
+    process_genome_output_dir = 'process_genome_output/'
+    processed_data_dir = os.path.join(args[1], process_genome_output_dir)
+    common_file_types = run_job(config, args[1])
+
+    # both a sort and shim's use of process_genome.py need the json, mag, h5
+    # filepaths
+    config['process_genome']['id_filename'] = common_file_types['json']
+    config['process_genome']['magnets_filename'] = common_file_types['mag']
+    config['process_genome']['id_template'] = common_file_types['h5']
+
+    if options.sort:
+        config['mpi_runner']['id_filename'] = common_file_types['json']
+        config['mpi_runner']['magnets_filename'] = common_file_types['mag']
+        config['mpi_runner']['lookup_filename'] = common_file_types['h5']
+        run_sort_job(config, processed_data_dir, args[1])
+    elif options.shim:
+        config['mpi_runner_for_shim_opt']['id_filename'] = common_file_types['json']
+        config['mpi_runner_for_shim_opt']['magnets_filename'] = common_file_types['mag']
+        config['mpi_runner_for_shim_opt']['lookup_filename'] = common_file_types['h5']
+        run_shim_job(config, processed_data_dir, args[1])
