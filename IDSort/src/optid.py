@@ -2,44 +2,18 @@ import os
 from collections import namedtuple
 
 from ruamel.yaml import YAML
+from jinja2 import FileSystemLoader, Environment
 
 from IDSort.src import id_setup, magnets, lookup_generator, mpi_runner, \
         mpi_runner_for_shim_opt, process_genome, compare
 
 
-def run_job(config, data_dir):
-    json_filename = config['id_setup'].pop('output_filename', None)
-    json_filepath = os.path.join(data_dir, json_filename)
-    run_id_setup(config['id_setup'], [json_filepath])
-
-    mag_filename = config['magnets'].pop('output_filename', None)
-    mag_filepath = os.path.join(data_dir, mag_filename)
-    run_magnets(config['magnets'], [mag_filepath])
-
-    # the periods param for this should be the same as the periods param for
-    # id_setup.py, so use that same value in config['lookup_generator']
-    h5_filename = config['lookup_generator'].pop('output_filename', None)
-    h5_filepath = os.path.join(data_dir, h5_filename)
-    config['lookup_generator']['periods'] = config['id_setup']['periods']
-    run_lookup_generator(config['lookup_generator'], [json_filepath, h5_filepath])
-
-    filepaths = {
-        'json': json_filepath,
-        'mag': mag_filepath,
-        'h5': h5_filepath
-    }
-
-    return filepaths
-
-def run_sort_job(config, processed_data_dir, data_dir):
-    genome_dir = 'genomes/'
-    genome_dirpath = os.path.join(data_dir, genome_dir)
-
-    if config['mpi_runner']['restart']:
-        initial_population_dir = config['mpi_runner']['initial_population_dir']
-        run_mpi_runner(config['mpi_runner'], [initial_population_dir])
+def run_sort_job(config, genome_dirpath, processed_data_dir, restart_sort):
+    if not restart_sort:
+        config['mpi_runner']['restart'] = False
     else:
-        run_mpi_runner(config['mpi_runner'], [genome_dirpath])
+        config['mpi_runner']['restart'] = True
+    run_mpi_runner(config['mpi_runner'], [genome_dirpath])
 
     # sorting typically involves creating genome.h5 or genome.inp files from a
     # genome after the mpi runner generates the genomes
@@ -132,38 +106,82 @@ def find_best_genome(genome_dir):
     assert best_genome is not None
     return best_genome
 
+def generate_restart_sort_script(config_path, data_dir):
+    file_loader = FileSystemLoader('/home/twi18192/wc/Opt-ID/IDSort/src')
+    env = Environment(loader=file_loader)
+    template = env.get_template('restart_sort_template.sh')
+
+    python_env_module = 'python/3'
+    # can assume that the json, mag, h5 filepaths have been added to
+    # config['mpi_runner'] at this point since we'll have gone through a sort
+    # process already
+    output = template.render(
+        python_env_module=python_env_module,
+        config_path=config_path,
+        output_dir_path=data_dir
+    )
+
+    script_name = 'restart_sort.sh'
+    script_path = os.path.join(data_dir, script_name)
+
+    with open(script_path, 'w') as script:
+        script.write(output)
+
+    os.chmod(script_path, 0o775)
+
 if __name__ == "__main__":
     from optparse import OptionParser
     usage = "%prog [options] ConfigFile OutputDataDir"
     parser = OptionParser(usage=usage)
     parser.add_option("--sort", dest="sort", help="Run a sort job", action="store_true", default=False)
+    parser.add_option("--restart-sort", dest="restart_sort", help="Run a sort job with an initial population of genomes", action="store_true", default=False)
     parser.add_option("--shim", dest="shim", help="Run a shim job", action="store_true", default=False)
     (options, args) = parser.parse_args()
 
     if options.sort and options.shim:
         raise ValueError('A sort and shim job cannot be done simultaneously, please choose only one')
 
+    config_path = args[0]
+    data_dir = args[1]
+
     yaml = YAML(typ='safe')
-    with open(args[0], 'r') as config_file:
+    with open(config_path, 'r') as config_file:
         config = yaml.load(config_file)
 
     process_genome_output_dir = 'process_genome_output/'
-    processed_data_dir = os.path.join(args[1], process_genome_output_dir)
-    common_file_types = run_job(config, args[1])
+    processed_data_dir = os.path.join(data_dir, process_genome_output_dir)
+
+    json_filename = config['id_setup'].pop('output_filename', None)
+    json_filepath = os.path.join(data_dir, json_filename)
+    mag_filename = config['magnets'].pop('output_filename', None)
+    mag_filepath = os.path.join(data_dir, mag_filename)
+    # the periods param for this should be the same as the periods param for
+    # id_setup.py, so use that same value in config['lookup_generator']
+    h5_filename = config['lookup_generator'].pop('output_filename', None)
+    h5_filepath = os.path.join(data_dir, h5_filename)
+    config['lookup_generator']['periods'] = config['id_setup']['periods']
+
+    if not options.restart_sort:
+        run_id_setup(config['id_setup'], [json_filepath])
+        run_magnets(config['magnets'], [mag_filepath])
+        run_lookup_generator(config['lookup_generator'], [json_filepath, h5_filepath])
 
     # both a sort and shim's use of process_genome.py need the json, mag, h5
     # filepaths
-    config['process_genome']['id_filename'] = common_file_types['json']
-    config['process_genome']['magnets_filename'] = common_file_types['mag']
-    config['process_genome']['id_template'] = common_file_types['h5']
+    config['process_genome']['id_filename'] = json_filepath
+    config['process_genome']['magnets_filename'] = mag_filepath
+    config['process_genome']['id_template'] = h5_filepath
 
-    if options.sort:
-        config['mpi_runner']['id_filename'] = common_file_types['json']
-        config['mpi_runner']['magnets_filename'] = common_file_types['mag']
-        config['mpi_runner']['lookup_filename'] = common_file_types['h5']
-        run_sort_job(config, processed_data_dir, args[1])
+    if options.sort or options.restart_sort:
+        genome_dir = 'genomes/'
+        genome_dirpath = os.path.join(data_dir, genome_dir)
+        config['mpi_runner']['id_filename'] = json_filepath
+        config['mpi_runner']['magnets_filename'] = mag_filepath
+        config['mpi_runner']['lookup_filename'] = h5_filepath
+        run_sort_job(config, genome_dirpath, processed_data_dir, options.restart_sort)
+        generate_restart_sort_script(config_path, data_dir)
     elif options.shim:
-        config['mpi_runner_for_shim_opt']['id_filename'] = common_file_types['json']
-        config['mpi_runner_for_shim_opt']['magnets_filename'] = common_file_types['mag']
-        config['mpi_runner_for_shim_opt']['lookup_filename'] = common_file_types['h5']
+        config['mpi_runner_for_shim_opt']['id_filename'] = json_filepath
+        config['mpi_runner_for_shim_opt']['magnets_filename'] = mag_filepath
+        config['mpi_runner_for_shim_opt']['lookup_filename'] = h5_filepath
         run_shim_job(config, processed_data_dir, args[1])
