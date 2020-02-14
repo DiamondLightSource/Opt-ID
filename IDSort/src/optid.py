@@ -129,6 +129,39 @@ def generate_restart_sort_script(config_path, data_dir):
 
     os.chmod(script_path, 0o775)
 
+def generate_report_script(data_dir, processed_data_dir):
+    # generate notebook .ipynb file
+    file_loader = FileSystemLoader('/home/twi18192/wc/Opt-ID/IDSort/src')
+    env = Environment(loader=file_loader)
+    report_template = env.get_template('genome_report_template.ipynb')
+
+    report_output = report_template.render(
+        genome_h5_dirpath=processed_data_dir
+    )
+
+    notebook_name = 'genome_report.ipynb'
+    notebook_path = os.path.join(data_dir, notebook_name)
+
+    with open(notebook_path, 'w') as notebook:
+        notebook.write(report_output)
+
+    # generate shell script that runs the notebook
+    shell_script_template = env.get_template('generate_report_template.sh')
+
+    python_env_module = 'python/3'
+    shell_script_output = shell_script_template.render(
+        python_env_module=python_env_module,
+        notebook_path=notebook_path
+    )
+
+    shell_script_name = 'generate_report.sh'
+    shell_script_path = os.path.join(data_dir, shell_script_name)
+
+    with open(shell_script_path, 'w') as shell_script:
+        shell_script.write(shell_script_output)
+
+    os.chmod(shell_script_path, 0o775)
+
 if __name__ == "__main__":
     from optparse import OptionParser
     usage = "%prog [options] ConfigFile OutputDataDir"
@@ -180,6 +213,7 @@ if __name__ == "__main__":
         config['mpi_runner']['lookup_filename'] = h5_filepath
         run_sort_job(config, genome_dirpath, processed_data_dir, options.restart_sort)
         generate_restart_sort_script(config_path, data_dir)
+        generate_report_script(data_dir, processed_data_dir)
     elif options.shim:
         config['mpi_runner_for_shim_opt']['id_filename'] = json_filepath
         config['mpi_runner_for_shim_opt']['magnets_filename'] = mag_filepath
