@@ -22,10 +22,7 @@ def run_sort_job(config, genome_dirpath, processed_data_dir, restart_sort):
         genome_path = os.path.join(genome_dirpath, best_genome_filename)
         run_process_genome(config['process_genome'], genome_path, processed_data_dir)
 
-def run_shim_job(config, processed_data_dir, data_dir):
-    shimmed_genome_dir = 'shimmed_genomes/'
-    shimmed_genome_dirpath = os.path.join(data_dir, shimmed_genome_dir)
-
+def run_shim_job(config, shimmed_genome_dirpath, processed_data_dir, data_dir):
     # shimming typically involves creating a genome from an inp before the mpi
     # runner generates the genome
     if config['process_genome']['create_genome']:
@@ -129,14 +126,15 @@ def generate_restart_sort_script(config_path, data_dir):
 
     os.chmod(script_path, 0o775)
 
-def generate_report_script(data_dir, processed_data_dir):
+def generate_report_script(job_type, data_dir, genome_h5_dirpath):
     # generate notebook .ipynb file
     file_loader = FileSystemLoader('/home/twi18192/wc/Opt-ID/IDSort/src')
     env = Environment(loader=file_loader)
     report_template = env.get_template('genome_report_template.ipynb')
 
     report_output = report_template.render(
-        genome_h5_dirpath=processed_data_dir
+        genome_h5_dirpath=genome_h5_dirpath,
+        job_type=job_type
     )
 
     notebook_name = 'genome_report.ipynb'
@@ -213,9 +211,12 @@ if __name__ == "__main__":
         config['mpi_runner']['lookup_filename'] = h5_filepath
         run_sort_job(config, genome_dirpath, processed_data_dir, options.restart_sort)
         generate_restart_sort_script(config_path, data_dir)
-        generate_report_script(data_dir, processed_data_dir)
+        generate_report_script('sort', data_dir, processed_data_dir)
     elif options.shim:
+        shimmed_genome_dir = 'shimmed_genomes/'
+        shimmed_genome_dirpath = os.path.join(data_dir, shimmed_genome_dir)
         config['mpi_runner_for_shim_opt']['id_filename'] = json_filepath
         config['mpi_runner_for_shim_opt']['magnets_filename'] = mag_filepath
         config['mpi_runner_for_shim_opt']['lookup_filename'] = h5_filepath
-        run_shim_job(config, processed_data_dir, args[1])
+        run_shim_job(config, shimmed_genome_dirpath, processed_data_dir, args[1])
+        generate_report_script('shim', data_dir, shimmed_genome_dirpath)
