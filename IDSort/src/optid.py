@@ -101,12 +101,56 @@ def run_mpi_runner(options, args):
         subprocess.call(qsub_args + mpijob_args)
 
 def run_mpi_runner_for_shim_opt(options, args):
+    if 'singlethreaded' not in options:
+        options['singlethreaded'] = False
+
     options_named = namedtuple("options", options.keys())(*options.values())
 
     if not os.path.exists(args[0]):
         os.makedirs(args[0])
 
-    mpi_runner_for_shim_opt.process(options_named, args)
+    if options_named.singlethreaded:
+        mpi_runner_for_shim_opt.process(options_named, args)
+    else:
+        env_var_sublist = ['-v', options_named.environment_variables] if 'environment_vars' in options else []
+        qsub_args = [
+            'qsub',
+            '-sync',
+            'y',
+            '-pe',
+            'openmpi',
+            str(options_named.number_of_threads),
+            '-q',
+            options_named.queue,
+            '-l',
+            'release=' + options_named.node_os
+        ] + env_var_sublist + ['/home/twi18192/wc/Opt-ID/IDSort/src/mpi4shimOpt.sh']
+
+        mpijob_args = [
+            '--iterations',
+            str(options_named.iterations),
+            '-m',
+            str(options_named.number_of_mutations),
+            '-c',
+            str(options_named.number_of_changes),
+            '-l',
+            options_named.lookup_filename,
+            '-i',
+            options_named.id_filename,
+            '--magnets',
+            options_named.magnets_filename,
+            '-g',
+            options_named.genome_filename,
+            '-b',
+            options_named.bfield_filename,
+            '-s',
+            str(options_named.setup),
+            '--param_c',
+            str(options_named.c),
+            args[0]
+        ]
+
+        subprocess.call(qsub_args + mpijob_args)
 
 def run_process_genome(options, input_file, output_dir):
     if not os.path.exists(output_dir):
