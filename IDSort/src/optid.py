@@ -1,4 +1,5 @@
 import os
+import subprocess
 from collections import namedtuple
 
 from ruamel.yaml import YAML
@@ -55,12 +56,49 @@ def run_lookup_generator(options, args):
     lookup_generator.process(options_named, args)
 
 def run_mpi_runner(options, args):
+    if 'singlethreaded' not in options:
+        options['singlethreaded'] = False
+
     options_named = namedtuple("options", options.keys())(*options.values())
 
     if not options['restart'] and not os.path.exists(args[0]):
         os.makedirs(args[0])
 
-    mpi_runner.process(options_named, args)
+    if options_named.singlethreaded:
+        mpi_runner.process(options_named, args)
+    else:
+        env_var_sublist = ['-v', options_named.environment_variables] if 'environment_vars' in options else []
+        qsub_args = [
+            'qsub',
+            '-sync',
+            'y',
+            '-pe',
+            'openmpi',
+            str(options_named.number_of_threads),
+            '-q',
+            options_named.queue,
+            '-l',
+            'release=' + options_named.node_os
+        ] + env_var_sublist + ['/home/twi18192/wc/Opt-ID/IDSort/src/mpijob.sh']
+
+        mpijob_restart_sublist = ['--restart'] if options_named.restart else []
+        mpijob_args = mpijob_restart_sublist + [
+            '--iterations',
+            str(options_named.iterations),
+            '-l',
+            options_named.lookup_filename,
+            '-i',
+            options_named.id_filename,
+            '-m',
+            options_named.magnets_filename,
+            '-s',
+            str(options_named.setup),
+            '--param_c',
+            str(options_named.c),
+            args[0]
+        ]
+
+        subprocess.call(qsub_args + mpijob_args)
 
 def run_mpi_runner_for_shim_opt(options, args):
     options_named = namedtuple("options", options.keys())(*options.values())
