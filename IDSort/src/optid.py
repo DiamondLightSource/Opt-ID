@@ -9,12 +9,12 @@ from IDSort.src import id_setup, magnets, lookup_generator, mpi_runner, \
         mpi_runner_for_shim_opt, process_genome, compare
 
 
-def run_sort_job(config, genome_dirpath, processed_data_dir, restart_sort):
+def run_sort_job(config, genome_dirpath, processed_data_dir, data_dir, restart_sort):
     if not restart_sort:
         config['mpi_runner']['restart'] = False
     else:
         config['mpi_runner']['restart'] = True
-    run_mpi_runner(config['mpi_runner'], [genome_dirpath])
+    run_mpi_runner(config['mpi_runner'], [genome_dirpath], data_dir)
 
     # sorting typically involves creating genome.h5 or genome.inp files from a
     # genome after the mpi runner generates the genomes
@@ -32,7 +32,7 @@ def run_shim_job(config, shimmed_genome_dirpath, processed_data_dir, data_dir):
     if 'mpi_runner_for_shim_opt' in config:
         genome_filename = os.path.split(config['process_genome']['readable_genome_file'][0])[1] + '.genome'
         config['mpi_runner_for_shim_opt']['genome_filename'] = os.path.join(processed_data_dir, genome_filename)
-        run_mpi_runner_for_shim_opt(config['mpi_runner_for_shim_opt'], [shimmed_genome_dirpath])
+        run_mpi_runner_for_shim_opt(config['mpi_runner_for_shim_opt'], [shimmed_genome_dirpath], data_dir)
 
     if 'compare' in config:
         best_shimmed_genome_filename = find_best_genome(shimmed_genome_dirpath)
@@ -55,7 +55,7 @@ def run_lookup_generator(options, args):
     options_named = namedtuple("options", options.keys())(*options.values())
     lookup_generator.process(options_named, args)
 
-def run_mpi_runner(options, args):
+def run_mpi_runner(options, args, data_dir):
     if 'singlethreaded' not in options:
         options['singlethreaded'] = False
 
@@ -67,6 +67,8 @@ def run_mpi_runner(options, args):
     if options_named.singlethreaded:
         mpi_runner.process(options_named, args)
     else:
+        logfile_dir = 'logfiles/'
+        logfile_dirpath = os.path.join(data_dir, logfile_dir)
         env_var_sublist = ['-v', options_named.environment_variables] if 'environment_vars' in options else []
         qsub_args = [
             'qsub',
@@ -78,7 +80,11 @@ def run_mpi_runner(options, args):
             '-q',
             options_named.queue,
             '-l',
-            'release=' + options_named.node_os
+            'release=' + options_named.node_os,
+            '-j',
+            'y',
+            '-o',
+            os.path.join(logfile_dirpath, '$JOB_ID.log')
         ] + env_var_sublist + ['/home/twi18192/wc/Opt-ID/IDSort/src/mpijob.sh']
 
         mpijob_restart_sublist = ['--restart'] if options_named.restart else []
@@ -100,7 +106,7 @@ def run_mpi_runner(options, args):
 
         subprocess.call(qsub_args + mpijob_args)
 
-def run_mpi_runner_for_shim_opt(options, args):
+def run_mpi_runner_for_shim_opt(options, args, data_dir):
     if 'singlethreaded' not in options:
         options['singlethreaded'] = False
 
@@ -112,6 +118,8 @@ def run_mpi_runner_for_shim_opt(options, args):
     if options_named.singlethreaded:
         mpi_runner_for_shim_opt.process(options_named, args)
     else:
+        logfile_dir = 'logfiles/'
+        logfile_dirpath = os.path.join(data_dir, logfile_dir)
         env_var_sublist = ['-v', options_named.environment_variables] if 'environment_vars' in options else []
         qsub_args = [
             'qsub',
@@ -123,7 +131,11 @@ def run_mpi_runner_for_shim_opt(options, args):
             '-q',
             options_named.queue,
             '-l',
-            'release=' + options_named.node_os
+            'release=' + options_named.node_os,
+            '-j',
+            'y',
+            '-o',
+            os.path.join(logfile_dirpath, '$JOB_ID.log')
         ] + env_var_sublist + ['/home/twi18192/wc/Opt-ID/IDSort/src/mpi4shimOpt.sh']
 
         mpijob_args = [
@@ -291,7 +303,7 @@ if __name__ == "__main__":
         config['mpi_runner']['id_filename'] = json_filepath
         config['mpi_runner']['magnets_filename'] = mag_filepath
         config['mpi_runner']['lookup_filename'] = h5_filepath
-        run_sort_job(config, genome_dirpath, processed_data_dir, options.restart_sort)
+        run_sort_job(config, genome_dirpath, processed_data_dir, data_dir, options.restart_sort)
         generate_restart_sort_script(config_path, data_dir)
         generate_report_script('sort', data_dir, processed_data_dir)
     elif options.shim:
@@ -300,5 +312,5 @@ if __name__ == "__main__":
         config['mpi_runner_for_shim_opt']['id_filename'] = json_filepath
         config['mpi_runner_for_shim_opt']['magnets_filename'] = mag_filepath
         config['mpi_runner_for_shim_opt']['lookup_filename'] = h5_filepath
-        run_shim_job(config, shimmed_genome_dirpath, processed_data_dir, args[1])
+        run_shim_job(config, shimmed_genome_dirpath, processed_data_dir, data_dir)
         generate_report_script('shim', data_dir, shimmed_genome_dirpath)
