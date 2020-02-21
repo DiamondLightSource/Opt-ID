@@ -16,13 +16,6 @@ def run_sort_job(config, genome_dirpath, processed_data_dir, data_dir, restart_s
         config['mpi_runner']['restart'] = True
     run_mpi_runner(config['mpi_runner'], [genome_dirpath], data_dir)
 
-    # sorting typically involves creating genome.h5 or genome.inp files from a
-    # genome after the mpi runner generates the genomes
-    if config['process_genome']['analysis'] or config['process_genome']['readable']:
-        best_genome_filename = find_best_genome(genome_dirpath)
-        genome_path = os.path.join(genome_dirpath, best_genome_filename)
-        run_process_genome(config['process_genome'], genome_path, processed_data_dir)
-
 def run_shim_job(config, shimmed_genome_dirpath, processed_data_dir, data_dir):
     # shimming typically involves creating a genome from an inp before the mpi
     # runner generates the genome
@@ -220,30 +213,20 @@ def generate_restart_sort_script(config_path, data_dir):
 
     os.chmod(script_path, 0o775)
 
-def generate_report_script(job_type, data_dir, genome_h5_dirpath):
-    # generate notebook .ipynb file
+def generate_report_script(job_type, config_path, data_dir, genome_h5_dirpath):
     file_loader = FileSystemLoader('/home/twi18192/wc/Opt-ID/IDSort/src')
     env = Environment(loader=file_loader)
-    report_template = env.get_template('genome_report_template.ipynb')
-
-    report_output = report_template.render(
-        genome_h5_dirpath=genome_h5_dirpath,
-        job_type=job_type
-    )
+    shell_script_template = env.get_template('generate_report_template.sh')
 
     notebook_name = 'genome_report.ipynb'
     notebook_path = os.path.join(data_dir, notebook_name)
 
-    with open(notebook_path, 'w') as notebook:
-        notebook.write(report_output)
-
-    # generate shell script that runs the notebook
-    shell_script_template = env.get_template('generate_report_template.sh')
-
     python_env_module = 'python/3'
     shell_script_output = shell_script_template.render(
         python_env_module=python_env_module,
-        notebook_path=notebook_path
+        notebook_path=notebook_path,
+        yaml_config=config_path,
+        data_dir=data_dir
     )
 
     shell_script_name = 'generate_report.sh'
@@ -254,6 +237,45 @@ def generate_report_script(job_type, data_dir, genome_h5_dirpath):
 
     os.chmod(shell_script_path, 0o775)
 
+def generate_report_notebook(config, job_type, data_dir, processed_data_dir, genome_dirpath, genome_filenames):
+    file_loader = FileSystemLoader('/home/twi18192/wc/Opt-ID/IDSort/src')
+    env = Environment(loader=file_loader)
+    report_template = env.get_template('genome_report_template.ipynb')
+
+    # create list of genome filepaths instead of just genome filenames
+    genome_filepaths = [os.path.join(genome_dirpath, filename) for filename in genome_filenames]
+
+    if job_type == 'sort':
+        # convert given genomes to h5 files
+        for filepath in genome_filepaths:
+            run_process_genome(config['process_genome'], filepath, processed_data_dir)
+
+        # get genome.h5 filepaths
+        genome_h5_filepaths = [os.path.join(processed_data_dir, filename + '.h5') for filename in genome_filenames]
+    elif job_type == 'shim':
+        # get h5 files associated to the genome via the UID
+        genome_h5_filepaths = []
+        h5_files = [filename for filename in os.listdir(genome_dirpath) if '.h5' in filename]
+        all_genome_uids = [filename.split('_')[2].split('.')[0] for filename in genome_filenames]
+        # only genome files with a leading "A" in their UID potentially have an
+        # associated h5 file
+        relevant_genome_uids = [uid for uid in all_genome_uids if len(uid) == 13]
+        for h5_file in h5_files:
+            for uid in relevant_genome_uids:
+                if uid in h5_file:
+                    genome_h5_filepaths.append(os.path.join(genome_dirpath, h5_file))
+
+    report_output = report_template.render(
+        job_type=job_type,
+        genome_h5_filepaths=genome_h5_filepaths
+    )
+
+    notebook_name = 'genome_report.ipynb'
+    notebook_path = os.path.join(data_dir, notebook_name)
+
+    with open(notebook_path, 'w') as notebook:
+        notebook.write(report_output)
+
 if __name__ == "__main__":
     from optparse import OptionParser
     usage = "%prog [options] ConfigFile OutputDataDir"
@@ -261,6 +283,7 @@ if __name__ == "__main__":
     parser.add_option("--sort", dest="sort", help="Run a sort job", action="store_true", default=False)
     parser.add_option("--restart-sort", dest="restart_sort", help="Run a sort job with an initial population of genomes", action="store_true", default=False)
     parser.add_option("--shim", dest="shim", help="Run a shim job", action="store_true", default=False)
+    parser.add_option("--generate-report", dest="generate_report", help="Generate a PDF with some data visualisation of desired genomes", action="store_true", default=False)
     (options, args) = parser.parse_args()
 
     if options.sort and options.shim:
@@ -286,7 +309,7 @@ if __name__ == "__main__":
     h5_filepath = os.path.join(data_dir, h5_filename)
     config['lookup_generator']['periods'] = config['id_setup']['periods']
 
-    if not options.restart_sort:
+    if not options.restart_sort and not options.generate_report:
         run_id_setup(config['id_setup'], [json_filepath])
         run_magnets(config['magnets'], [mag_filepath])
         run_lookup_generator(config['lookup_generator'], [json_filepath, h5_filepath])
@@ -305,7 +328,7 @@ if __name__ == "__main__":
         config['mpi_runner']['lookup_filename'] = h5_filepath
         run_sort_job(config, genome_dirpath, processed_data_dir, data_dir, options.restart_sort)
         generate_restart_sort_script(config_path, data_dir)
-        generate_report_script('sort', data_dir, processed_data_dir)
+        generate_report_script('sort', config_path, data_dir, processed_data_dir)
     elif options.shim:
         shimmed_genome_dir = 'shimmed_genomes/'
         shimmed_genome_dirpath = os.path.join(data_dir, shimmed_genome_dir)
@@ -313,4 +336,17 @@ if __name__ == "__main__":
         config['mpi_runner_for_shim_opt']['magnets_filename'] = mag_filepath
         config['mpi_runner_for_shim_opt']['lookup_filename'] = h5_filepath
         run_shim_job(config, shimmed_genome_dirpath, processed_data_dir, data_dir)
-        generate_report_script('shim', data_dir, shimmed_genome_dirpath)
+        generate_report_script('shim', config_path, data_dir, shimmed_genome_dirpath)
+    elif options.generate_report:
+        job_type = None
+        if 'mpi_runner' in config:
+            job_type = 'sort'
+            genome_dir = 'genomes/'
+            genome_dirpath = os.path.join(data_dir, genome_dir)
+        elif 'mpi_runner_for_shim_opt' in config:
+            job_type = 'shim'
+            genome_dir = 'shimmed_genomes/'
+            genome_dirpath = os.path.join(data_dir, genome_dir)
+        assert job_type is not None
+        genome_filenames = args[2:]
+        generate_report_notebook(config, job_type, data_dir, processed_data_dir, genome_dirpath, genome_filenames)
