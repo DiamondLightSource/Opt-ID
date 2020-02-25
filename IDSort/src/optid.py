@@ -235,13 +235,13 @@ def generate_report_script(job_type, config_path, data_dir, genome_h5_dirpath):
 
     os.chmod(shell_script_path, 0o775)
 
-def generate_report_notebook(config, job_type, data_dir, processed_data_dir, genome_dirpath, genome_filenames):
+def generate_report_notebook(config, job_type, data_dir, processed_data_dir, genome_dirpath, filenames):
     file_loader = FileSystemLoader('/home/twi18192/wc/Opt-ID/IDSort/src')
     env = Environment(loader=file_loader)
     report_template = env.get_template('genome_report_template.ipynb')
 
     # create list of genome filepaths instead of just genome filenames
-    genome_filepaths = [os.path.join(genome_dirpath, filename) for filename in genome_filenames]
+    genome_filepaths = [os.path.join(genome_dirpath, filename) for filename in filenames]
 
     if job_type == 'sort':
         # convert given genomes to h5 files
@@ -249,19 +249,9 @@ def generate_report_notebook(config, job_type, data_dir, processed_data_dir, gen
             run_process_genome(config['process_genome'], filepath, processed_data_dir)
 
         # get genome.h5 filepaths
-        genome_h5_filepaths = [os.path.join(processed_data_dir, filename + '.h5') for filename in genome_filenames]
+        genome_h5_filepaths = [os.path.join(processed_data_dir, filename + '.h5') for filename in filenames]
     elif job_type == 'shim':
-        # get h5 files associated to the genome via the UID
-        genome_h5_filepaths = []
-        h5_files = [filename for filename in os.listdir(genome_dirpath) if '.h5' in filename]
-        all_genome_uids = [filename.split('_')[2].split('.')[0] for filename in genome_filenames]
-        # only genome files with a leading "A" in their UID potentially have an
-        # associated h5 file
-        relevant_genome_uids = [uid for uid in all_genome_uids if len(uid) == 13]
-        for h5_file in h5_files:
-            for uid in relevant_genome_uids:
-                if uid in h5_file:
-                    genome_h5_filepaths.append(os.path.join(genome_dirpath, h5_file))
+        genome_h5_filepaths = [os.path.join(genome_dirpath, filename) for filename in filenames]
 
     report_output = report_template.render(
         job_type=job_type,
