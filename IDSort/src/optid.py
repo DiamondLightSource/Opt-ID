@@ -9,14 +9,7 @@ from IDSort.src import id_setup, magnets, lookup_generator, mpi_runner, \
         mpi_runner_for_shim_opt, process_genome, compare
 
 
-def run_sort_job(config, genome_dirpath, processed_data_dir, data_dir, restart_sort):
-    if not restart_sort:
-        config['mpi_runner']['restart'] = False
-    else:
-        config['mpi_runner']['restart'] = True
-    run_mpi_runner(config['mpi_runner'], [genome_dirpath], data_dir)
-
-def run_shim_job(config, shimmed_genome_dirpath, processed_data_dir, data_dir):
+def run_shim_job(config, shimmed_genome_dirpath, processed_data_dir, data_dir, use_cluster):
     # shimming typically involves creating a genome from an inp before the mpi
     # runner generates the genome
     if config['process_genome']['create_genome']:
@@ -25,7 +18,7 @@ def run_shim_job(config, shimmed_genome_dirpath, processed_data_dir, data_dir):
     if 'mpi_runner_for_shim_opt' in config:
         genome_filename = os.path.split(config['process_genome']['readable_genome_file'][0])[1] + '.genome'
         config['mpi_runner_for_shim_opt']['genome_filename'] = os.path.join(processed_data_dir, genome_filename)
-        run_mpi_runner_for_shim_opt(config['mpi_runner_for_shim_opt'], [shimmed_genome_dirpath], data_dir)
+        run_mpi_runner_for_shim_opt(config['mpi_runner_for_shim_opt'], [shimmed_genome_dirpath], data_dir, use_cluster)
 
     if 'compare' in config:
         best_shimmed_genome_filename = find_best_genome(shimmed_genome_dirpath)
@@ -48,16 +41,13 @@ def run_lookup_generator(options, args):
     options_named = namedtuple("options", options.keys())(*options.values())
     lookup_generator.process(options_named, args)
 
-def run_mpi_runner(options, args, data_dir):
-    if 'singlethreaded' not in options:
-        options['singlethreaded'] = False
-
+def run_mpi_runner(options, args, data_dir, use_cluster):
     options_named = namedtuple("options", options.keys())(*options.values())
 
     if not options['restart'] and not os.path.exists(args[0]):
         os.makedirs(args[0])
 
-    if options_named.singlethreaded:
+    if not use_cluster:
         mpi_runner.process(options_named, args)
     else:
         logfile_dir = 'logfiles/'
@@ -99,16 +89,13 @@ def run_mpi_runner(options, args, data_dir):
 
         subprocess.call(qsub_args + mpijob_args)
 
-def run_mpi_runner_for_shim_opt(options, args, data_dir):
-    if 'singlethreaded' not in options:
-        options['singlethreaded'] = False
-
+def run_mpi_runner_for_shim_opt(options, args, data_dir, use_cluster):
     options_named = namedtuple("options", options.keys())(*options.values())
 
     if not os.path.exists(args[0]):
         os.makedirs(args[0])
 
-    if options_named.singlethreaded:
+    if not use_cluster:
         mpi_runner_for_shim_opt.process(options_named, args)
     else:
         logfile_dir = 'logfiles/'
@@ -190,20 +177,31 @@ def find_best_genome(genome_dir):
     assert best_genome is not None
     return best_genome
 
-def generate_restart_sort_script(config_path, data_dir):
+def generate_restart_sort_script(config, config_path, data_dir, use_cluster):
     file_loader = FileSystemLoader('/home/twi18192/wc/Opt-ID/IDSort/src')
     env = Environment(loader=file_loader)
     template = env.get_template('restart_sort_template.sh')
 
     python_env_module = 'python/3'
-    # can assume that the json, mag, h5 filepaths have been added to
-    # config['mpi_runner'] at this point since we'll have gone through a sort
-    # process already
-    output = template.render(
-        python_env_module=python_env_module,
-        config_path=config_path,
-        output_dir_path=data_dir
-    )
+    if use_cluster:
+        output = template.render(
+            python_env_module=python_env_module,
+            config_path=config_path,
+            output_dir_path=data_dir,
+            use_cluster=use_cluster,
+            node_os=config['mpi_runner']['node_os'],
+            number_of_threads=config['mpi_runner']['number_of_threads'],
+            queue=config['mpi_runner']['queue']
+        )
+    else:
+        output = template.render(
+            python_env_module=python_env_module,
+            config_path=config_path,
+            output_dir_path=data_dir,
+            use_cluster=use_cluster,
+            seed=config['mpi_runner']['seed'],
+            seed_value=config['mpi_runner']['seed_value']
+        )
 
     script_name = 'restart_sort.sh'
     script_path = os.path.join(data_dir, script_name)
@@ -276,6 +274,21 @@ def generate_report_notebook(config, job_type, data_dir, processed_data_dir, gen
     with open(notebook_path, 'w') as notebook:
         notebook.write(report_output)
 
+def set_job_parameters(job_type, options, config):
+    if job_type == 'sort':
+        runner = 'mpi_runner'
+    elif job_type == 'shim':
+        runner = 'mpi_runner_for_shim_opt'
+
+    if options.use_cluster:
+        config[runner]['number_of_threads'] = options.number_of_threads
+        config[runner]['queue'] = options.queue
+        config[runner]['node_os'] = options.node_os
+    else:
+        config[runner]['singlethreaded'] = True
+        config[runner]['seed'] = options.seed
+        config[runner]['seed_value'] = options.seed_value
+
 if __name__ == "__main__":
     from optparse import OptionParser
     usage = "%prog [options] ConfigFile OutputDataDir"
@@ -284,6 +297,13 @@ if __name__ == "__main__":
     parser.add_option("--restart-sort", dest="restart_sort", help="Run a sort job with an initial population of genomes", action="store_true", default=False)
     parser.add_option("--shim", dest="shim", help="Run a shim job", action="store_true", default=False)
     parser.add_option("--generate-report", dest="generate_report", help="Generate a PDF with some data visualisation of desired genomes", action="store_true", default=False)
+    parser.add_option("--cluster-on", dest="use_cluster", help="Run job on a cluster", action="store_true")
+    parser.add_option("--num-threads", dest="number_of_threads", help="Set the number of threads to use per node", default=10, type="int")
+    parser.add_option("--queue", dest="queue", help="Set the desired queue for the cluster job to be added to", default="medium.q", type="string")
+    parser.add_option("--node-os", dest="node_os", help="Set the OS of the desired nodes", default="rhel7", type="string")
+    parser.add_option("--cluster-off", dest="use_cluster", help="Run job on a local machine", action="store_false")
+    parser.add_option("--seed", dest="seed", help="Seed the random number generator", action="store_true", default=False)
+    parser.add_option("--seed-value", dest="seed_value", help="Seed value for the random number generator", default=1, type="int")
     (options, args) = parser.parse_args()
 
     if options.sort and options.shim:
@@ -326,8 +346,15 @@ if __name__ == "__main__":
         config['mpi_runner']['id_filename'] = json_filepath
         config['mpi_runner']['magnets_filename'] = mag_filepath
         config['mpi_runner']['lookup_filename'] = h5_filepath
-        run_sort_job(config, genome_dirpath, processed_data_dir, data_dir, options.restart_sort)
-        generate_restart_sort_script(config_path, data_dir)
+        set_job_parameters('sort', options, config)
+
+        if not options.restart_sort:
+            config['mpi_runner']['restart'] = False
+        else:
+            config['mpi_runner']['restart'] = True
+        run_mpi_runner(config['mpi_runner'], [genome_dirpath], data_dir, options.use_cluster)
+
+        generate_restart_sort_script(config, config_path, data_dir, options.use_cluster)
         generate_report_script('sort', config_path, data_dir, processed_data_dir)
     elif options.shim:
         shimmed_genome_dir = 'shimmed_genomes/'
@@ -335,7 +362,8 @@ if __name__ == "__main__":
         config['mpi_runner_for_shim_opt']['id_filename'] = json_filepath
         config['mpi_runner_for_shim_opt']['magnets_filename'] = mag_filepath
         config['mpi_runner_for_shim_opt']['lookup_filename'] = h5_filepath
-        run_shim_job(config, shimmed_genome_dirpath, processed_data_dir, data_dir)
+        set_job_parameters('shim', options, config)
+        run_shim_job(config, shimmed_genome_dirpath, processed_data_dir, data_dir, options.use_cluster)
         generate_report_script('shim', config_path, data_dir, shimmed_genome_dirpath)
     elif options.generate_report:
         job_type = None
