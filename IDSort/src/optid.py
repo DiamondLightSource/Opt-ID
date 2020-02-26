@@ -240,16 +240,40 @@ def generate_report_notebook(config, job_type, data_dir, processed_data_dir, gen
     env = Environment(loader=file_loader)
     report_template = env.get_template('genome_report_template.ipynb')
 
-    # create list of genome filepaths instead of just genome filenames
-    genome_filepaths = [os.path.join(genome_dirpath, filename) for filename in filenames]
-
     if job_type == 'sort':
-        # convert given genomes to h5 files
-        for filepath in genome_filepaths:
-            run_process_genome(config['process_genome'], filepath, processed_data_dir)
+        # convert given genomes to h5 files, and convert given inp files to
+        # genomes and then to h5 files
 
-        # get genome.h5 filepaths
-        genome_h5_filepaths = [os.path.join(processed_data_dir, filename + '.h5') for filename in filenames]
+        inp_to_genome_config = {
+            'analysis': False,
+            'readable': False,
+            'create_genome': True,
+            'id_filename': config['process_genome']['id_filename'],
+            'magnets_filename': config['process_genome']['magnets_filename'],
+            'id_template': config['process_genome']['id_template']
+        }
+        genome_to_h5_config = {
+            'analysis': True,
+            'readable': True,
+            'create_genome': False,
+            'id_filename': config['process_genome']['id_filename'],
+            'magnets_filename': config['process_genome']['magnets_filename'],
+            'id_template': config['process_genome']['id_template']
+        }
+
+        genome_h5_filepaths = []
+        for filename in filenames:
+            if filename.endswith('.genome'):
+                filepath = os.path.join(genome_dirpath, filename)
+                run_process_genome(genome_to_h5_config, filepath, processed_data_dir)
+                genome_h5_filepaths.append(os.path.join(processed_data_dir, filename + '.h5'))
+            elif filename.endswith('.inp'):
+                filepath = os.path.join(processed_data_dir, filename)
+                run_process_genome(inp_to_genome_config, filepath, genome_dirpath)
+                new_genome_filename = filename + '.genome'
+                new_genome_filepath = os.path.join(genome_dirpath, new_genome_filename)
+                run_process_genome(genome_to_h5_config, new_genome_filepath, processed_data_dir)
+                genome_h5_filepaths.append(os.path.join(processed_data_dir, new_genome_filename + '.h5'))
     elif job_type == 'shim':
         genome_h5_filepaths = [os.path.join(genome_dirpath, filename) for filename in filenames]
 
