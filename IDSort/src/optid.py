@@ -2,6 +2,9 @@ import os
 import subprocess
 from collections import namedtuple
 
+import nbformat
+from nbconvert import PDFExporter
+from nbconvert.preprocessors import ExecutePreprocessor
 from ruamel.yaml import YAML
 from jinja2 import FileSystemLoader, Environment
 
@@ -235,7 +238,7 @@ def generate_report_script(job_type, config_path, data_dir, genome_h5_dirpath):
 
     os.chmod(shell_script_path, 0o775)
 
-def generate_report_notebook(config, job_type, data_dir, processed_data_dir, genome_dirpath, filenames):
+def generate_report_notebook(config, job_type, data_dir, processed_data_dir, genome_dirpath, filenames, report_filename):
     file_loader = FileSystemLoader('/home/twi18192/wc/Opt-ID/IDSort/src')
     env = Environment(loader=file_loader)
     report_template = env.get_template('genome_report_template.ipynb')
@@ -288,6 +291,33 @@ def generate_report_notebook(config, job_type, data_dir, processed_data_dir, gen
     with open(notebook_path, 'w') as notebook:
         notebook.write(report_output)
 
+    # create dir for genome reports
+    genome_report_dir = 'genome_reports/'
+    genome_report_dirpath = os.path.join(data_dir, genome_report_dir)
+    if not os.path.exists(genome_report_dirpath):
+        os.makedirs(genome_report_dirpath)
+
+    # execute notebook
+    with open(notebook_path, 'r') as notebook:
+        nb = nbformat.read(notebook, as_version=4)
+
+    ep = ExecutePreprocessor()
+    ep.preprocess(nb, {'metadata': {'path': data_dir}})
+    pdf_exporter = PDFExporter()
+    pdf_exporter.exclude_output_prompt = True
+    pdf_exporter.exclude_input = True
+    pdf_data, resources = pdf_exporter.from_notebook_node(nb)
+
+    # check the name of the report to see if a specific name has been given or
+    # not
+    if report_filename == 'genome_report.pdf':
+        # concatenate all genome/inp files using "_" as a separator to form the
+        # filename
+        report_filename = '_'.join(filenames) + '.pdf'
+
+    with open(os.path.join(genome_report_dirpath, report_filename), 'wb') as report:
+        report.write(pdf_data)
+
 def set_job_parameters(job_type, options, config):
     if job_type == 'sort':
         runner = 'mpi_runner'
@@ -311,6 +341,7 @@ if __name__ == "__main__":
     parser.add_option("--restart-sort", dest="restart_sort", help="Run a sort job with an initial population of genomes", action="store_true", default=False)
     parser.add_option("--shim", dest="shim", help="Run a shim job", action="store_true", default=False)
     parser.add_option("--generate-report", dest="generate_report", help="Generate a PDF with some data visualisation of desired genomes", action="store_true", default=False)
+    parser.add_option("--report-filename", dest="report_filename", help="Specify the filename of the PDF report", default="genome_report.pdf", type="string")
     parser.add_option("--cluster-on", dest="use_cluster", help="Run job on a cluster", action="store_true")
     parser.add_option("--num-threads", dest="number_of_threads", help="Set the number of threads to use per node", default=10, type="int")
     parser.add_option("--queue", dest="queue", help="Set the desired queue for the cluster job to be added to", default="medium.q", type="string")
@@ -391,4 +422,4 @@ if __name__ == "__main__":
             genome_dirpath = os.path.join(data_dir, genome_dir)
         assert job_type is not None
         genome_filenames = args[2:]
-        generate_report_notebook(config, job_type, data_dir, processed_data_dir, genome_dirpath, genome_filenames)
+        generate_report_notebook(config, job_type, data_dir, processed_data_dir, genome_dirpath, genome_filenames, options.report_filename)
