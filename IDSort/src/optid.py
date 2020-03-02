@@ -315,8 +315,12 @@ def generate_report_notebook(config, job_type, data_dir, processed_data_dir, gen
         # filename
         report_filename = '_'.join(filenames) + '.pdf'
 
-    with open(os.path.join(genome_report_dirpath, report_filename), 'wb') as report:
+    report_filepath = os.path.join(genome_report_dirpath, report_filename)
+    with open(report_filepath, 'wb') as report:
         report.write(pdf_data)
+
+    # open report
+    subprocess.Popen(['evince', report_filepath])
 
 def set_job_parameters(job_type, options, config):
     if job_type == 'sort':
