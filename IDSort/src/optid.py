@@ -1,4 +1,5 @@
 import os
+import pwd
 import subprocess
 from collections import namedtuple
 
@@ -47,9 +48,6 @@ def run_lookup_generator(options, args):
 def run_mpi_runner(options, args, data_dir, use_cluster):
     options_named = namedtuple("options", options.keys())(*options.values())
 
-    if not options['restart'] and not os.path.exists(args[0]):
-        os.makedirs(args[0])
-
     if not use_cluster:
         mpi_runner.process(options_named, args)
     else:
@@ -94,9 +92,6 @@ def run_mpi_runner(options, args, data_dir, use_cluster):
 
 def run_mpi_runner_for_shim_opt(options, args, data_dir, use_cluster):
     options_named = namedtuple("options", options.keys())(*options.values())
-
-    if not os.path.exists(args[0]):
-        os.makedirs(args[0])
 
     if not use_cluster:
         mpi_runner_for_shim_opt.process(options_named, args)
@@ -148,9 +143,6 @@ def run_mpi_runner_for_shim_opt(options, args, data_dir, use_cluster):
         subprocess.call(qsub_args + mpijob_args)
 
 def run_process_genome(options, input_file, output_dir):
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
     options['output_dir'] = output_dir
     options_named = namedtuple("options", options.keys())(*options.values())
     args = [input_file]
@@ -365,8 +357,21 @@ if __name__ == "__main__":
     with open(config_path, 'r') as config_file:
         config = yaml.load(config_file)
 
+    # grab the user's FedID and create a dir at /dls/tmp/FedID/data_dir where
+    # data_dir is the last child directory of the path in the data_dir
+    # variable
+    fed_id = pwd.getpwuid(os.getuid()).pw_name
+    data_dirname = os.path.basename(os.path.normpath(data_dir))
+    tmp_dirpath = os.path.join('/dls/tmp/', fed_id, data_dirname)
+    if not os.path.exists(tmp_dirpath):
+        os.makedirs(tmp_dirpath)
+
     process_genome_output_dir = 'process_genome_output/'
-    processed_data_dir = os.path.join(data_dir, process_genome_output_dir)
+    processed_data_dir = os.path.join(tmp_dirpath, process_genome_output_dir)
+    if not os.path.exists(processed_data_dir):
+        os.makedirs(processed_data_dir)
+        process_genome_symlink_path = os.path.normpath(os.path.join(data_dir, process_genome_output_dir))
+        os.symlink(processed_data_dir, process_genome_symlink_path)
 
     json_filename = config['id_setup'].pop('output_filename', None)
     json_filepath = os.path.join(data_dir, json_filename)
@@ -375,13 +380,15 @@ if __name__ == "__main__":
     # the periods param for this should be the same as the periods param for
     # id_setup.py, so use that same value in config['lookup_generator']
     h5_filename = config['lookup_generator'].pop('output_filename', None)
-    h5_filepath = os.path.join(data_dir, h5_filename)
+    h5_filepath = os.path.join(tmp_dirpath, h5_filename)
     config['lookup_generator']['periods'] = config['id_setup']['periods']
 
     if not options.restart_sort and not options.generate_report:
         run_id_setup(config['id_setup'], [json_filepath])
         run_magnets(config['magnets'], [mag_filepath])
         run_lookup_generator(config['lookup_generator'], [json_filepath, h5_filepath])
+        h5_symlink_path = os.path.join(data_dir, h5_filename)
+        os.symlink(h5_filepath, h5_symlink_path)
 
     # both a sort and shim's use of process_genome.py need the json, mag, h5
     # filepaths
@@ -391,7 +398,14 @@ if __name__ == "__main__":
 
     if options.sort or options.restart_sort:
         genome_dir = 'genomes/'
-        genome_dirpath = os.path.join(data_dir, genome_dir)
+        genome_dirpath = os.path.join(tmp_dirpath, genome_dir)
+        genome_symlink_path = os.path.normpath(os.path.join(data_dir, genome_dir))
+
+        if not os.path.exists(genome_dirpath):
+            os.makedirs(genome_dirpath)
+        if not os.path.exists(genome_symlink_path):
+            os.symlink(genome_dirpath, genome_symlink_path)
+
         config['mpi_runner']['id_filename'] = json_filepath
         config['mpi_runner']['magnets_filename'] = mag_filepath
         config['mpi_runner']['lookup_filename'] = h5_filepath
@@ -401,13 +415,20 @@ if __name__ == "__main__":
             config['mpi_runner']['restart'] = False
         else:
             config['mpi_runner']['restart'] = True
-        run_mpi_runner(config['mpi_runner'], [genome_dirpath], data_dir, options.use_cluster)
 
+        run_mpi_runner(config['mpi_runner'], [genome_dirpath], data_dir, options.use_cluster)
         generate_restart_sort_script(config, config_path, data_dir, options.use_cluster)
         generate_report_script('sort', config_path, data_dir, processed_data_dir)
     elif options.shim:
         shimmed_genome_dir = 'shimmed_genomes/'
-        shimmed_genome_dirpath = os.path.join(data_dir, shimmed_genome_dir)
+        shimmed_genome_dirpath = os.path.join(tmp_dirpath, shimmed_genome_dir)
+        shimmed_genome_symlink_path = os.path.normpath(os.path.join(data_dir, shimmed_genome_dir))
+
+        if not os.path.exists(shimmed_genome_dirpath):
+            os.makedirs(shimmed_genome_dirpath)
+        if not os.path.exists(shimmed_genome_symlink_path):
+            os.symlink(shimmed_genome_dirpath, shimmed_genome_symlink_path)
+
         config['mpi_runner_for_shim_opt']['id_filename'] = json_filepath
         config['mpi_runner_for_shim_opt']['magnets_filename'] = mag_filepath
         config['mpi_runner_for_shim_opt']['lookup_filename'] = h5_filepath
