@@ -24,15 +24,6 @@ def run_shim_job(config, shimmed_genome_dirpath, processed_data_dir, data_dir, u
         config['mpi_runner_for_shim_opt']['genome_filename'] = os.path.join(processed_data_dir, genome_filename)
         run_mpi_runner_for_shim_opt(config['mpi_runner_for_shim_opt'], [shimmed_genome_dirpath], data_dir, use_cluster)
 
-    if 'compare' in config:
-        best_shimmed_genome_filename = find_best_genome(shimmed_genome_dirpath)
-        # grab the genome created from an .inp file from the use of
-        # process_genome.py
-        original_genome_filename = os.path.split(config['process_genome']['readable_genome_file'][0])[1] + '.genome'
-        original_genome_path = os.path.join(processed_data_dir, original_genome_filename)
-        shimmed_genome_path = os.path.join(shimmed_genome_dirpath, best_shimmed_genome_filename)
-        run_compare(config['compare'], original_genome_path, shimmed_genome_path, data_dir)
-
 def run_id_setup(options, args):
     options_named = namedtuple("options", options.keys())(*options.values())
     id_setup.process(options_named, args)
@@ -148,29 +139,25 @@ def run_process_genome(options, input_file, output_dir):
     args = [input_file]
     process_genome.process(options_named, args)
 
-def run_compare(params, original_genome, shimmed_genome, output_dir):
+def run_compare(original_genome_path, shimmed_genome_path, diff_filename, data_dir):
+    diff_dir = 'shim_diffs/'
+    diff_dirpath = os.path.join(data_dir, diff_dir)
+    if not os.path.exists(diff_dirpath):
+        os.makedirs(diff_dirpath)
+
+    # check the name of the diff filename to see if it's the default one or not
+    if diff_filename == 'shim':
+        # concatenate the original genome and the shimmed genome to form the
+        # diff filename
+        original_genome = os.path.split(original_genome_path)[1]
+        shimmed_genome = os.path.split(shimmed_genome_path)[1]
+        diff_filename += '_' + original_genome + '_' + shimmed_genome
+
+    diff_filepath = os.path.join(diff_dirpath, diff_filename)
     options = {}
-    shim_output_filepath = os.path.join(output_dir, params['output_filename'])
-    args = [original_genome] + [shimmed_genome] + [shim_output_filepath]
+    args = [original_genome_path, shimmed_genome_path, diff_filepath]
     options_named = namedtuple("options", options.keys())(*options.values())
     compare.process(options_named, args)
-
-def find_best_genome(genome_dir):
-    # find the best genome by looking at the fitnesses
-    best_genome = None
-    # filter out any files in the given dir that aren't genomes
-    genome_filepaths = [filepath for filepath in os.listdir(genome_dir) if 'genome' in filepath]
-    # grab all filenames from the filepaths, then grab the fitnesses
-    genome_filenames = [os.path.split(filepath)[1] for filepath in genome_filepaths]
-    genome_fitnesses = [filename.split('_')[0] for filename in genome_filenames]
-    genome_fitnesses.sort(key=float)
-
-    for filename in os.listdir(genome_dir):
-        if genome_fitnesses[0] in filename:
-            best_genome = filename
-
-    assert best_genome is not None
-    return best_genome
 
 def generate_restart_sort_script(config, config_path, data_dir, use_cluster):
     file_loader = FileSystemLoader('/home/twi18192/wc/Opt-ID/IDSort/src')
@@ -314,6 +301,26 @@ def generate_report_notebook(config, job_type, data_dir, processed_data_dir, gen
     # open report
     subprocess.Popen(['evince', report_filepath])
 
+def generate_compare_shim_script(config_path, data_dir):
+    file_loader = FileSystemLoader('/home/twi18192/wc/Opt-ID/IDSort/src')
+    env = Environment(loader=file_loader)
+    shell_script_template = env.get_template('compare_shim_template.sh')
+
+    python_env_module = 'python/3'
+    shell_script_output = shell_script_template.render(
+        python_env_module=python_env_module,
+        yaml_config=config_path,
+        data_dir=data_dir
+    )
+
+    shell_script_name = 'compare_shim.sh'
+    shell_script_path = os.path.join(data_dir, shell_script_name)
+
+    with open(shell_script_path, 'w') as shell_script:
+        shell_script.write(shell_script_output)
+
+    os.chmod(shell_script_path, 0o775)
+
 def set_job_parameters(job_type, options, config):
     if job_type == 'sort':
         runner = 'mpi_runner'
@@ -336,6 +343,8 @@ if __name__ == "__main__":
     parser.add_option("--sort", dest="sort", help="Run a sort job", action="store_true", default=False)
     parser.add_option("--restart-sort", dest="restart_sort", help="Run a sort job with an initial population of genomes", action="store_true", default=False)
     parser.add_option("--shim", dest="shim", help="Run a shim job", action="store_true", default=False)
+    parser.add_option("--compare-shim", dest="compare_shim", help="Compare a shimmed genome to the starting genome and get a human readable diff of the magnet configurations", action="store_true", default=False)
+    parser.add_option("--diff-filename", dest="diff_filename", help="Specify the filename of the human readable magnet configuration diff", default="shim", type="string")
     parser.add_option("--generate-report", dest="generate_report", help="Generate a PDF with some data visualisation of desired genomes", action="store_true", default=False)
     parser.add_option("--report-filename", dest="report_filename", help="Specify the filename of the PDF report", default="genome_report.pdf", type="string")
     parser.add_option("--cluster-on", dest="use_cluster", help="Run job on a cluster", action="store_true")
@@ -383,7 +392,7 @@ if __name__ == "__main__":
     h5_filepath = os.path.join(tmp_dirpath, h5_filename)
     config['lookup_generator']['periods'] = config['id_setup']['periods']
 
-    if not options.restart_sort and not options.generate_report:
+    if not options.restart_sort and not options.generate_report and not options.compare_shim:
         run_id_setup(config['id_setup'], [json_filepath])
         run_magnets(config['magnets'], [mag_filepath])
         run_lookup_generator(config['lookup_generator'], [json_filepath, h5_filepath])
@@ -435,6 +444,7 @@ if __name__ == "__main__":
         set_job_parameters('shim', options, config)
         run_shim_job(config, shimmed_genome_dirpath, processed_data_dir, data_dir, options.use_cluster)
         generate_report_script('shim', config_path, data_dir, shimmed_genome_dirpath)
+        generate_compare_shim_script(config_path, data_dir)
     elif options.generate_report:
         job_type = None
         if 'mpi_runner' in config:
@@ -448,3 +458,12 @@ if __name__ == "__main__":
         assert job_type is not None
         genome_filenames = args[2:]
         generate_report_notebook(config, job_type, data_dir, processed_data_dir, genome_dirpath, genome_filenames, options.report_filename)
+    elif options.compare_shim:
+        original_inp = os.path.split(config['process_genome']['readable_genome_file'][0])[1]
+        original_genome = original_inp + '.genome'
+        original_genome_path = os.path.join(processed_data_dir, original_genome)
+        shimmed_genomes_dir = 'shimmed_genomes/'
+        shimmed_genomes_dirpath = os.path.join(tmp_dirpath, shimmed_genomes_dir)
+        shimmed_genome = args[2]
+        shimmed_genome_path = os.path.join(shimmed_genomes_dirpath, shimmed_genome)
+        run_compare(original_genome_path, shimmed_genome_path, options.diff_filename, data_dir)
