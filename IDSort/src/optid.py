@@ -9,6 +9,7 @@ from nbconvert.preprocessors import ExecutePreprocessor
 from ruamel.yaml import YAML
 from jinja2 import FileSystemLoader, Environment
 
+from definitions import ROOT_DIR
 from IDSort.src import id_setup, magnets, lookup_generator, mpi_runner, \
         mpi_runner_for_shim_opt, process_genome, compare
 
@@ -60,7 +61,7 @@ def run_mpi_runner(options, args, data_dir, use_cluster):
             'y',
             '-o',
             os.path.join(logfile_dirpath, '$JOB_ID.log')
-        ] + env_var_sublist + ['/home/twi18192/wc/Opt-ID/IDSort/src/mpijob.sh']
+        ] + env_var_sublist + [os.path.join(ROOT_DIR, 'IDSort/src/mpijob.sh')]
 
         mpijob_restart_sublist = ['--restart'] if options_named.restart else []
         mpijob_args = mpijob_restart_sublist + [
@@ -105,7 +106,7 @@ def run_mpi_runner_for_shim_opt(options, args, data_dir, use_cluster):
             'y',
             '-o',
             os.path.join(logfile_dirpath, '$JOB_ID.log')
-        ] + env_var_sublist + ['/home/twi18192/wc/Opt-ID/IDSort/src/mpi4shimOpt.sh']
+        ] + env_var_sublist + [os.path.join(ROOT_DIR, 'IDSort/src/mpi4shimOpt.sh')]
 
         mpijob_args = [
             '--iterations',
@@ -160,7 +161,7 @@ def run_compare(original_genome_path, shimmed_genome_path, diff_filename, data_d
     compare.process(options_named, args)
 
 def generate_restart_sort_script(config, config_path, data_dir, use_cluster):
-    file_loader = FileSystemLoader('/home/twi18192/wc/Opt-ID/IDSort/src')
+    file_loader = FileSystemLoader(os.path.join(ROOT_DIR, 'IDSort/src'))
     env = Environment(loader=file_loader)
     template = env.get_template('restart_sort_template.sh')
 
@@ -194,7 +195,7 @@ def generate_restart_sort_script(config, config_path, data_dir, use_cluster):
     os.chmod(script_path, 0o775)
 
 def generate_report_script(job_type, config_path, data_dir, genome_h5_dirpath):
-    file_loader = FileSystemLoader('/home/twi18192/wc/Opt-ID/IDSort/src')
+    file_loader = FileSystemLoader(os.path.join(ROOT_DIR, 'IDSort/src'))
     env = Environment(loader=file_loader)
     shell_script_template = env.get_template('generate_report_template.sh')
 
@@ -218,7 +219,7 @@ def generate_report_script(job_type, config_path, data_dir, genome_h5_dirpath):
     os.chmod(shell_script_path, 0o775)
 
 def generate_report_notebook(config, job_type, data_dir, processed_data_dir, genome_dirpath, filenames, report_filename):
-    file_loader = FileSystemLoader('/home/twi18192/wc/Opt-ID/IDSort/src')
+    file_loader = FileSystemLoader(os.path.join(ROOT_DIR, 'IDSort/src'))
     env = Environment(loader=file_loader)
     report_template = env.get_template('genome_report_template.ipynb')
 
@@ -302,7 +303,7 @@ def generate_report_notebook(config, job_type, data_dir, processed_data_dir, gen
     subprocess.Popen(['evince', report_filepath])
 
 def generate_compare_shim_script(config_path, data_dir):
-    file_loader = FileSystemLoader('/home/twi18192/wc/Opt-ID/IDSort/src')
+    file_loader = FileSystemLoader(os.path.join(ROOT_DIR, 'IDSort/src'))
     env = Environment(loader=file_loader)
     shell_script_template = env.get_template('compare_shim_template.sh')
 
