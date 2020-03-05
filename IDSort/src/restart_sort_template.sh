@@ -1,5 +1,5 @@
 module load {{ python_env_module }}
-export PYTHONPATH="/home/twi18192/wc/Opt-ID"
+export PYTHONPATH=$PYTHONPATH:{{ project_root_dir }}
 
 {% if use_cluster %}
 python -m IDSort.src.optid --restart-sort --cluster-on --node-os {{ node_os }} --num-threads {{ number_of_threads }} --queue {{ queue }} {{ config_path }} {{ output_dir_path }}

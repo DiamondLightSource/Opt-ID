@@ -2,7 +2,7 @@
 module load {{ python_env_module }}
 module load texlive/2015
 
-export PYTHONPATH="/home/twi18192/wc/Opt-ID"
+export PYTHONPATH=$PYTHONPATH:{{ project_root_dir }}
 
 first_arg=$1
 if [[ $first_arg == --* ]]

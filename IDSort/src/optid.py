@@ -171,6 +171,7 @@ def generate_restart_sort_script(config, config_path, data_dir, use_cluster):
             python_env_module=python_env_module,
             config_path=config_path,
             output_dir_path=data_dir,
+            project_root_dir=ROOT_DIR,
             use_cluster=use_cluster,
             node_os=config['mpi_runner']['node_os'],
             number_of_threads=config['mpi_runner']['number_of_threads'],
@@ -181,6 +182,7 @@ def generate_restart_sort_script(config, config_path, data_dir, use_cluster):
             python_env_module=python_env_module,
             config_path=config_path,
             output_dir_path=data_dir,
+            project_root_dir=ROOT_DIR,
             use_cluster=use_cluster,
             seed=config['mpi_runner']['seed'],
             seed_value=config['mpi_runner']['seed_value']
@@ -207,7 +209,8 @@ def generate_report_script(job_type, config_path, data_dir, genome_h5_dirpath):
         python_env_module=python_env_module,
         notebook_path=notebook_path,
         yaml_config=config_path,
-        data_dir=data_dir
+        data_dir=data_dir,
+        project_root_dir=ROOT_DIR
     )
 
     shell_script_name = 'generate_report.sh'
@@ -311,7 +314,8 @@ def generate_compare_shim_script(config_path, data_dir):
     shell_script_output = shell_script_template.render(
         python_env_module=python_env_module,
         yaml_config=config_path,
-        data_dir=data_dir
+        data_dir=data_dir,
+        project_root_dir=ROOT_DIR
     )
 
     shell_script_name = 'compare_shim.sh'
