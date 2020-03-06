@@ -15,10 +15,13 @@ from IDSort.src import id_setup, magnets, lookup_generator, mpi_runner, \
 
 
 def run_shim_job(config, shimmed_genome_dirpath, processed_data_dir, data_dir, use_cluster):
-    # shimming typically involves creating a genome from an inp before the mpi
-    # runner generates the genome
-    if config['process_genome']['create_genome']:
-        run_process_genome(config['process_genome'], config['process_genome']['readable_genome_file'][0], processed_data_dir)
+    # assuming that the shim job is starting with an inp file, it needs to
+    # first be converted to a genome file before the mpi runner generates the
+    # shimmed genomes
+    config['process_genome']['create_genome'] = True
+    config['process_genome']['readable'] = False
+    config['process_genome']['analysis'] = False
+    run_process_genome(config['process_genome'], config['process_genome']['readable_genome_file'][0], processed_data_dir)
 
     if 'mpi_runner_for_shim_opt' in config:
         genome_filename = os.path.split(config['process_genome']['readable_genome_file'][0])[1] + '.genome'
