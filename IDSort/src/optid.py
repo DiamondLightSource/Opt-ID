@@ -409,6 +409,8 @@ if __name__ == "__main__":
 
     # both a sort and shim's use of process_genome.py need the json, mag, h5
     # filepaths
+    if 'process_genome' not in config:
+        config['process_genome'] = {}
     config['process_genome']['id_filename'] = json_filepath
     config['process_genome']['magnets_filename'] = mag_filepath
     config['process_genome']['id_template'] = h5_filepath
