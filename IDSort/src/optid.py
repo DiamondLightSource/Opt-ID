@@ -427,7 +427,8 @@ if __name__ == "__main__":
         run_magnets(config['magnets'], [mag_filepath])
         run_lookup_generator(config['lookup_generator'], [json_filepath, h5_filepath])
         h5_symlink_path = os.path.join(data_dir, h5_filename)
-        os.symlink(h5_filepath, h5_symlink_path)
+        if not os.path.exists(h5_symlink_path):
+            os.symlink(h5_filepath, h5_symlink_path)
 
     # both a sort and shim's use of process_genome.py need the json, mag, h5
     # filepaths
