@@ -238,4 +238,25 @@ opposed to generating genomes from scratch.
 This option starts off the process of comparing the given shimmed genome to the
 original genome that was used to start the shim job.
 
+## Running the tests
+
+Navigate to the root directory of the Opt-ID repo:
+
+```
+cd /path/to/Opt-ID
+```
+
+To run all the tests:
+
+```
+python -m pytest IDSort/test/
+```
+
+To run a particular test in the `test/` directory, it can be specified in the
+path in the above command. For example, to run `IDSort/test/magnets_test.py`:
+
+```
+python -m pytest IDSort/test/magnets_test.py
+```
+
 [![](https://codescene.io/projects/6289/status.svg) Get more details at **codescene.io**.](https://codescene.io/projects/6289/jobs/latest-successful/results)
