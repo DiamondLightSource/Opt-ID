@@ -3,7 +3,7 @@ module load global/cluster
 module load python/3
 module load openmpi/3.0.0
 
-export PYTHONPATH="/home/twi18192/wc/Opt-ID"
+export PYTHONPATH=$PYTHONPATH:{{ project_root_dir }}
 
 UNIQHOSTS=${TMPDIR}/machines-u
 awk '{print $1 }' ${PE_HOSTFILE} | uniq > ${UNIQHOSTS}
@@ -17,7 +17,6 @@ processes=`bc <<< "$uniqslots"`
 echo "Processes running are : ${processes}"
 
 mpirun -np ${processes} \
-        -x LD_LIBRARY_PATH \
         --hostfile ${UNIQHOSTS} \
         --tag-output \
-        python -m IDSort.src.mpi_runner $@
+        python -m IDSort.src.mpi_runner_for_shim_opt $@

@@ -48,7 +48,6 @@ def run_mpi_runner(options, args, data_dir, use_cluster):
     else:
         logfile_dir = 'logfiles/'
         logfile_dirpath = os.path.join(data_dir, logfile_dir)
-        env_var_sublist = ['-v', options_named.environment_variables] if 'environment_vars' in options else []
         qsub_args = [
             'qsub',
             '-sync',
@@ -64,7 +63,7 @@ def run_mpi_runner(options, args, data_dir, use_cluster):
             'y',
             '-o',
             os.path.join(logfile_dirpath, '$JOB_ID.log')
-        ] + env_var_sublist + [os.path.join(ROOT_DIR, 'IDSort/src/mpijob.sh')]
+        ] + [os.path.join(ROOT_DIR, 'IDSort/src/mpijob.sh')]
 
         mpijob_restart_sublist = ['--restart'] if options_named.restart else []
         mpijob_args = mpijob_restart_sublist + [
@@ -93,7 +92,6 @@ def run_mpi_runner_for_shim_opt(options, args, data_dir, use_cluster):
     else:
         logfile_dir = 'logfiles/'
         logfile_dirpath = os.path.join(data_dir, logfile_dir)
-        env_var_sublist = ['-v', options_named.environment_variables] if 'environment_vars' in options else []
         qsub_args = [
             'qsub',
             '-sync',
@@ -109,7 +107,7 @@ def run_mpi_runner_for_shim_opt(options, args, data_dir, use_cluster):
             'y',
             '-o',
             os.path.join(logfile_dirpath, '$JOB_ID.log')
-        ] + env_var_sublist + [os.path.join(ROOT_DIR, 'IDSort/src/mpi4shimOpt.sh')]
+        ] + [os.path.join(ROOT_DIR, 'IDSort/src/mpi4shimOpt.sh')]
 
         mpijob_args = [
             '--iterations',
@@ -344,6 +342,30 @@ def set_job_parameters(job_type, options, config):
         config[runner]['seed'] = options.seed
         config[runner]['seed_value'] = options.seed_value
 
+def generate_mpi_script(job_type):
+    file_loader = FileSystemLoader(os.path.join(ROOT_DIR, 'IDSort/src'))
+    env = Environment(loader=file_loader)
+    if job_type == 'sort':
+        shell_script_template = env.get_template('mpijob_template.sh')
+    elif job_type == 'shim':
+        shell_script_template = env.get_template('mpi4shimOpt_template.sh')
+
+    shell_script_output = shell_script_template.render(
+        project_root_dir=ROOT_DIR
+    )
+
+    if job_type == 'sort':
+        shell_script_name = 'mpijob.sh'
+    elif job_type == 'shim':
+        shell_script_name = 'mpi4shimOpt.sh'
+    shell_script_path = os.path.join(ROOT_DIR, 'IDSort/src', shell_script_name)
+    print(shell_script_path)
+
+    with open(shell_script_path, 'w') as shell_script:
+        shell_script.write(shell_script_output)
+
+    os.chmod(shell_script_path, 0o775)
+
 if __name__ == "__main__":
     from optparse import OptionParser
     usage = "%prog [options] ConfigFile OutputDataDir"
@@ -424,6 +446,9 @@ if __name__ == "__main__":
             os.makedirs(genome_dirpath)
         if not os.path.exists(genome_symlink_path):
             os.symlink(genome_dirpath, genome_symlink_path)
+        mpijob_script_path = os.path.join(ROOT_DIR, 'IDSort/src/mpijob.sh')
+        if not os.path.exists(mpijob_script_path):
+            generate_mpi_script('sort')
 
         config['mpi_runner']['id_filename'] = json_filepath
         config['mpi_runner']['magnets_filename'] = mag_filepath
@@ -447,6 +472,9 @@ if __name__ == "__main__":
             os.makedirs(shimmed_genome_dirpath)
         if not os.path.exists(shimmed_genome_symlink_path):
             os.symlink(shimmed_genome_dirpath, shimmed_genome_symlink_path)
+        mpijob_script_path = os.path.join(ROOT_DIR, 'IDSort/src/mpi4shimOpt.sh')
+        if not os.path.exists(mpijob_script_path):
+            generate_mpi_script('shim')
 
         config['mpi_runner_for_shim_opt']['id_filename'] = json_filepath
         config['mpi_runner_for_shim_opt']['magnets_filename'] = mag_filepath
