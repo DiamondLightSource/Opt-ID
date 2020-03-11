@@ -68,6 +68,25 @@ should be run using the syntax `python -m IDSort.src.optid` as opposed to
 
 ## Different options that Opt-ID can be run with
 
+There are two sets of flags from which one flag from each set is mandatory to be
+passed to Opt-ID, and the rest are optional and have sensible default values if
+they are not provided.
+
+The mandatory sets of flags are
+
+- `--sort` vs `--shim`
+- `--cluster-on` vs `--cluster-off`
+
+where only one flag from each bullet point should be provided.
+
+Examples of running Opt-ID with the bare mininum flags and parameters it needs
+are:
+
+```
+python -m IDSort.src.optid --sort --cluster-on /path/to/yaml /path/to/data/dir
+python -m IDSort.src.optid --shim --cluster-off /path/to/yaml /path/to/data/dir
+```
+
 ### `--sort` and `--shim`
 
 These are used for specifying what type of job is desired.
@@ -79,15 +98,12 @@ submitted to run on a cluster.
 
 #### `--num-threads`, `--queue`, and `--node-os`
 
-These are used in conjunction with `--cluster-on`. They all have sensible
-default values if not provided, so they can be omitted if this level of control
-isn't of interest to the job in mind.
-
-Some examples of using these flags would be
+These are used in conjunction with `--cluster-on`. Some examples of using these
+flags would be
 
 ```
 python -m IDSort.src.optid --sort --cluster-on --node-os rhel7 /path/to/yaml /path/to/data/dir
-python -m IDSort.src.optid --sort --cluster-on --queue low /path/to/yaml /path/to/data/dir
+python -m IDSort.src.optid --shim --cluster-on --queue low.q /path/to/yaml /path/to/data/dir
 ```
 
 #### `--seed` and `--seed-value`
@@ -96,13 +112,11 @@ These are used in conjunction with `--cluster-off`. `--seed` is used to specify
 that the random number generator (RNG) should be seeded and thus produce the
 same output across multiple runs with the same parameters. `--seed-value` is
 specified if a particular value to seed the RNG is desired (by default its value
-is 1).
-
-Some examples of using these flags would be
+is 1). Some examples of using these flags would be
 
 ```
 python -m IDSort.src.optid --sort --cluster-off --seed /path/to/yaml /path/to/data/dir
-python -m IDSort.src.optid --sort --cluster-off --seed --seed-value 30 /path/to/yaml /path/to/data/dir
+python -m IDSort.src.optid --shim --cluster-off --seed --seed-value 30 /path/to/yaml /path/to/data/dir
 ```
 ## YAML config files
 
