@@ -21,10 +21,10 @@ def run_shim_job(config, shimmed_genome_dirpath, processed_data_dir, data_dir, u
     config['process_genome']['create_genome'] = True
     config['process_genome']['readable'] = False
     config['process_genome']['analysis'] = False
-    run_process_genome(config['process_genome'], config['process_genome']['readable_genome_file'][0], processed_data_dir)
+    run_process_genome(config['process_genome'], config['process_genome']['readable_genome_file'], processed_data_dir)
 
     if 'mpi_runner_for_shim_opt' in config:
-        genome_filename = os.path.split(config['process_genome']['readable_genome_file'][0])[1] + '.genome'
+        genome_filename = os.path.split(config['process_genome']['readable_genome_file'])[1] + '.genome'
         config['mpi_runner_for_shim_opt']['genome_filename'] = os.path.join(processed_data_dir, genome_filename)
         run_mpi_runner_for_shim_opt(config['mpi_runner_for_shim_opt'], [shimmed_genome_dirpath], data_dir, use_cluster)
 
@@ -498,7 +498,7 @@ if __name__ == "__main__":
         genome_filenames = args[2:]
         generate_report_notebook(config, job_type, data_dir, processed_data_dir, genome_dirpath, genome_filenames, options.report_filename)
     elif options.compare_shim:
-        original_inp = os.path.split(config['process_genome']['readable_genome_file'][0])[1]
+        original_inp = os.path.split(config['process_genome']['readable_genome_file'])[1]
         original_genome = original_inp + '.genome'
         original_genome_path = os.path.join(processed_data_dir, original_genome)
         shimmed_genomes_dir = 'shimmed_genomes/'

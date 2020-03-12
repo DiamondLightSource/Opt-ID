@@ -43,8 +43,7 @@ lookup_generator:
   random: False
   output_filename: 'test_cpmu_shim.h5'
 process_genome:
-  readable_genome_file:
-    - '/path/to/Opt-ID/IDSort/data/test_data/sort/process_genome_analyse_output/1.12875826e-08_000_7c51ecd01f73.genome.inp'
+  readable_genome_file: '/path/to/Opt-ID/IDSort/data/test_data/sort/process_genome_analyse_output/1.12875826e-08_000_7c51ecd01f73.genome.inp'
 mpi_runner_for_shim_opt:
   iterations: 3
   setup: 24
