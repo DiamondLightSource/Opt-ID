@@ -23,10 +23,20 @@ def run_shim_job(config, shimmed_genome_dirpath, processed_data_dir, data_dir, u
     config['process_genome']['analysis'] = False
     run_process_genome(config['process_genome'], config['process_genome']['readable_genome_file'], processed_data_dir)
 
-    if 'mpi_runner_for_shim_opt' in config:
-        genome_filename = os.path.split(config['process_genome']['readable_genome_file'])[1] + '.genome'
-        config['mpi_runner_for_shim_opt']['genome_filename'] = os.path.join(processed_data_dir, genome_filename)
-        run_mpi_runner_for_shim_opt(config['mpi_runner_for_shim_opt'], [shimmed_genome_dirpath], data_dir, use_cluster)
+    genome_filename = os.path.split(config['process_genome']['readable_genome_file'])[1] + '.genome'
+    genome_filepath = os.path.join(processed_data_dir, genome_filename)
+    # rename the newly created genome file to be prefixed with '1.0_000'; this
+    # is a temporary hack to get the shimming optimiser to utilise its fullest
+    # capabilities, since currently the optimisation is dependent on the
+    # fitness and age parts of the genome filename used to start the shim
+    split_genome_filename = genome_filename.split('_')
+    split_genome_filename[0] = '1.0'
+    split_genome_filename[1] = '000'
+    renamed_genome_filename = '_'.join(split_genome_filename)
+    renamed_genome_filepath = os.path.join(processed_data_dir, renamed_genome_filename)
+    os.rename(genome_filepath, renamed_genome_filepath)
+    config['mpi_runner_for_shim_opt']['genome_filename'] = renamed_genome_filepath
+    run_mpi_runner_for_shim_opt(config['mpi_runner_for_shim_opt'], [shimmed_genome_dirpath], data_dir, use_cluster)
 
 def run_id_setup(options, args):
     options_named = namedtuple("options", options.keys())(*options.values())
