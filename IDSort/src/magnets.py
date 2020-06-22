@@ -32,19 +32,22 @@ class Magnets(object):
         self.mean_field = {}
 
     def add_magnet_set(self, name, filename, flip_vector):
-        f = open(filename)
         magnets = {}
-        for line in f:
-            vals = line.split()
-            print(vals[0])
-            magnets[vals[0]] = np.array((float(vals[1]), float(vals[2]), float(vals[3])))
+
+        with open(filename) as fp:
+            for line in fp:
+                vals = line.split()
+                assert len(vals) >= 4
+
+                print(vals[0])
+                magnets[vals[0]] = np.array((float(vals[1]), float(vals[2]), float(vals[3])))
+
         self.magnet_sets[name] = magnets
         self.magnet_flip[name] = np.array(flip_vector)
-        
-        self.mean_field[name]=0.0
+        self.mean_field[name]  = 0.0
         for magnet in self.magnet_sets[name]:
-            self.mean_field[name]+=np.linalg.norm(self.magnet_sets[name][magnet])
-        self.mean_field[name]=self.mean_field[name]/len(self.magnet_sets[name])
+            self.mean_field[name] += np.linalg.norm(self.magnet_sets[name][magnet])
+        self.mean_field[name] = self.mean_field[name] / len(self.magnet_sets[name])
         
 
     def add_perfect_magnet_set(self, name, number, vector, flip_vector):
@@ -62,14 +65,12 @@ class Magnets(object):
         self.magnet_flip[name] = np.array(flip_vector)
     
     def save(self, filename):
-        fp = open(filename, 'wb')
-        pickle.dump((self.magnet_sets, self.magnet_flip, self.mean_field), fp)
-        fp.close()
+        with open(filename, 'wb') as fp:
+            pickle.dump((self.magnet_sets, self.magnet_flip, self.mean_field), fp)
     
     def load(self, filename):
-        fp = open(filename, 'rb')
-        (self.magnet_sets, self.magnet_flip, self.mean_field) = pickle.load(fp)
-        fp.close()
+        with open(filename, 'rb') as fp:
+            (self.magnet_sets, self.magnet_flip, self.mean_field) = pickle.load(fp)
         
     def availability(self):
         availability={}
@@ -209,9 +210,9 @@ if __name__ == "__main__" :
     import optparse
     usage = "%prog [options] OutputFile"
     parser = optparse.OptionParser(usage=usage)
-    parser.add_option("-H", "--hmaglist", dest="hmags", help="Set the path to the H magnet data", default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13H.sim', type="string")
+    parser.add_option(  "-H", "--hmaglist",  dest="hmags",  help="Set the path to the H magnet data",  default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13H.sim',   type="string")
     parser.add_option("--HE", "--hemaglist", dest="hemags", help="Set the path to the HE magnet data", default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13HEA.sim', type="string")
-    parser.add_option("-V", "--vmaglist", dest="vmags", help="Set the path to the V magnet data", default=None, type="string")
+    parser.add_option(  "-V", "--vmaglist",  dest="vmags",  help="Set the path to the V magnet data",  default=None, type="string")
     parser.add_option("--VE", "--vemaglist", dest="vemags", help="Set the path to the VE magnet data", default=None, type="string")
     parser.add_option("--HT", "--htmaglist", dest="htmags", help="Set the path to the HT magnet data", default=None, type="string")
 
