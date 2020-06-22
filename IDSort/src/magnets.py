@@ -73,10 +73,10 @@ class Magnets(object):
             (self.magnet_sets, self.magnet_flip, self.mean_field) = pickle.load(fp)
         
     def availability(self):
-        availability={}
+        availability = {}
 
         for key in self.magnet_sets:
-            availability[key]=range(np.alen(self.magnet_sets[key]))
+            availability[key] = range(len(self.magnet_sets[key]))
             
         return availability
 
