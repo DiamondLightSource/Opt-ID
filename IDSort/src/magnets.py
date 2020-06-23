@@ -38,8 +38,6 @@ class Magnets(object):
             for line in fp:
                 vals = line.split()
                 assert len(vals) >= 4
-
-                print(vals[0])
                 magnets[vals[0]] = np.array((float(vals[1]), float(vals[2]), float(vals[3])))
 
         self.magnet_sets[name] = magnets
@@ -129,7 +127,7 @@ class MagLists():
 #    def mutate(self, number_of_mutations, available={'VE':range(20), 'HE':range(20), 'HH':range(576), 'VV':range(419), 'HT':range(20)}):
         if (available == None):
             #logging.debug("No available list specified, getting from magnet list")
-            available = self.raw_magnets.availability
+            available = self.raw_magnets.availability()
         
         #logging.debug("Magnet keys are %s"%(available.keys()))    
         
@@ -161,6 +159,10 @@ class MagLists():
                 self.flip(key , (p1,))
 
 def process(options, args):
+
+    if options.seed:
+        random.seed(int(options.seed_value))
+
     mags = Magnets()
     if options.hmags:
         mags.add_magnet_set('HH', options.hmags, (-1.,-1.,1.))
@@ -177,7 +179,7 @@ def process(options, args):
     #mags.add_perfect_magnet_set('HE', 5 , (0.,0.,1.), (-1.,1.,-1.))
     #mags.add_perfect_magnet_set('VV', 20 , (0.,1.,0.), (-1.,-1.,1.))
     #mags.add_perfect_magnet_set('VE', 5 , (0.,1.,0.), (-1.,-1.,1.))
-    
+
     import pprint
     pprint.pprint(mags.magnet_sets)
     
@@ -195,9 +197,9 @@ def process(options, args):
     for key in mags.magnet_sets.keys():
         pprint.pprint(key)
     #    maglist.flip('HH',(107,294,511,626))
+
     available = {key : range(len(mags.magnet_sets[key])) for key in mags.magnet_sets.keys()}
-    
-    maglist.mutate(4,available)
+    maglist.mutate(4, available)
     
 #    maglist.flip('HH',(107,294,511,626))
     
@@ -215,6 +217,9 @@ if __name__ == "__main__" :
     parser.add_option(  "-V", "--vmaglist",  dest="vmags",  help="Set the path to the V magnet data",  default=None, type="string")
     parser.add_option("--VE", "--vemaglist", dest="vemags", help="Set the path to the VE magnet data", default=None, type="string")
     parser.add_option("--HT", "--htmaglist", dest="htmags", help="Set the path to the HT magnet data", default=None, type="string")
+
+    parser.add_option("--seed", dest="seed", help="Seed the random number generator or not", action="store_true", default=False)
+    parser.add_option("--seed_value", dest="seed_value", help="Seed value for the random number generator")
 
     (options, args) = parser.parse_args()
     process(options, args)

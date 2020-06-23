@@ -9,11 +9,13 @@ class MagnetsTest(unittest.TestCase):
     def test_process(self):
 
         options = {
-            'hmags': 'IDSort/data/I03H.sim',
-            'hemags': 'IDSort/data/I03HEC.sim',
-            'htmags': 'IDSort/data/I03HTE.sim',
-            'vmags': None,
-            'vemags': None
+            'hmags'  : 'IDSort/data/I03H.sim',
+            'hemags' : 'IDSort/data/I03HEC.sim',
+            'htmags' : 'IDSort/data/I03HTE.sim',
+            'vmags'  : None,
+            'vemags' : None,
+            'seed': True,
+            'seed_value': 30
         }
 
         options_named = namedtuple("options", options.keys())(*options.values())
