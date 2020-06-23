@@ -34,7 +34,7 @@ class Magnets(object):
     def add_magnet_set(self, name, filename, flip_vector):
         magnets = {}
 
-        with open(filename) as fp:
+        with open(filename, 'r') as fp:
             for line in fp:
                 vals = line.split()
                 assert len(vals) >= 4
@@ -139,9 +139,11 @@ class MagLists():
                 # swap
                 p1 = random.choice(available[key])
                 p2 = random.choice(available[key])
+                # logging.debug("swapping key %s at %s and %s" % (key, p1, p2))
                 self.swap(key, p1, p2)
-            else :
+            else:
                 p1 = random.choice(available[key])
+                # logging.debug("flipping key %s at %s" % (key, p1))
                 self.flip(key , (p1,))
     
     def mutate_from_list(self, mutation_list):
@@ -152,7 +154,7 @@ class MagLists():
                 p2 = mutation[3]
                 logging.debug("swapping key %s at %s and %s" % (key, p1, p2) )
                 self.swap(key, p1, p2)
-            else :
+            else:
                 key = mutation[1]
                 p1 = mutation[2]
                 logging.debug("flipping key %s at %s" % (key, p1) )
@@ -160,10 +162,8 @@ class MagLists():
 
 def process(options, args):
 
-    if options.seed:
-        random.seed(int(options.seed_value))
-
     mags = Magnets()
+
     if options.hmags:
         mags.add_magnet_set('HH', options.hmags, (-1.,-1.,1.))
     if options.hemags:
@@ -174,37 +174,6 @@ def process(options, args):
         mags.add_magnet_set('VE', options.vemags, (-1.,1.,-1.))
     if options.htmags:
         mags.add_magnet_set('HT', options.htmags, (-1.,-1.,1.))
-    
-    #mags.add_perfect_magnet_set('HH', 20 , (0.,0.,1.), (-1.,1.,-1.))
-    #mags.add_perfect_magnet_set('HE', 5 , (0.,0.,1.), (-1.,1.,-1.))
-    #mags.add_perfect_magnet_set('VV', 20 , (0.,1.,0.), (-1.,-1.,1.))
-    #mags.add_perfect_magnet_set('VE', 5 , (0.,1.,0.), (-1.,-1.,1.))
-
-    import pprint
-    pprint.pprint(mags.magnet_sets)
-    
-    maglist = MagLists(mags)
-    
-    maglist.sort_all()
-    print("Now for the lists")
-    pprint.pprint(maglist.magnet_lists['HE'])
-    
-    maglist.swap('HE', 0, 1)
-    
-    print("After swap")
-    pprint.pprint(maglist.magnet_lists['HE'])
-    
-    for key in mags.magnet_sets.keys():
-        pprint.pprint(key)
-    #    maglist.flip('HH',(107,294,511,626))
-
-    available = {key : range(len(mags.magnet_sets[key])) for key in mags.magnet_sets.keys()}
-    maglist.mutate(4, available)
-    
-#    maglist.flip('HH',(107,294,511,626))
-    
-    print("After flips")
-    pprint.pprint(maglist.magnet_lists['HH'])
     
     mags.save(args[0])
 
@@ -217,9 +186,6 @@ if __name__ == "__main__" :
     parser.add_option(  "-V", "--vmaglist",  dest="vmags",  help="Set the path to the V magnet data",  default=None, type="string")
     parser.add_option("--VE", "--vemaglist", dest="vemags", help="Set the path to the VE magnet data", default=None, type="string")
     parser.add_option("--HT", "--htmaglist", dest="htmags", help="Set the path to the HT magnet data", default=None, type="string")
-
-    parser.add_option("--seed", dest="seed", help="Seed the random number generator or not", action="store_true", default=False)
-    parser.add_option("--seed_value", dest="seed_value", help="Seed value for the random number generator")
 
     (options, args) = parser.parse_args()
     process(options, args)
