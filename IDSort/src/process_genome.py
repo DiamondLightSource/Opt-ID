@@ -20,8 +20,11 @@ def human_output(id_info, filename):
     
     with open(id_info, 'r') as fp:
         info = json.load(fp)
-    
+
+    # TODO refactor file path creation
     readable_outfile = (os.path.split(filename)[1]+'.inp')
+
+    # TODO refactor other ID types in the same manner as Hybrid_Symmetric
 
     # Lookup table for converting mag names to integers
     mag_types = { 'HT': 5, 'HE': 4, 'VE': 3, 'HH': 2, 'VV': 1 }
