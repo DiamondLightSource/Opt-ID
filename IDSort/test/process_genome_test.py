@@ -7,7 +7,7 @@ from collections import namedtuple
 import h5py
 import numpy as np
 
-from IDSort.src.process_genome import process
+from IDSort.src.process_genome import process, MagLists
 
 
 class ProcessGenomeTest(unittest.TestCase):
