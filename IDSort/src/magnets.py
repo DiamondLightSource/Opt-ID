@@ -120,7 +120,7 @@ class MagLists():
     '''
     
     def __init__(self, magnets):
-        self.raw_magnets = magnets
+        self.raw_magnets  = magnets
         self.magnet_lists = {}
         for magnet_set in magnets.magnet_sets.keys():
             mags = []
@@ -194,6 +194,22 @@ class MagLists():
                 p1 = mutation[2]
                 logging.debug("flipping key %s at %s" % (key, p1) )
                 self.flip(key , (p1,))
+
+    def __eq__(self, other):
+
+        old_mag_lists_keys = sorted( self.magnet_lists.keys())
+        new_mag_lists_keys = sorted(other.magnet_lists.keys())
+
+        if not (old_mag_lists_keys == new_mag_lists_keys): return False
+
+        for list_key in old_mag_lists_keys:
+            if not (self.magnet_lists[list_key] == other.magnet_lists[list_key]):
+                return False
+
+        # Offload raw_magnets comparison to Magnets::__eq__
+        if not (self.raw_magnets == other.raw_magnets): return False
+
+        return True
 
 def process(options, args):
 

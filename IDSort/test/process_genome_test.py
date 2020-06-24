@@ -82,7 +82,16 @@ class ProcessGenomeTest(unittest.TestCase):
         try:
             process(options_named, args)
             with open(old_genome_filepath, 'rb') as old_genome_file, \
-                    open(new_genome_filepath, 'rb') as new_genome_file:
-                assert new_genome_file.read() == old_genome_file.read()
+                 open(new_genome_filepath, 'rb') as new_genome_file:
+
+                old_maglist = pickle.load(old_genome_file)
+                new_maglist = pickle.load(new_genome_file)
+
+            assert (type(old_maglist) is MagLists)
+            assert (type(new_maglist) is MagLists)
+
+            # Offloads comparison to MagLists::__eq__ method
+            assert old_maglist == new_maglist
+
         finally:
             os.remove(new_genome_filepath)
