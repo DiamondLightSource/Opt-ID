@@ -13,14 +13,13 @@ import numpy as np
 from IDSort.src.magnets import Magnets, MagLists
 import IDSort.src.field_generator as fg
 
-
 def human_output(id_info, filename):
+
+    with open(filename, 'rb') as fp:
+        maglists = pickle.load(fp)
     
-    maglists = pickle.load( open( filename, "rb" ) )
-    
-    f2 = open(id_info, 'r')
-    info = json.load(f2)
-    f2.close()
+    with open(id_info, 'r') as fp:
+        info = json.load(fp)
     
     readable_outfile = (os.path.split(filename)[1]+'.inp')
     
@@ -91,6 +90,9 @@ def human_output(id_info, filename):
         for b in range(len(info['beams'])):
             a=0
             for mag in info['beams'][b]['mags']:
+
+
+
                 if info['beams'][b]['mags'][a]['type']=='HE':mag_type=4
                 elif info['beams'][b]['mags'][a]['type']=='VE':mag_type=3
                 elif info['beams'][b]['mags'][a]['type']=='HH':mag_type=2
@@ -137,6 +139,7 @@ def human_output(id_info, filename):
         he=0
         for b in range(len(info['beams'])):
             a=0
+
             for mag in info['beams'][b]['mags']:
                 if info['beams'][b]['mags'][a]['type']=='HE':mag_type=4
                 elif info['beams'][b]['mags'][a]['type']=='VE':mag_type=3
@@ -182,9 +185,7 @@ def process(options, args):
         for filename in args[0::]:
             print("Turning file %s from Human Readable to Genome" % (filename))
 
-            f2 = open(filename, 'r')
             buildlist = np.genfromtxt(filename, dtype=str)
-            f2.close()
 
             mags = Magnets()
             mags.load(options.magnets_filename)
@@ -228,9 +229,9 @@ def process(options, args):
 
             outfile = (os.path.split(filename)[1]+'.h5')
             #fg.output_fields(outfile, options.id_filename, options.id_template, options.magnets_filename, maglist)
-            fp = open(os.path.split(filename)[1]+'.genome','wb')
-            pickle.dump(maglist, fp)
-            fp.close()
+
+            with open(os.path.split(filename)[1]+'.genome','wb') as fp:
+                pickle.dump(maglist, fp)
 
     if options.readable:
 
@@ -242,8 +243,10 @@ def process(options, args):
     if options.analysis:
         for filename in args[0::]:  
             print("Processing file %s" % (filename))
+
             # load the genome
-            maglists = pickle.load( open( filename, "rb" ) )
+            with open( filename, "rb" ) as fp:
+                maglists = pickle.load(fp)
 
             outfile = (os.path.split(filename)[1]+'.h5')
             fg.output_fields(outfile, options.id_filename, options.id_template, options.magnets_filename, maglists)
