@@ -12,7 +12,7 @@ class CompareTest(unittest.TestCase):
         # exp == Expected Outputs
         # obs == Observed Outputs
 
-        data_path = 'IDSort/test/data/compare_test'
+        data_path = 'IDSort/test/data/compare_test/test_process'
         inp_path  = os.path.join(data_path, 'inputs')
         exp_path  = os.path.join(data_path, 'expected_outputs')
         obs_path  = os.path.join(data_path, 'observed_outputs')
