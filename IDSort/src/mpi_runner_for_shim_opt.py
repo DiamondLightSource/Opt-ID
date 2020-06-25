@@ -152,9 +152,9 @@ def process(options, args):
     mags = Magnets()
     mags.load(options.magnets_filename)
 
-    logging.debug('mpi runenr calling fg.generate_reference_magnets()')
+    logging.debug('mpi runner calling fg.generate_reference_magnets()')
     ref_mags = fg.generate_reference_magnets(mags)
-    logging.debug('mpi runenr calling MagLists()')
+    logging.debug('mpi runner calling MagLists()')
     ref_maglist = MagLists(ref_mags)
     logging.debug('after ref_maglist')
     ref_total_id_field = fg.generate_id_field(info, ref_maglist, ref_mags, lookup)
@@ -227,7 +227,7 @@ def process(options, args):
     for i in range(options.iterations):
 
         barrier(options.singlethreaded)
-        logging.debug("Starting itteration %i" % (i))
+        logging.debug("Starting iteration %i" % (i))
 
         nextpop = []
 
