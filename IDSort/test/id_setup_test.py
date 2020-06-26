@@ -17,10 +17,10 @@ class IDSetupTest(unittest.TestCase):
         obs_path  = os.path.join(data_path, 'observed_outputs')
 
         # Prepare expected output file paths
-        exp_json_path = os.path.join(exp_path, 'output.json')
+        exp_json_path = os.path.join(exp_path, 'test_cpmu.json')
 
         # Prepare observed output file paths
-        obs_json_path = os.path.join(obs_path, 'output.json')
+        obs_json_path = os.path.join(obs_path, 'test_cpmu.json')
 
         # Always clear any observed output files before running test
         shutil.rmtree(obs_path, ignore_errors=True)
@@ -77,10 +77,10 @@ class IDSetupTest(unittest.TestCase):
         obs_path  = os.path.join(data_path, 'observed_outputs')
 
         # Prepare expected output file paths
-        exp_json_path = os.path.join(exp_path, 'output.json')
+        exp_json_path = os.path.join(exp_path, 'test_cpmu_shim.json')
 
         # Prepare observed output file paths
-        obs_json_path = os.path.join(obs_path, 'output.json')
+        obs_json_path = os.path.join(obs_path, 'test_cpmu_shim.json')
 
         # Always clear any observed output files before running test
         shutil.rmtree(obs_path, ignore_errors=True)
