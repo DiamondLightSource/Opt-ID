@@ -47,8 +47,8 @@ class CompareTest(unittest.TestCase):
             process(options_named, args)
 
             # Compare the output file to the expected one
-            with open(exp_shim_comparison_path) as exp_shim_file, \
-                 open(obs_shim_comparison_path) as obs_shim_file:
+            with open(exp_shim_comparison_path, 'r') as exp_shim_file, \
+                 open(obs_shim_comparison_path, 'r') as obs_shim_file:
 
                 # TODO make comparison more robust based on values not bytes (pandas .csv instead of manual .txt ?)
                 # Bytewise file comparison works for now for raw text files
