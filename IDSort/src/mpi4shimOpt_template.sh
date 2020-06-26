@@ -1,8 +1,9 @@
 #!/bin/bash
 module load global/cluster
-module load python/ana
-source activate mpi2
-module load openmpi/1.6.5
+module load python/3
+module load openmpi/3.0.0
+
+export PYTHONPATH=$PYTHONPATH:{{ project_root_dir }}
 
 UNIQHOSTS=${TMPDIR}/machines-u
 awk '{print $1 }' ${PE_HOSTFILE} | uniq > ${UNIQHOSTS}
@@ -18,4 +19,4 @@ echo "Processes running are : ${processes}"
 mpirun -np ${processes} \
         --hostfile ${UNIQHOSTS} \
         --tag-output \
-        python $IDHOME/mpi_runner_for_shim_opt.py $@
+        python -m IDSort.src.mpi_runner_for_shim_opt $@

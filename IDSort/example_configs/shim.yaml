@@ -1,0 +1,56 @@
+id_setup:
+  periods: 113
+  fullmagdims:
+    - 50.0
+    - 30.0
+    - 5.76
+  hemagdims:
+    - 50.0
+    - 30.0
+    - 4.00
+  htmagdims:
+    - 50.0
+    - 30.0
+    - 1.13
+  poledims:
+    - 30.0
+    - 23.0
+    - 2.95
+  interstice: 0.0625
+  gap: 5.6
+  type: 'Hybrid_Symmetric'
+  name: 'test_cpmu_shim'
+  x:
+    - 0
+    - 0.1
+    - 1
+  z:
+    - 0
+    - 0.1
+    - 1
+  steps: 1
+  endgapsym: 3.0
+  terminalgapsymhyb: 3.0
+  output_filename: 'test_cpmu_shim.json'
+magnets:
+  hmags: '/path/to/Opt-ID/IDSort/data/I03H.sim'
+  hemags: '/path/to/Opt-ID/IDSort/data/I03HEC.sim'
+  htmags: '/path/to/Opt-ID/IDSort/data/I03HTE.sim'
+  vmags: null
+  vemags: null
+  output_filename: 'test_cpmu_shim.mag'
+lookup_generator:
+  random: False
+  output_filename: 'test_cpmu_shim.h5'
+process_genome:
+  readable_genome_file: '/path/to/Opt-ID/IDSort/data/test_data/sort/process_genome_analyse_output/1.12875826e-08_000_7c51ecd01f73.genome.inp'
+mpi_runner_for_shim_opt:
+  iterations: 3
+  setup: 24
+  c: 1
+  e: 0.0
+  max_age: 10
+  scale: 10.0
+  bfield_filename: '/path/to/measured_h5_data'
+  number_of_changes: 2
+  number_of_mutations: 5
