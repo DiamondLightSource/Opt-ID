@@ -22,10 +22,10 @@ class CompareTest(unittest.TestCase):
         inp_shimmed_genome_path  = os.path.join(inp_path, 'shim/1.20847271e-07_000_A85a13cc425d0.genome')
 
         # Prepare expected output file paths
-        exp_shim_comparison_path = os.path.join(exp_path, 'output.txt')
+        exp_shim_comparison_path = os.path.join(exp_path, 'test_shim.txt')
 
         # Prepare observed output file paths
-        obs_shim_comparison_path = os.path.join(obs_path, 'output.txt')
+        obs_shim_comparison_path = os.path.join(obs_path, 'test_shim.txt')
 
         # Always clear any observed output files before running test
         shutil.rmtree(obs_path, ignore_errors=True)
