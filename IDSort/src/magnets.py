@@ -32,19 +32,20 @@ class Magnets(object):
         self.mean_field = {}
 
     def add_magnet_set(self, name, filename, flip_vector):
-        f = open(filename)
         magnets = {}
-        for line in f:
-            vals = line.split()
-            print(vals[0])
-            magnets[vals[0]] = np.array((float(vals[1]), float(vals[2]), float(vals[3])))
+
+        with open(filename, 'r') as fp:
+            for line in fp:
+                vals = line.split()
+                assert len(vals) >= 4
+                magnets[vals[0]] = np.array((float(vals[1]), float(vals[2]), float(vals[3])))
+
         self.magnet_sets[name] = magnets
         self.magnet_flip[name] = np.array(flip_vector)
-        
-        self.mean_field[name]=0.0
+        self.mean_field[name]  = 0.0
         for magnet in self.magnet_sets[name]:
-            self.mean_field[name]+=np.linalg.norm(self.magnet_sets[name][magnet])
-        self.mean_field[name]=self.mean_field[name]/len(self.magnet_sets[name])
+            self.mean_field[name] += np.linalg.norm(self.magnet_sets[name][magnet])
+        self.mean_field[name] = self.mean_field[name] / len(self.magnet_sets[name])
         
 
     def add_perfect_magnet_set(self, name, number, vector, flip_vector):
@@ -62,23 +63,56 @@ class Magnets(object):
         self.magnet_flip[name] = np.array(flip_vector)
     
     def save(self, filename):
-        fp = open(filename, 'wb')
-        pickle.dump((self.magnet_sets, self.magnet_flip, self.mean_field), fp)
-        fp.close()
+        with open(filename, 'wb') as fp:
+            pickle.dump((self.magnet_sets, self.magnet_flip, self.mean_field), fp)
     
     def load(self, filename):
-        fp = open(filename, 'rb')
-        (self.magnet_sets, self.magnet_flip, self.mean_field) = pickle.load(fp)
-        fp.close()
+        with open(filename, 'rb') as fp:
+            (self.magnet_sets, self.magnet_flip, self.mean_field) = pickle.load(fp)
         
     def availability(self):
-        availability={}
+        availability = {}
 
         for key in self.magnet_sets:
-            availability[key]=range(np.alen(self.magnet_sets[key]))
+            availability[key] = range(len(self.magnet_sets[key]))
             
         return availability
 
+    def __eq__(self, other):
+        # Assert set keys within old .mag file are internally consistent
+        old_mag_set_keys   = sorted(self.magnet_sets.keys())
+        old_mag_flip_keys  = sorted(self.magnet_flip.keys())
+        old_mag_field_keys = sorted(self.mean_field.keys())
+        assert (old_mag_set_keys == old_mag_flip_keys) and (old_mag_set_keys == old_mag_field_keys)
+
+        # Assert set keys within new .mag file are internally consistent
+        new_mag_set_keys   = sorted(other.magnet_sets.keys())
+        new_mag_flip_keys  = sorted(other.magnet_flip.keys())
+        new_mag_field_keys = sorted(other.mean_field.keys())
+        assert (new_mag_set_keys == new_mag_flip_keys) and (new_mag_set_keys == new_mag_field_keys)
+
+        # Assert set keys between old and new .mag files are consistent with one another
+        if not ((old_mag_set_keys   == new_mag_set_keys)  and \
+                (old_mag_flip_keys  == new_mag_flip_keys) and \
+                (old_mag_field_keys == new_mag_field_keys)): return False
+
+        for set_key in old_mag_set_keys:
+            old_mag_set_mag_names   = sorted( self.magnet_sets[set_key].keys())
+            new_mag_set_mag_names   = sorted(other.magnet_sets[set_key].keys())
+
+            # Assert magnet names in this magnet set between old and new .mag files are consistent with one another
+            if not (old_mag_set_mag_names == new_mag_set_mag_names): return False
+
+            # Assert magnet values in this magnet set between old and new .mag files are consistent with one another
+            for magnet in old_mag_set_mag_names:
+                if not all(self.magnet_sets[set_key][magnet] == other.magnet_sets[set_key][magnet]): return False
+
+            # Assert the flip vectors and mean fields between old and new .mag files are consistent with one another
+            if not all(self.magnet_flip[set_key] == other.magnet_flip[set_key]): return False
+            if not    (self.mean_field[set_key]  == other.mean_field[set_key]):  return False
+
+        # If we have reached here the two objects contain the same data
+        return True
 
 class MagLists():
     '''
@@ -86,7 +120,7 @@ class MagLists():
     '''
     
     def __init__(self, magnets):
-        self.raw_magnets = magnets
+        self.raw_magnets  = magnets
         self.magnet_lists = {}
         for magnet_set in magnets.magnet_sets.keys():
             mags = []
@@ -128,7 +162,7 @@ class MagLists():
 #    def mutate(self, number_of_mutations, available={'VE':range(20), 'HE':range(20), 'HH':range(576), 'VV':range(419), 'HT':range(20)}):
         if (available == None):
             #logging.debug("No available list specified, getting from magnet list")
-            available = self.raw_magnets.availability
+            available = self.raw_magnets.availability()
         
         #logging.debug("Magnet keys are %s"%(available.keys()))    
         
@@ -140,9 +174,11 @@ class MagLists():
                 # swap
                 p1 = random.choice(available[key])
                 p2 = random.choice(available[key])
+                # logging.debug("swapping key %s at %s and %s" % (key, p1, p2))
                 self.swap(key, p1, p2)
-            else :
+            else:
                 p1 = random.choice(available[key])
+                # logging.debug("flipping key %s at %s" % (key, p1))
                 self.flip(key , (p1,))
     
     def mutate_from_list(self, mutation_list):
@@ -153,14 +189,32 @@ class MagLists():
                 p2 = mutation[3]
                 logging.debug("swapping key %s at %s and %s" % (key, p1, p2) )
                 self.swap(key, p1, p2)
-            else :
+            else:
                 key = mutation[1]
                 p1 = mutation[2]
                 logging.debug("flipping key %s at %s" % (key, p1) )
                 self.flip(key , (p1,))
 
+    def __eq__(self, other):
+
+        old_mag_lists_keys = sorted( self.magnet_lists.keys())
+        new_mag_lists_keys = sorted(other.magnet_lists.keys())
+
+        if not (old_mag_lists_keys == new_mag_lists_keys): return False
+
+        for list_key in old_mag_lists_keys:
+            if not (self.magnet_lists[list_key] == other.magnet_lists[list_key]):
+                return False
+
+        # Offload raw_magnets comparison to Magnets::__eq__
+        if not (self.raw_magnets == other.raw_magnets): return False
+
+        return True
+
 def process(options, args):
+
     mags = Magnets()
+
     if options.hmags:
         mags.add_magnet_set('HH', options.hmags, (-1.,-1.,1.))
     if options.hemags:
@@ -172,46 +226,15 @@ def process(options, args):
     if options.htmags:
         mags.add_magnet_set('HT', options.htmags, (-1.,-1.,1.))
     
-    #mags.add_perfect_magnet_set('HH', 20 , (0.,0.,1.), (-1.,1.,-1.))
-    #mags.add_perfect_magnet_set('HE', 5 , (0.,0.,1.), (-1.,1.,-1.))
-    #mags.add_perfect_magnet_set('VV', 20 , (0.,1.,0.), (-1.,-1.,1.))
-    #mags.add_perfect_magnet_set('VE', 5 , (0.,1.,0.), (-1.,-1.,1.))
-    
-    import pprint
-    pprint.pprint(mags.magnet_sets)
-    
-    maglist = MagLists(mags)
-    
-    maglist.sort_all()
-    print("Now for the lists")
-    pprint.pprint(maglist.magnet_lists['HE'])
-    
-    maglist.swap('HE', 0, 1)
-    
-    print("After swap")
-    pprint.pprint(maglist.magnet_lists['HE'])
-    
-    for key in mags.magnet_sets.keys():
-        pprint.pprint(key)
-    #    maglist.flip('HH',(107,294,511,626))
-    available = {key : range(len(mags.magnet_sets[key])) for key in mags.magnet_sets.keys()}
-    
-    maglist.mutate(4,available)
-    
-#    maglist.flip('HH',(107,294,511,626))
-    
-    print("After flips")
-    pprint.pprint(maglist.magnet_lists['HH'])
-    
     mags.save(args[0])
 
 if __name__ == "__main__" :
     import optparse
     usage = "%prog [options] OutputFile"
     parser = optparse.OptionParser(usage=usage)
-    parser.add_option("-H", "--hmaglist", dest="hmags", help="Set the path to the H magnet data", default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13H.sim', type="string")
+    parser.add_option(  "-H", "--hmaglist",  dest="hmags",  help="Set the path to the H magnet data",  default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13H.sim',   type="string")
     parser.add_option("--HE", "--hemaglist", dest="hemags", help="Set the path to the HE magnet data", default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/data/J13HEA.sim', type="string")
-    parser.add_option("-V", "--vmaglist", dest="vmags", help="Set the path to the V magnet data", default=None, type="string")
+    parser.add_option(  "-V", "--vmaglist",  dest="vmags",  help="Set the path to the V magnet data",  default=None, type="string")
     parser.add_option("--VE", "--vemaglist", dest="vemags", help="Set the path to the VE magnet data", default=None, type="string")
     parser.add_option("--HT", "--htmaglist", dest="htmags", help="Set the path to the HT magnet data", default=None, type="string")
 
