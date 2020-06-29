@@ -20,22 +20,18 @@ class MpiRunnerTest(unittest.TestCase):
         exp_path  = os.path.join(data_path, 'expected_outputs')
         obs_path  = os.path.join(data_path, 'observed_outputs')
 
-        # Base name for test genome file
-        base_genome_names = [
-            '1.12875826e-08_000_7c51ecd01f73.genome',
-            '1.49788342e-08_000_b6059e1c0884.genome',
-            '1.81441854e-08_000_645a52b2bb2d.genome',
-            '4.05007630e-08_000_47a4f43ecf86.genome'
-        ]
-
         # Prepare input file paths
         inp_json_path   = os.path.join(inp_path, 'test_cpmu.json')
         inp_mag_path    = os.path.join(inp_path, 'test_cpmu.mag')
         inp_h5_path     = os.path.join(inp_path, 'test_cpmu.h5')
 
         # Prepare expected output file paths
-        exp_genome_paths = [os.path.join(exp_path, base_genome_name)
-                            for base_genome_name in base_genome_names]
+        exp_genome_paths = [
+            os.path.join(exp_path, '1.12875826e-08_000_7c51ecd01f73.genome'),
+            os.path.join(exp_path, '1.49788342e-08_000_b6059e1c0884.genome'),
+            os.path.join(exp_path, '1.81441854e-08_000_645a52b2bb2d.genome'),
+            os.path.join(exp_path, '4.05007630e-08_000_47a4f43ecf86.genome'),
+        ]
 
         # Always clear any observed output files before running test
         shutil.rmtree(obs_path, ignore_errors=True)
