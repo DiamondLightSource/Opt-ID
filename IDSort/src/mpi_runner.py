@@ -83,18 +83,15 @@ def process(options, args):
 
     logging.debug("Process %d ip address is : %s" % (rank, ip))
 
-
-    f2 = open(options.id_filename, 'r')
-    info = json.load(f2)
-    f2.close()
+    with open(options.id_filename, 'r') as fp:
+        info = json.load(fp)
 
     logging.debug("Loading Lookup")
-    f1 = h5py.File(options.lookup_filename, 'r')
-    lookup = {}
-    for beam in info['beams']:
-        logging.debug("Loading beam %s" %(beam['name']))
-        lookup[beam['name']] = f1[beam['name']][...]
-    f1.close()
+    with h5py.File(options.lookup_filename, 'r') as fp:
+        lookup = {}
+        for beam in info['beams']:
+            logging.debug("Loading beam %s" %(beam['name']))
+            lookup[beam['name']] = fp[beam['name']][...]
 
     barrier(options.singlethreaded)
 
