@@ -169,23 +169,23 @@ def calculate_trajectory_fitness_from_array(total_id_field, info, ref_trajectori
     return generate_id_field_cost(test_array, ref_trajectories)
 
 # TODO refactor and remove this code
-def calculate_fitness(id_filename, lookup_filename, magnets_filename, maglist):
-    # TODO this will be slow, but should be optimizable with lookups
-    with open(id_filename, 'r') as fp:
-        info = json.load(fp)
-
-    with h5py.File(lookup_filename, 'r') as lookup:
-
-        mags = Magnets()
-        mags.load(magnets_filename)
-
-        ref_mags = generate_reference_magnets(mags)
-        ref_maglist = MagLists(ref_mags)
-        ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, lookup)
-
-        result = calculate_cached_fitness(info, lookup, magnets, maglist, ref_total_id_field)
-
-    return result
+# def calculate_fitness(id_filename, lookup_filename, magnets_filename, maglist):
+#     # TODO this will be slow, but should be optimizable with lookups
+#     with open(id_filename, 'r') as fp:
+#         info = json.load(fp)
+#
+#     with h5py.File(lookup_filename, 'r') as lookup:
+#
+#         mags = Magnets()
+#         mags.load(magnets_filename)
+#
+#         ref_mags = generate_reference_magnets(mags)
+#         ref_maglist = MagLists(ref_mags)
+#         ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, lookup)
+#
+#         result = calculate_cached_fitness(info, lookup, magnets, maglist, ref_total_id_field)
+#
+#     return result
 
 
 def output_fields(filename, id_filename, lookup_filename, magnets_filename, maglist):
