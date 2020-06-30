@@ -212,6 +212,6 @@ if __name__ == "__main__":
         output['beams'].append(top_beam)
         output['beams'].append(bottom_beam)
 
-        fp = open(args[0], 'w')
-        json.dump(output, fp, indent=4)
-        fp.close()
+        with open(args[0], 'w') as fp:
+            json.dump(output, fp, indent=4)
+

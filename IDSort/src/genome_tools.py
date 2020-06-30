@@ -46,14 +46,15 @@ class BCell(object):
 
     def save(self, path):
         filename = '%010.8e_%03i_%s.genome' %(self.fitness, self.age, self.uid)
-        fp = open(os.path.join(path, filename), 'wb')
-        pickle.dump(self.genome, fp)
-        fp.close()
+
+        with open(os.path.join(path, filename), 'wb') as fp:
+            pickle.dump(self.genome, fp)
 
     def load(self, filename):
-        fp = open(filename, 'rb')
-        self.genome = pickle.load(fp)
-        fp.close()
+
+        with open(filename, 'rb') as fp:
+            self.genome = pickle.load(fp)
+
         params = os.path.split(filename)[1].split('_')
         self.fitness = float(params[0])
         self.age = int(params[1])

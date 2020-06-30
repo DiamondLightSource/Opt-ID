@@ -30,8 +30,8 @@ import IDSort.src.magnet_tools as mt
 
 
 def load_lookup(filename, beam):
-    f = h5py.File(filename, 'r')
-    return f[beam]
+    with h5py.File(filename, 'r') as fp:
+        return fp[beam]
 
 
 def generate_per_magnet_array(info, magnetlist, magnets):
@@ -168,63 +168,63 @@ def calculate_trajectory_fitness_from_array(total_id_field, info, ref_trajectori
     pherr, test_array = mt.calculate_phase_error(info, total_id_field)
     return generate_id_field_cost(test_array, ref_trajectories)
 
-
+# TODO refactor and remove this code
 def calculate_fitness(id_filename, lookup_filename, magnets_filename, maglist):
     # TODO this will be slow, but should be optimizable with lookups
-    lookup = h5py.File(lookup_filename, 'r')
-    f2 = open(id_filename, 'r')
-    info = json.load(f2)
-    f2.close()
+    with open(id_filename, 'r') as fp:
+        info = json.load(fp)
 
-    mags = Magnets()
-    mags.load(magnets_filename)
+    with h5py.File(lookup_filename, 'r') as lookup:
 
-    ref_mags = generate_reference_magnets(mags)
-    ref_maglist = MagLists(ref_mags)
-    ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, lookup)
+        mags = Magnets()
+        mags.load(magnets_filename)
 
-    result = calculate_cached_fitness(info, lookup, magnets, maglist, ref_total_id_field)
-    lookup.close()
+        ref_mags = generate_reference_magnets(mags)
+        ref_maglist = MagLists(ref_mags)
+        ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, lookup)
+
+        result = calculate_cached_fitness(info, lookup, magnets, maglist, ref_total_id_field)
 
     return result
 
 
 def output_fields(filename, id_filename, lookup_filename, magnets_filename, maglist):
-    f2 = open(id_filename, 'r')
-    info = json.load(f2)
-    f2.close()
-    f1 = h5py.File(lookup_filename, 'r')
-    lookup = {}
-    for beam in info['beams']:
-        lookup[beam['name']] = f1[beam['name']][...]
-    f1.close()
+
+    with open(id_filename, 'r') as fp:
+        info = json.load(fp)
+
+    with h5py.File(lookup_filename, 'r') as fp:
+        lookup = {}
+        for beam in info['beams']:
+            lookup[beam['name']] = fp[beam['name']][...]
 
     mags = Magnets()
     mags.load(magnets_filename)
     ref_mags=generate_reference_magnets(mags)
 
-    f = h5py.File(filename, 'w')
+    with h5py.File(filename, 'w') as fp:
     
-    per_beam_field = generate_per_beam_b_field(info, maglist, mags, lookup)
-    total_id_field = generate_id_field(info, maglist, mags, lookup)
-    for name in per_beam_field.keys():
-        f.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
-    f.create_dataset('id_Bfield', data=total_id_field)
-    trajectory_information=mt.calculate_phase_error(info, total_id_field)
-    f.create_dataset('id_phase_error', data = trajectory_information[0])
-    f.create_dataset('id_trajectory', data = trajectory_information[1])
-    
-    per_beam_field = generate_per_beam_b_field(info, maglist, ref_mags, lookup)
-    total_id_field = generate_id_field(info, maglist, ref_mags, lookup)
-    for name in per_beam_field.keys():
-        f.create_dataset("%s_per_beam_perfect" % (name), data=per_beam_field[name])
-    f.create_dataset('id_Bfield_perfect', data=total_id_field)
-    trajectory_information=mt.calculate_phase_error(info, total_id_field)
-    f.create_dataset('id_phase_error_perfect', data = trajectory_information[0])
-    f.create_dataset('id_trajectory_perfect', data = trajectory_information[1])
+        per_beam_field = generate_per_beam_b_field(info, maglist, mags, lookup)
+        total_id_field = generate_id_field(info, maglist, mags, lookup)
 
-    f.close()
+        for name in per_beam_field.keys():
+            fp.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
 
+        fp.create_dataset('id_Bfield', data=total_id_field)
+        trajectory_information=mt.calculate_phase_error(info, total_id_field)
+        fp.create_dataset('id_phase_error', data=trajectory_information[0])
+        fp.create_dataset('id_trajectory',  data=trajectory_information[1])
+
+        per_beam_field = generate_per_beam_b_field(info, maglist, ref_mags, lookup)
+        total_id_field = generate_id_field(info, maglist, ref_mags, lookup)
+
+        for name in per_beam_field.keys():
+            fp.create_dataset("%s_per_beam_perfect" % (name), data=per_beam_field[name])
+
+        fp.create_dataset('id_Bfield_perfect', data=total_id_field)
+        trajectory_information = mt.calculate_phase_error(info, total_id_field)
+        fp.create_dataset('id_phase_error_perfect', data=trajectory_information[0])
+        fp.create_dataset('id_trajectory_perfect',  data=trajectory_information[1])
 
 if __name__ == "__main__" :
     import optparse
@@ -233,21 +233,15 @@ if __name__ == "__main__" :
     parser = optparse.OptionParser(usage=usage)
     (options, args) = parser.parse_args()
     
-    #f2 = open('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015test.json', 'r')
-    f2 = open(args[0], 'r')
-    info = json.load(f2)
-    f2.close()
+    with open(args[0], 'r') as fp:
+        info = json.load(fp)
 
-    #f1 = h5py.File('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015test.h5', 'r')
-    f1 = h5py.File(args[1], 'r')
-    lookup = {}
-    for beam in info['beams']:
-        lookup[beam['name']] = f1[beam['name']][...]
-    f1.close()
-    
+    with h5py.File(args[1], 'r') as fp:
+        lookup = {}
+        for beam in info['beams']:
+            lookup[beam['name']] = fp[beam['name']][...]
 
     mags = Magnets()
-    #mags.load('/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/magnets.mag')
     mags.load(args[2])
     
     ref_mags = generate_reference_magnets(mags)
@@ -262,7 +256,6 @@ if __name__ == "__main__" :
     mag_array = generate_per_magnet_array(info, maglist, mags)
     
     for i in range(2):
-    
 
         maglist2 =  copy.deepcopy(maglist)
         maglist2.mutate(1)
@@ -284,64 +277,64 @@ if __name__ == "__main__" :
 
     maglist0 = MagLists(mags)
     maglist0.sort_all()
-#    maglist0.flip('HH', (107,294,511,626))
+    # maglist0.flip('HH', (107,294,511,626))
+
     per_beam_field = generate_per_beam_b_field(info, maglist0, mags, lookup)
     total_id_field = generate_id_field(info, maglist0, mags, lookup)
     pherr, trajectories = mt.calculate_phase_error(info,total_id_field)
 
-    f3 = h5py.File('real_data.h5', 'w')
-    for name in per_beam_field.keys():
-# #        f3.create_dataset("%s_per_magnet" % (name), data=per_mag_field[name])
-        f3.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
-    f3.create_dataset('id_Bfield',data=total_id_field)
-    f3.create_dataset('id_phase_error',data=trajectories[0])
-    f3.create_dataset('id_trajectories',data=trajectories[2])
-    f3.close()
+    with h5py.File('real_data.h5', 'w') as fp:
+
+        for name in per_beam_field.keys():
+            fp.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
+
+        fp.create_dataset('id_Bfield',      data=total_id_field)
+        fp.create_dataset('id_phase_error', data=trajectories[0])
+        fp.create_dataset('id_trajectories',data=trajectories[2])
     
-    f4 = open('I21_setmag.inp','w')
-    
-    if info['type']=='APPLE_Symmetric':
-        
-        a=0
-        vv=0
-        hh=0
-        ve=0
-        he=0
-        for b in range(len(info['beams'])):
+    with open('I21_setmag.inp','w') as fp:
+
+        # TODO support for other ID devices?
+        if info['type'] == 'APPLE_Symmetric':
+
             a=0
-            for mag in info['beams'][b]['mags']:
-                if info['beams'][b]['mags'][a]['type']=='HE':mag_type=4
-                elif info['beams'][b]['mags'][a]['type']=='VE':mag_type=3
-                elif info['beams'][b]['mags'][a]['type']=='HH':mag_type=2
-                elif info['beams'][b]['mags'][a]['type']=='VV':mag_type=1
-                
-                if mag_type==1:
-                    mag_num=int(maglist0.magnet_lists['VV'][vv][0])
-                    mag_flip=maglist0.magnet_lists['VV'][vv][1]
-                    vv+=1
-                
-                if mag_type==2:
-                    mag_num=int(maglist0.magnet_lists['HH'][hh][0])
-                    mag_flip=maglist0.magnet_lists['HH'][hh][1]
-                    hh+=1
-                    
-                if mag_type==3:
-                    mag_num=int(maglist0.magnet_lists['VE'][ve][0])
-                    mag_flip=maglist0.magnet_lists['VE'][ve][1]
-                    ve+=1
-                    
-                if mag_type==4:
-                    mag_num=int(maglist0.magnet_lists['HE'][he][0])
-                    mag_flip=maglist0.magnet_lists['HE'][he][1]
-                    he+=1
-                
-                line= ("%5i %4i %4i %4i %4i %4i\n"%(b+1,a+1,mag_type,info['beams'][b]['mags'][a]['direction_matrix'][0][0]+info['beams'][b]['mags'][a]['direction_matrix'][0][1],mag_flip, mag_num))
-                f4.write(line)
-                
-                a+=1
-                
-            f4.write("\n")
-        
-        f4.close()
+            vv=0
+            hh=0
+            ve=0
+            he=0
+            for b in range(len(info['beams'])):
+                a=0
+                for mag in info['beams'][b]['mags']:
+                    if   info['beams'][b]['mags'][a]['type']=='HE': mag_type=4
+                    elif info['beams'][b]['mags'][a]['type']=='VE': mag_type=3
+                    elif info['beams'][b]['mags'][a]['type']=='HH': mag_type=2
+                    elif info['beams'][b]['mags'][a]['type']=='VV': mag_type=1
+
+                    if mag_type==1:
+                        mag_num=int(maglist0.magnet_lists['VV'][vv][0])
+                        mag_flip=maglist0.magnet_lists['VV'][vv][1]
+                        vv+=1
+
+                    if mag_type==2:
+                        mag_num=int(maglist0.magnet_lists['HH'][hh][0])
+                        mag_flip=maglist0.magnet_lists['HH'][hh][1]
+                        hh+=1
+
+                    if mag_type==3:
+                        mag_num=int(maglist0.magnet_lists['VE'][ve][0])
+                        mag_flip=maglist0.magnet_lists['VE'][ve][1]
+                        ve+=1
+
+                    if mag_type==4:
+                        mag_num=int(maglist0.magnet_lists['HE'][he][0])
+                        mag_flip=maglist0.magnet_lists['HE'][he][1]
+                        he+=1
+
+                    line= ("%5i %4i %4i %4i %4i %4i\n"%(b+1,a+1,mag_type,info['beams'][b]['mags'][a]['direction_matrix'][0][0]+info['beams'][b]['mags'][a]['direction_matrix'][0][1],mag_flip, mag_num))
+                    fp.write(line)
+
+                    a+=1
+
+                fp.write("\n")
     
 
