@@ -49,23 +49,19 @@ import IDSort.src.magnet_tools as mt
 logging.basicConfig(level=0,format=' %(asctime)s.%(msecs)03d %(threadName)-16s %(levelname)-6s %(message)s', datefmt='%H:%M:%S')
 
 def mutations(c, e_star, fitness, scale):
-    inverse_proportional_hypermutation =  abs(((1.0-(e_star/fitness)) * c) + c)
+    inverse_proportional_hypermutation =  abs(((1.0 - (e_star / fitness)) * c) + c)
     a = random.random()
     b = random.random()
-    hypermacromuation = abs((a-b) * scale)
+    hypermacromuation = abs((a - b) * scale)
     return int(inverse_proportional_hypermutation + hypermacromuation)
 
 def barrier(is_single_threaded):
-    if is_single_threaded:
-        pass
-    else:
+    if not is_single_threaded:
         MPI.COMM_WORLD.Barrier()
 
 def alltoall(is_single_threaded, trans):
-    if is_single_threaded:
-        return trans
-    else:
-        return MPI.COMM_WORLD.alltoall(trans)
+    return trans if is_single_threaded else MPI.COMM_WORLD.alltoall(trans)
+
 
 def process(options, args):
 
@@ -122,25 +118,29 @@ def process(options, args):
     population = []
     estar = options.e
 
-
     if options.restart and (rank == 0) :
-        filenames = os.listdir(args[0])
+
         # sort the genome filenames to ensure that when given the same set of
         # files in a directory, population[0] is the same across different
         # orderings of the listed directory contents: this is to fix the test
         # MpiRunnerTest.test_process_initial_population() in mpi_runner_test.py
         # when run on travis
-        filenames.sort()
+        filenames = os.listdir(args[0]).sort()
+
         for filename in filenames:
             fullpath = os.path.join(args[0],filename)
+
             try :
                 logging.debug("Trying to load %s" % (fullpath))
                 genome = ID_BCell()
                 genome.load(fullpath)
                 population.append(genome)
                 logging.debug("Loaded %s" % (fullpath))
-            except :
+
+            except Exception as ex:
                 logging.debug("Failed to load %s" % (fullpath))
+                raise ex
+
         if len(population) < options.setup:
             # Seed with children from first
             children = population[0].generate_children(options.setup-len(population), 20, info, lookup, mags, ref_trajectories)
