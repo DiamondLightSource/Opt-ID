@@ -122,7 +122,7 @@ def process(options, args):
         # orderings of the listed directory contents: this is to fix the test
         # MpiRunnerTest.test_process_initial_population() in mpi_runner_test.py
         # when run on travis
-        filenames = os.listdir(args[0]).sort()
+        filenames = sorted(os.listdir(args[0]))
 
         for filename in filenames:
             fullpath = os.path.join(args[0],filename)
