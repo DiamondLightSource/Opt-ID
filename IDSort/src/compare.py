@@ -25,7 +25,7 @@ def process(options, args):
     output_path      = args[2] if (len(args) > 2) else 'compare.txt'
 
     try:
-        logger.debug('Loading ID_BCell genome 1 [%s]', g1_path)
+        logger.info('Loading ID_BCell genome 1 [%s]', g1_path)
         g1 = ID_BCell()
         g1.load(g1_path)
 
@@ -34,7 +34,7 @@ def process(options, args):
         raise ex
 
     try:
-        logger.debug('Loading ID_BCell genome 2 [%s]', g2_path)
+        logger.info('Loading ID_BCell genome 2 [%s]', g2_path)
         g2 = ID_BCell()
         g2.load(g2_path)
 
@@ -43,7 +43,7 @@ def process(options, args):
         raise ex
 
     try:
-        logger.debug('Writing comparison to [%s]', output_path)
+        logger.info('Writing comparison to [%s]', output_path)
 
         # TODO convert output to pandas .csv file
         with open(output_path, 'w') as output_file:
