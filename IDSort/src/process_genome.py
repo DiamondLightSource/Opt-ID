@@ -13,109 +13,131 @@ import numpy as np
 from IDSort.src.magnets import Magnets, MagLists
 import IDSort.src.field_generator as fg
 
-def human_output(id_info, filepath, output_dir):
+from IDSort.src.logging_utils import logging, getLogger
+logger = getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
-    with open(filepath, 'rb') as fp:
-        maglists = pickle.load(fp)
-    
-    with open(id_info, 'r') as fp:
-        info = json.load(fp)
+def human_output(id_json_path, genome_path, output_dir):
+    logger.debug('Starting')
+
+    # Load the MagLists data
+    try:
+        logger.info('Loading MagLists from genome [%s]', genome_path)
+        with open(genome_path, 'rb') as fp:
+            maglists = pickle.load(fp)
+
+    except Exception as ex:
+        logger.error('Failed to load MagLists from genome [%s]', genome_path, exc_info=ex)
+        raise ex
+
+    # Load the ID json data
+    try:
+        logger.info('Loading ID info from json [%s]', id_json_path)
+        with open(id_json_path, 'r') as fp:
+            info = json.load(fp)
+
+    except Exception as ex:
+        logger.error('Failed to load ID info from json [%s]', id_json_path, exc_info=ex)
+        raise ex
 
     # TODO refactor file path creation
-    readable_filename = os.path.split(filepath)[1] + '.inp'
-    readable_outfile = (os.path.join(output_dir, readable_filename))
+    output_filename = os.path.split(genome_path)[1] + '.inp'
+    output_path     = (os.path.join(output_dir, output_filename))
 
-    # TODO make sure there are test files for IDs other than Hybrid_Symmetric
+    try:
+        logger.info('Writing human readable genome for [%s] device to [%s]', info['type'], output_path)
 
-    # Lookup table for converting mag names to integers
-    mag_types = { 'HT': 5, 'HE': 4, 'VE': 3, 'HH': 2, 'VV': 1 }
-    
-    if info['type'] == 'Hybrid_Symmetric':
-        # TODO make a proper function somewhere
-        with open(readable_outfile, 'w') as fp:
+        # TODO refactor as pandas .csv file format
+        with open(output_path, 'w') as output_file:
 
+            # Lookup table for converting mag names to integers
+            mag_types   = {'HT': 5, 'HE': 4, 'VE': 3, 'HH': 2, 'VV': 1}
             # Track the current index of each magnet type
-            mag_indices = { 'HT': 0, 'HE': 0, 'VE': 0, 'HH': 0, 'VV': 0 }
+            mag_indices = {'HT': 0, 'HE': 0, 'VE': 0, 'HH': 0, 'VV': 0}
 
-            for b, beam in enumerate(info['beams']):
-                for a, mag in enumerate(beam['mags']):
+            if info['type'] == 'Hybrid_Symmetric':
 
-                    # Prepare data for this magnet
-                    mag_type = mag_types[mag['type']]
-                    mag_data = maglists.magnet_lists[mag['type']][mag_indices[mag['type']]]
-                    mag_num  = int(mag_data[0])
-                    mag_flip = mag_data[1]
+                for b, beam in enumerate(info['beams']):
+                    for a, mag in enumerate(beam['mags']):
 
-                    # Update the index to the next magnet of this type
-                    mag_indices[mag['type']] += 1
+                        # Prepare data for this magnet
+                        mag_type = mag_types[mag['type']]
+                        mag_data = maglists.magnet_lists[mag['type']][mag_indices[mag['type']]]
+                        mag_num  = int(mag_data[0])
+                        mag_flip = mag_data[1]
 
-                    # Write each magnet in the beam as a new line
-                    fp.write('%5i %4i %4i %4i %4i %03i\n' % ((b + 1), (a + 1),
-                                                             mag_type, mag['direction_matrix'][2][2],
-                                                             mag_flip, mag_num))
-                # New line at the end of the beam
-                fp.write('\n')
-    
-    if info['type']=='PPM_AntiSymmetric':
-        #TODO make a proper function somewhere
-        with open(readable_outfile, 'w') as fp:
+                        # Update the index to the next magnet of this type
+                        mag_indices[mag['type']] += 1
 
-            # Track the current index of each magnet type
-            mag_indices = { 'HE': 0, 'VE': 0, 'HH': 0, 'VV': 0 }
+                        # Write each magnet in the beam as a new line
+                        row_data = ((b + 1), (a + 1), mag_type, mag['direction_matrix'][2][2], mag_flip, mag_num)
+                        logger.debug('Beam %d [%s] Magnet %d [%s]', b, beam['name'], a, row_data)
+                        output_file.write('%5i %4i %4i %4i %4i %03i\n' % row_data)
 
-            for b, beam in enumerate(info['beams']):
-                for a, mag in enumerate(beam['mags']):
+                    # New line at the end of the beam
+                    output_file.write('\n')
 
-                    # Prepare data for this magnet
-                    mag_type = mag_types[mag['type']]
-                    mag_data = maglists.magnet_lists[mag['type']][mag_indices[mag['type']]]
-                    mag_num  = int(mag_data[0])
-                    mag_flip = mag_data[1]
+            elif info['type'] == 'PPM_AntiSymmetric':
 
-                    # Update the index to the next magnet of this type
-                    mag_indices[mag['type']] += 1
+                for b, beam in enumerate(info['beams']):
+                    for a, mag in enumerate(beam['mags']):
 
-                    # Write each magnet in the beam as a new line
-                    fp.write('%5i %4i %4i %4i %4i %03i\n' % ((b + 1), (a + 1),
-                                                             mag_type, mag['direction'][0],
-                                                             mag_flip, mag_num))
-                # New line at the end of the beam
-                fp.write('\n')
+                        # Prepare data for this magnet
+                        mag_type = mag_types[mag['type']]
+                        mag_data = maglists.magnet_lists[mag['type']][mag_indices[mag['type']]]
+                        mag_num  = int(mag_data[0])
+                        mag_flip = mag_data[1]
 
-    if info['type']=='APPLE_Symmetric':
-        #TODO make a proper function somewhere
-        with open(readable_outfile, 'w') as fp:
+                        # Update the index to the next magnet of this type
+                        mag_indices[mag['type']] += 1
 
-            # Track the current index of each magnet type
-            mag_indices = { 'HE': 0, 'VE': 0, 'HH': 0, 'VV': 0 }
+                        # Write each magnet in the beam as a new line
+                        row_data = ((b + 1), (a + 1), mag_type, mag['direction'][0], mag_flip, mag_num)
+                        logger.debug('Beam %d [%s] Magnet %d [%s]', b, beam['name'], a, row_data)
+                        output_file.write('%5i %4i %4i %4i %4i %03i\n' % row_data)
 
-            for b, beam in enumerate(info['beams']):
-                for a, mag in enumerate(beam['mags']):
+                    # New line at the end of the beam
+                    output_file.write('\n')
 
-                    # Prepare data for this magnet
-                    mag_type = mag_types[mag['type']]
-                    mag_data = maglists.magnet_lists[mag['type']][mag_indices[mag['type']]]
-                    mag_num  = int(mag_data[0])
-                    mag_flip = mag_data[1]
+            elif info['type'] == 'APPLE_Symmetric':
 
-                    # Update the index to the next magnet of this type
-                    mag_indices[mag['type']] += 1
+                for b, beam in enumerate(info['beams']):
+                    for a, mag in enumerate(beam['mags']):
 
-                    if   mag_type in [1, 3]:
-                        mag_direction = mag['direction_matrix'][1][1]
-                    elif mag_type in [2, 4]:
-                        mag_direction = mag['direction_matrix'][2][2]
-                    else:
-                        raise Exception(f'Unknown mag_type [{mag_type}]')
+                        # Prepare data for this magnet
+                        mag_type = mag_types[mag['type']]
+                        mag_data = maglists.magnet_lists[mag['type']][mag_indices[mag['type']]]
+                        mag_num  = int(mag_data[0])
+                        mag_flip = mag_data[1]
 
-                    # Write each magnet in the beam as a new line
-                    fp.write('%5i %4i %4i %4i %4i %03i\n' % ((b + 1), (a + 1),
-                                                             mag_type, mag_direction,
-                                                             mag_flip, mag_num))
-                # New line at the end of the beam
-                fp.write('\n')
+                        # Update the index to the next magnet of this type
+                        mag_indices[mag['type']] += 1
+
+                        if   mag_type in [1, 3]:
+                            mag_direction = mag['direction_matrix'][1][1]
+                        elif mag_type in [2, 4]:
+                            mag_direction = mag['direction_matrix'][2][2]
+                        else:
+                            raise Exception(f'Unknown mag_type [{mag_type}]')
+
+                        # Write each magnet in the beam as a new line
+                        row_data = ((b + 1), (a + 1), mag_type, mag_direction, mag_flip, mag_num)
+                        logger.debug('Beam %d [%s] Magnet %d [%s]', b, beam['name'], a, row_data)
+                        output_file.write('%5i %4i %4i %4i %4i %03i\n' % row_data)
+
+                    # New line at the end of the beam
+                    output_file.write('\n')
+
+    except Exception as ex:
+        logger.error('Failed to write comparison to [%s]', output_path, exc_info=ex)
+        raise ex
+
+    logger.debug('Halting')
 
 def process(options, args):
+    logger.debug('Starting')
+
+    # Process all genome files converting them from human readable to machine readable files
     if options.create_genome:
         for filepath in args[0::]:
             print("Turning file %s from Human Readable to Genome" % (filepath))
@@ -166,24 +188,37 @@ def process(options, args):
             with open(os.path.join(options.output_dir, genome_filename),'wb') as fp:
                 pickle.dump(maglist, fp)
 
+    # Process all genome files converting them from machine readable files to human readable files
     if options.readable:
 
-        for filepath in args[0::]:
-            print("Making file %s human readable." % (filepath))
+        genome_paths = args[0::]
+        for index, genome_path in enumerate(genome_paths):
+            logger.info('%03d of %03d : Converting genome file to human readable genome file [%s]', index, len(genome_paths), genome_path)
 
-            human_output(options.id_filename, filepath, options.output_dir)
+            human_output(options.id_filename, genome_path, options.output_dir)
 
+    # Process all genome files producing analysis files
     if options.analysis:
-        for filepath in args[0::]:
-            print("Processing file %s" % (filepath))
-            # load the genome
-            with open(filepath, "rb") as fp:
-                maglists = pickle.load(fp)
 
-            analysis_filename = os.path.split(filepath)[1]+'.h5'
-            outfile = (os.path.join(options.output_dir, analysis_filename))
-            fg.output_fields(outfile, options.id_filename, options.id_template, options.magnets_filename, maglists)
+        genome_paths = args[0::]
+        for index, genome_path in enumerate(genome_paths):
+            logger.info('%03d of %03d : Producing analysis file from genome file [%s]', index, len(genome_paths), genome_path)
 
+            # Load the MagLists data
+            try:
+                logger.info('Loading MagLists from genome [%s]', genome_path)
+                with open(genome_path, 'rb') as fp:
+                    maglists = pickle.load(fp)
+
+            except Exception as ex:
+                logger.error('Failed to load MagLists from genome [%s]', genome_path, exc_info=ex)
+                raise ex
+
+            # Offload analysis processing to field_generator::output_fields
+            analysis_path = os.path.join(options.output_dir, os.path.split(genome_path)[1] + '.h5')
+            fg.output_fields(analysis_path, options.id_filename, options.id_template, options.magnets_filename, maglists)
+
+    logger.debug('Halting')
 
 if __name__ == '__main__':
     import optparse
