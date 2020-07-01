@@ -28,32 +28,34 @@ import h5py
 from IDSort.src.magnets import Magnets, MagLists
 import IDSort.src.magnet_tools as mt
 
-
-def load_lookup(filename, beam):
-    with h5py.File(filename, 'r') as fp:
-        return fp[beam]
+from IDSort.src.logging_utils import logging, getLogger
+logger = getLogger(__name__)
 
 
-def generate_per_magnet_array(info, magnetlist, magnets):
-    pos = {}
-    pos['VV'] = 0;
-    pos['VE'] = 0;
-    pos['HH'] = 0;
-    pos['HE'] = 0;
-    pos['HT'] = 0;
-
+def generate_per_magnet_array(info, maglist, magnets):
+    # Result dict for each beams data
     beams = {}
 
-    # for each beam
-    for beam in info['beams']:
+    # Track the current index of each magnet type
+    mag_indices = {'HT': 0, 'HE': 0, 'VE': 0, 'HH': 0, 'VV': 0}
+
+    # Process each beam in the ID json data
+    for b, beam in enumerate(info['beams']):
+
+        # Process all magnets in this beam
         magvalues = []
-        for mag in beam['mags']:
-            magarray = magnetlist.get_magnet_vals(mag['type'], pos[mag['type']], magnets, mag['flip_matrix'])
-            pos[mag['type']] += 1
-            magvalues.append(magarray)
+        for a, mag in enumerate(beam['mags']):
+
+            # Prepare data for this magnet
+            magvalues += [maglist.get_magnet_vals(mag['type'], mag_indices[mag['type']], magnets, mag['flip_matrix'])]
+
+            # Update the index to the next magnet of this type
+            mag_indices[mag['type']] += 1
+
+        # Stack the resulting rows and transpose them to shape (3, N)
         beams[beam['name']] = np.transpose(np.vstack(magvalues))
-        #logging.debug("beam keys is %s"%(beam.keys())) # mags, name
-        #logging.debug("beams keys are %s"%(beams.keys())) # Bottom Beam, Top Beam
+        logger.debug('Beam %d [%s] has shape [%s]', b, beam['name'], beams[beam['name']].shape)
+
     return beams
 
 
