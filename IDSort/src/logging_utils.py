@@ -8,16 +8,16 @@ def getLogger(module):
     logger.setLevel(logging.CRITICAL)
     return logger
 
-logger = getLogger(__name__)
-
-if __name__ == "__main__":
-
-    logger.setLevel(logging.INFO)
-    logger.debug('Hello %s.', 'World')
-    logger.info('Hello %s.', 'World')
-    logger.warning('Hello %s.', 'World')
-    logger.error('Hello %s.', 'World')
-    logger.critical('Hello %s.', 'World')
-
-    if logger.isEnabledFor(logging.INFO):
-        logger.info('INFO')
+# logger = getLogger(__name__)
+#
+# if __name__ == "__main__":
+#
+#     logger.setLevel(logging.INFO)
+#     logger.debug('Hello %s.', 'World')
+#     logger.info('Hello %s.', 'World')
+#     logger.warning('Hello %s.', 'World')
+#     logger.error('Hello %s.', 'World')
+#     logger.critical('Hello %s.', 'World')
+#
+#     if logger.isEnabledFor(logging.INFO):
+#         logger.info('INFO')
