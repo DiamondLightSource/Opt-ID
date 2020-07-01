@@ -58,29 +58,27 @@ def generate_per_magnet_array(info, maglist, magnets):
 
     return beams
 
-
 def compare_magnet_arrays(mag_array_a, mag_array_b, lookup):
     difference_map = {}
+
     for beam in mag_array_a.keys():
-        difference = mag_array_a[beam] - mag_array_b[beam]
-        diff_slice = (np.abs(difference).sum(0) > 0.)
-        field_diff = np.sum(lookup[beam][:, :, :, :, :, diff_slice] * difference[:,diff_slice], 4)
-        difference_map[beam] = field_diff.sum(4)
+
+        difference = (mag_array_a[beam] - mag_array_b[beam])
+        diff_slice = (np.sum(np.abs(difference), axis=0) > 0)
+        field_diff = np.sum((lookup[beam][..., diff_slice] * difference[:,diff_slice]), axis=4)
+
+        difference_map[beam] = np.sum(field_diff, axis=4)
+
     return difference_map
 
-
+# TODO refactor use of results input being destructively modified
 def generate_sub_array(beam_array, eval_list, lookup, beam, results):
     # This sum is calculated like this to avoid memory errors
-    result = np.sum(lookup[beam][:, :, :, :, :, eval_list[0]] * beam_array[:,eval_list[0]], 4)
-    #logging.debug("result shape is %s"%(s(result.shape)))
-    #logging.debug("beam shape is %s"%(s(beam.shape))) doesn't work, beam shape = is a unicode object
-    #logging.debug("beam is %s"%(s(beam)))
-    #logging.debug("eval_list shape is %s"%(s(eval_list.shape))) doesn't work, eval_list is a list object
-    #logging.debug("eval_list is %s"%(s(eval_list)))
-    #logging.debug("beam_array shape is %s"%(s(beam_array.shape)))
+    result = np.sum((lookup[beam][..., eval_list[0]] * beam_array[:, eval_list[0]]), axis=4)
+
     for m in eval_list[1:]:
-        tmp = np.sum(lookup[beam][:, :, :, :, :, m] * beam_array[:,m], 4)
-        result += tmp
+        result += np.sum((lookup[beam][..., m] * beam_array[:, m]), axis=4)
+
     results.append(result)
 
 
@@ -181,14 +179,13 @@ def calculate_trajectory_fitness_from_array(total_id_field, info, ref_trajectori
 #         mags = Magnets()
 #         mags.load(magnets_filename)
 #
-#         ref_mags = generate_reference_magnets(mags)
-#         ref_maglist = MagLists(ref_mags)
+#         ref_mags           = generate_reference_magnets(mags)
+#         ref_maglist        = MagLists(ref_mags)
 #         ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, lookup)
 #
-#         result = calculate_cached_fitness(info, lookup, magnets, maglist, ref_total_id_field)
+#         result = calculate_cached_fitness(info, lookup, mags, maglist, ref_total_id_field)
 #
 #     return result
-
 
 def output_fields(filename, id_filename, lookup_filename, magnets_filename, maglist):
 
