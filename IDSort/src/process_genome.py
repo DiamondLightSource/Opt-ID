@@ -139,53 +139,37 @@ def process(options, args):
 
     # Process all genome files converting them from human readable to machine readable files
     if options.create_genome:
-        for filepath in args[0::]:
-            print("Turning file %s from Human Readable to Genome" % (filepath))
 
-            buildlist = np.genfromtxt(filepath, dtype=str)
+        hr_genome_paths = args[0::]
+        for index, hr_genome_path in enumerate(hr_genome_paths):
+            logger.info('%03d of %03d : Converting human readable genome file to genome file [%s]', index, len(hr_genome_paths), hr_genome_path)
+
+            # TODO refactor to avoid use of np.genfromtxt()
+            buildlist = np.genfromtxt(hr_genome_path, dtype=str)
 
             mags = Magnets()
             mags.load(options.magnets_filename)
-
             maglist = MagLists(mags)
 
-            heswap = 0
-            veswap = 0
-            hhswap = 0
-            vvswap = 0
+            # Lookup table for converting mag names to integers
+            mag_types   = { 5 : 'HT', 4 : 'HE', 3 : 'VE', 2 : 'HH', 1 : 'VV' }
+            # Track the current index of each magnet type
+            mag_indices = {'HT': 0, 'HE': 0, 'VE': 0, 'HH': 0, 'VV': 0}
 
             for line in range(buildlist.shape[0]):
 
-                if int(buildlist[line,2])==4:
-                    #maglist.magnet_lists['HE'][heswap][0]=buildlist[line,5]
-                    maglist.swap('HE',maglist.magnet_lists['HE'].index([buildlist[line,5],1,0]) , heswap)
-                    maglist.magnet_lists['HE'][heswap][1]=int(buildlist[line,4])
+                mag_type_id = int(buildlist[line, 2])
+                mag_type    = mag_types[mag_type_id]
 
-                    heswap+=1
+                logger.debug('mag_type_id %d mag_type %s buildlist [%s]', mag_type_id, mag_type, buildlist[line])
 
+                maglist.swap(mag_type, maglist.magnet_lists[mag_type].index([buildlist[line, 5], 1, 0]), mag_indices[mag_type])
+                maglist.magnet_lists[mag_type][mag_indices[mag_type]][1] = int(buildlist[line, 4])
 
-                elif int(buildlist[line,2])==3:
-                    #maglist.magnet_lists['VE'][veswap][0]=buildlist[line,5]
-                    maglist.swap('VE',maglist.magnet_lists['VE'].index([buildlist[line,5],1,0]) , veswap)
-                    maglist.magnet_lists['VE'][veswap][1]=int(buildlist[line,4])
-                    veswap+=1
+                mag_indices[mag_type] += 1
 
-                elif int(buildlist[line,2])==2:
-                    #maglist.magnet_lists['HH'][hhswap][0]=buildlist[line,5]
-                    maglist.swap('HH',maglist.magnet_lists['HH'].index([buildlist[line,5],1,0]) , hhswap)
-                    maglist.magnet_lists['HH'][hhswap][1]=int(buildlist[line,4])
-
-                    hhswap+=1
-
-                elif int(buildlist[line,2])==1:
-                    #maglist.magnet_lists['VV'][vvswap][0]=buildlist[line,5]
-                    maglist.swap('VV',maglist.magnet_lists['VV'].index([buildlist[line,5],1,0]) , vvswap)
-                    maglist.magnet_lists['VV'][vvswap][1]=int(buildlist[line,4])
-
-                    vvswap+=1
-
-            genome_filename = os.path.split(filepath)[1] + '.genome'
-            with open(os.path.join(options.output_dir, genome_filename),'wb') as fp:
+            genome_path = os.path.join(options.output_dir, os.path.split(hr_genome_path)[1] + '.genome')
+            with open(genome_path,'wb') as fp:
                 pickle.dump(maglist, fp)
 
     # Process all genome files converting them from machine readable files to human readable files
