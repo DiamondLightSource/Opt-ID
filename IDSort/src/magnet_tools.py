@@ -22,79 +22,79 @@ import logging
 import numpy as np
 from scipy import signal
 
+# TODO marked for deprecation, never called and contains undefined function
+# def generate_B_array(xmin, xmax, xstep, zmin, zmax, zstep, smin, smax, sstep, magdims, V1):
+#     '''
+#     magdims = np.array([41.,16.,5.25])
+#     mingap = 5.0
+#     '''
+#     return generate_B_array_with_offsets(xmin, xmax, xstep, 0.0, zmin, zmax, zstep, 0.0, smin, smax, sstep, 0.0, magdims, V1)
 
-def generate_B_array(xmin, xmax, xstep, zmin, zmax, zstep, smin, smax, sstep, magdims, V1):
-    '''
-    magdims = np.array([41.,16.,5.25])
-    mingap = 5.0
-    '''
-    return generate_B_array_with_offsets(xmin, xmax, xstep, 0.0, zmin, zmax, zstep, 0.0, smin, smax, sstep, 0.0, magdims, V1)
+# TODO marked for deprecation, never called and contains undefined function
+# def generate_integral_array(xmin, xmax, xstep, xoff, zmin, zmax, zstep, zoff, smin, smax, sstep, soff, magdims, mingap):
+#
+#     # Fist generate the b_array at the right point
+#     BClean = generate_B_array_with_offsets(xmin, xmax, xstep, xoff, zmin, zmax, zstep, zoff, smin, smax, sstep, soff, magdims, mingap)
+#
+#     B = BClean*1e4*sstep
+#
+#     # get the appropriate parts of the b array
+#     bx = B[:,0,:,:,0]
+#     bz = B[:,0,:,:,1]
+#     bs = B[:,0,:,:,2]
+#
+#     fintx = bx.sum(1)
+#     fintz = bz.sum(1)
+#     fints = bs.sum(1)
+#
+#     scale_factor = -np.arange(smin, smax, sstep)
+#
+#     sintx = np.array(bx)
+#     sintx[:,:,1] = bx[:,:,1]*scale_factor
+#     sintx[:,:,0] = bx[:,:,0]*scale_factor
+#     sintx[:,:,2] = bx[:,:,2]*scale_factor
+#
+#     sintx =  sintx.sum(1)
+#
+#     sintz = np.array(bz)
+#     sintz[:,:,1] = bz[:,:,1]*scale_factor
+#     sintz[:,:,0] = bz[:,:,0]*scale_factor
+#     sintz[:,:,2] = bz[:,:,2]*scale_factor
+#
+#     sintz =  sintz.sum(1)
+#
+#     sints = np.array(bs)
+#     sints[:,:,1] = bs[:,:,1]*scale_factor
+#     sints[:,:,0] = bs[:,:,0]*scale_factor
+#     sints[:,:,2] = bs[:,:,2]*scale_factor
+#
+#     sints =  sints.sum(1)
+#
+#     mid = (BClean.shape[0]-1)/2
+#
+#     # should only pass back the middle point
+# #    return (BClean[mid:mid+1,:,:,:,:], fintx, fintz, fints, sintx, sintz, sints)
+#     #Passing back full array
+#     return (BClean, fintx, fintz, fints, sintx, sintz, sints)
 
+# TODO marked for deprecation, never called
+# def calculate_magnetic_components(mag_x, mag_z, mag_s, B_array):
+#     mult = B_array*np.array([mag_x,mag_z,mag_s])
+# #    mult = B_array*np.array([mag_z,mag_x,mag_s])
+#     return mult.sum((len(mult.shape)-1))
 
+# TODO marked for deprecation, never called
+# def calculate_integral_component(mag_x, mag_z, mag_s, fintx, fintz, sintx, sintz):
+#     mags = np.array([mag_x,mag_z,mag_s])
+#
+#     firstix = (fintx*mags).sum(1)
+#     firstiz = (fintz*mags).sum(1)
+#
+#     secondix = (sintx*mags).sum(1)
+#     secondiz = (sintz*mags).sum(1)
+#
+#     return(firstix,firstiz,secondix,secondiz)
 
-def generate_integral_array(xmin, xmax, xstep, xoff, zmin, zmax, zstep, zoff, smin, smax, sstep, soff, magdims, mingap):
-    
-    # Fist generate the b_array at the right point
-    BClean = generate_B_array_with_offsets(xmin, xmax, xstep, xoff, zmin, zmax, zstep, zoff, smin, smax, sstep, soff, magdims, mingap)
-    
-    B = BClean*1e4*sstep
-    
-    # get the appropriate parts of the b array
-    bx = B[:,0,:,:,0]
-    bz = B[:,0,:,:,1]
-    bs = B[:,0,:,:,2]
-    
-    fintx = bx.sum(1)
-    fintz = bz.sum(1)
-    fints = bs.sum(1)
-    
-    scale_factor = -np.arange(smin, smax, sstep)
-    
-    sintx = np.array(bx)
-    sintx[:,:,1] = bx[:,:,1]*scale_factor
-    sintx[:,:,0] = bx[:,:,0]*scale_factor
-    sintx[:,:,2] = bx[:,:,2]*scale_factor
-    
-    sintx =  sintx.sum(1)
-    
-    sintz = np.array(bz)
-    sintz[:,:,1] = bz[:,:,1]*scale_factor
-    sintz[:,:,0] = bz[:,:,0]*scale_factor
-    sintz[:,:,2] = bz[:,:,2]*scale_factor
-    
-    sintz =  sintz.sum(1)
-    
-    sints = np.array(bs)
-    sints[:,:,1] = bs[:,:,1]*scale_factor
-    sints[:,:,0] = bs[:,:,0]*scale_factor
-    sints[:,:,2] = bs[:,:,2]*scale_factor
-    
-    sints =  sints.sum(1)
-    
-    mid = (BClean.shape[0]-1)/2
-    
-    # should only pass back the middle point 
-#    return (BClean[mid:mid+1,:,:,:,:], fintx, fintz, fints, sintx, sintz, sints)
-    #Passing back full array
-    return (BClean, fintx, fintz, fints, sintx, sintz, sints)
-
-def calculate_magnetic_components(mag_x, mag_z, mag_s, B_array):
-    mult = B_array*np.array([mag_x,mag_z,mag_s])
-#    mult = B_array*np.array([mag_z,mag_x,mag_s])
-    return mult.sum((len(mult.shape)-1))
-
-
-def calculate_integral_component(mag_x, mag_z, mag_s, fintx, fintz, sintx, sintz):
-    mags = np.array([mag_x,mag_z,mag_s])
-    
-    firstix = (fintx*mags).sum(1)
-    firstiz = (fintz*mags).sum(1)
-    
-    secondix = (sintx*mags).sum(1)
-    secondiz = (sintz*mags).sum(1)
-    
-    return(firstix,firstiz,secondix,secondiz)
-    
 
 def calculate_phase_error(info, b_array):
     Energy = 3.0  #ideally needs to be tunable. Is a machine parameter. Would need a new Machine Class
@@ -102,52 +102,52 @@ def calculate_phase_error(info, b_array):
     c=2.9911124e8 #The speed of light. For now.
     Mass =0.511e-3
     Gamma=Energy/Mass
-    
+
     #quick hack for central trajectory only
 #    i=b_array.shape[0]
 #    i=(i+1)/2-1
 #    b_array=b_array[i,:,:]
-    
-    
+
+
     nperiods=info['periods']
     step=info['sstep']
     n_stp = int(info['period_length']/step)
     n_s_stp = int(round((info['smax']-info['smin'])/step))
-    
+
 #    logging.debug("step %s"%(str(info['sstep'])))
 #    logging.debug("smax %s"%(str(info['smax'])))
 #    logging.debug("smin %s"%(str(info['smin'])))
 #    logging.debug("N_S_Step %s"%(str(n_s_stp)))
-    
+
     nskip=8
-    
+
 #    ph=np.zeros(n_s_stp)
     ph2=np.zeros(n_s_stp)
-    
+
 #    v1=np.zeros((4*nperiods-2*nskip))
 #    v2=np.zeros((4*nperiods-2*nskip))
     v2a=np.zeros((4*nperiods-2*nskip))
-    
+
     logging.debug("Barray shape %s"%(str(b_array.shape)))
     logging.debug("Barray 3rd element shape %s"%(str(b_array.shape[2])))
-    
+
     trap_b_array = np.roll(b_array, 1, 0)
 #    logging.debug("trap_b_array shape %s"%(str(trap_b_array.shape)))
     trap_b_array[:,:,0,:]=0.0
     trap_b_array = (trap_b_array+b_array)*step/2
-    
-    trajectories = np.zeros([b_array.shape[0],b_array.shape[1],b_array.shape[2],4]) 
-    
+
+    trajectories = np.zeros([b_array.shape[0],b_array.shape[1],b_array.shape[2],4])
+
     trajectories[:,:,:,2]=-np.cumsum(np.multiply(Const,trap_b_array[:,:,:,1]), axis=2)
     trajectories[:,:,:,3]=np.cumsum(np.multiply(Const,trap_b_array[:,:,:,0]), axis=2)
-    
+
     trap_traj = np.roll(trajectories, 4, 0)
     trap_traj[:,:,0,:]=0.0
     trap_traj=(trap_traj+trajectories)*step/2
-    
+
     trajectories[:,:,:,0]=np.cumsum(trap_traj[:,:,:,2], axis=2)
     trajectories[:,:,:,1]=np.cumsum(trap_traj[:,:,:,3], axis=2)
-    
+
     #wx=np.cumsum(np.square(trajectories[:,2])*1e-3)
     #wz=np.cumsum(np.square(trajectories[:,3])*1e-3)
 
@@ -155,240 +155,244 @@ def calculate_phase_error(info, b_array):
     i = (i+1)//2 - 1
     j = b_array.shape[1]
     j = (j+1)//2 - 1
-    
+
     b_array=b_array[i,j,:,:]
-    
-    
-    
+
+
+
     w=np.zeros([n_s_stp,2])
     #logging.debug("w shape is %s"%(str(w.shape)))
     #logging.debug("trajectories shape is %s"%(str(trajectories[i,j,:,2].shape)))
     w[:,0]=np.square(trajectories[i,j,:,2])
     w[:,1]=np.square(trajectories[i,j,:,3])
-    
+
     trap_w = np.roll(w,1,0)
     trap_w[0,:] = 0.0
     trap_w= (trap_w+w)*1e-3*step/2
-    
+
     ph=np.cumsum(trap_w[:,0]+trap_w[:,1])/(2.0*c)
     ph2=(step*1e-3/(2.0*c*Gamma**2))*np.arange(n_s_stp)+ph
-    
-    
+
+
     v1 = (n_stp//4)*np.arange(4*nperiods - 2*nskip) + n_s_stp//2 - nperiods*n_stp//2 + (nskip-1)*n_stp//4
     v2 = ph2[v1[0] : v1[-1] + n_stp//4 : n_stp//4]
-            
-            
+
+
     #'linear fit'
     A=np.vstack([v1,np.ones(len(v1))]).T
-    
+
 #    logging.debug("A %s"%(str(len(v1))))
 #    logging.debug("v2 %s"%(str(len(v2))))
-    
+
     m,intercept=np.linalg.lstsq(A, v2, rcond=None)[0]
     Omega0=2*np.pi/(m*n_stp)
-    
+
     v2 = ph[v1[0] : v1[-1] + n_stp//4 : n_stp//4]
-    
-        
+
+
     #'fit function'
     A=np.vstack([v1,np.ones(len(v1))]).T
-    
+
     m,intercept=np.linalg.lstsq(A, v2, rcond=None)[0]
 
     phfit=intercept+m*v1
-    
-    
+
+
     ph=v2-phfit
     pherr=np.sum(ph**2)*Omega0**2
-    
+
     pherr=np.sqrt(pherr/(4*nperiods+1-2*nskip))*360.0/(2.0*np.pi)
     return (pherr, trajectories)
 
-def calculate_phase_error2(info, b_array):
-    Energy = 3.0  #ideally needs to be tunable. Is a machine parameter. Would need a new Machine Class
-    Const = (0.03/Energy)*1e-2  # appears to be defining 10^5eV...(Includes random 1e4 B factor)
-    c=2.9911124e8 #The speed of light. For now.
-    Mass =0.511e-3
-    Gamma=Energy/Mass
-    
-    #quick hack for central trajectory only
-    i=b_array.shape[0]
-    i=(i+1)/2-1
-    b_array=b_array[i,:,:]
-    
-    
-    nperiods=info['periods']
-    step=info['sstep']
-    n_stp = int(info['period_length']/step)
-    n_s_stp = int(round((info['smax']-info['smin'])/step))
-    
-    nskip=8
-    
-    ph=np.zeros(n_s_stp)
-    ph2=np.zeros(n_s_stp)
-    
-    v1=np.zeros((4*nperiods-2*nskip))
-    v2=np.zeros((4*nperiods-2*nskip))
-    v2a=np.zeros((4*nperiods-2*nskip))
-    
-    
-    
-    trap_b_array = np.roll(b_array, 1, 0)
-    trap_b_array[0,:]=0.0
-    trap_b_array = (trap_b_array+b_array)*step/2
-    
-    trajectories = np.zeros([n_s_stp,4]) 
-    
-    trajectories[:,2]=-np.cumsum(np.multiply(Const,trap_b_array[:,1]))
-    trajectories[:,3]=np.cumsum(np.multiply(Const,trap_b_array[:,0]))
-    
-    trap_traj = np.roll(trajectories, 1, 0)
-    trap_traj[0,:]=0.0
-    trap_traj=(trap_traj+trajectories)*step/2
-    
-    trajectories[:,0]=np.cumsum(trap_traj[:,2])
-    trajectories[:,1]=np.cumsum(trap_traj[:,3])
-    
-    #wx=np.cumsum(np.square(trajectories[:,2])*1e-3)
-    #wz=np.cumsum(np.square(trajectories[:,3])*1e-3)
-    
-    w=np.zeros([n_s_stp,2])
-    
-    w[:,0]=np.square(trajectories[:,2])
-    w[:,1]=np.square(trajectories[:,3])
-    
-    trap_w = np.roll(w,1,0)
-    trap_w[0,:] = 0.0
-    trap_w= (trap_w+w)*1e-3*step/2
-    
-    ph=np.cumsum(trap_w[:,0]+trap_w[:,1])/(2.0*c)
-    ph2=(step*1e-3/(2.0*c*Gamma**2))*np.arange(n_s_stp)+ph
-    
-    
-    v1=(n_stp/4)*np.arange(4*nperiods-2*nskip)+n_s_stp/2-nperiods*n_stp/2+(nskip-1)*n_stp/4
-    v2=ph2[v1[0]:v1[-1]+n_stp/4:n_stp/4]
-            
-            
-    #'linear fit'
-    A=np.vstack([v1,np.ones(len(v1))]).T
-    
-    m,intercept=np.linalg.lstsq(A, v2, rcond=None)[0]
-    Omega0=2*np.pi/(m*n_stp)
-    
-    v2=ph[v1[0]:v1[-1]+n_stp/4:n_stp/4]
-    
-        
-    #'fit function'
-    A=np.vstack([v1,np.ones(len(v1))]).T
-    
-    m,intercept=np.linalg.lstsq(A, v2, rcond=None)[0]
+# TODO marked for deprecation, never called
+# def calculate_phase_error2(info, b_array):
+#     Energy = 3.0  #ideally needs to be tunable. Is a machine parameter. Would need a new Machine Class
+#     Const = (0.03/Energy)*1e-2  # appears to be defining 10^5eV...(Includes random 1e4 B factor)
+#     c=2.9911124e8 #The speed of light. For now.
+#     Mass =0.511e-3
+#     Gamma=Energy/Mass
+#
+#     #quick hack for central trajectory only
+#     i=b_array.shape[0]
+#     i=(i+1)/2-1
+#     b_array=b_array[i,:,:]
+#
+#
+#     nperiods=info['periods']
+#     step=info['sstep']
+#     n_stp = int(info['period_length']/step)
+#     n_s_stp = int(round((info['smax']-info['smin'])/step))
+#
+#     nskip=8
+#
+#     ph=np.zeros(n_s_stp)
+#     ph2=np.zeros(n_s_stp)
+#
+#     v1=np.zeros((4*nperiods-2*nskip))
+#     v2=np.zeros((4*nperiods-2*nskip))
+#     v2a=np.zeros((4*nperiods-2*nskip))
+#
+#
+#
+#     trap_b_array = np.roll(b_array, 1, 0)
+#     trap_b_array[0,:]=0.0
+#     trap_b_array = (trap_b_array+b_array)*step/2
+#
+#     trajectories = np.zeros([n_s_stp,4])
+#
+#     trajectories[:,2]=-np.cumsum(np.multiply(Const,trap_b_array[:,1]))
+#     trajectories[:,3]=np.cumsum(np.multiply(Const,trap_b_array[:,0]))
+#
+#     trap_traj = np.roll(trajectories, 1, 0)
+#     trap_traj[0,:]=0.0
+#     trap_traj=(trap_traj+trajectories)*step/2
+#
+#     trajectories[:,0]=np.cumsum(trap_traj[:,2])
+#     trajectories[:,1]=np.cumsum(trap_traj[:,3])
+#
+#     #wx=np.cumsum(np.square(trajectories[:,2])*1e-3)
+#     #wz=np.cumsum(np.square(trajectories[:,3])*1e-3)
+#
+#     w=np.zeros([n_s_stp,2])
+#
+#     w[:,0]=np.square(trajectories[:,2])
+#     w[:,1]=np.square(trajectories[:,3])
+#
+#     trap_w = np.roll(w,1,0)
+#     trap_w[0,:] = 0.0
+#     trap_w= (trap_w+w)*1e-3*step/2
+#
+#     ph=np.cumsum(trap_w[:,0]+trap_w[:,1])/(2.0*c)
+#     ph2=(step*1e-3/(2.0*c*Gamma**2))*np.arange(n_s_stp)+ph
+#
+#
+#     v1=(n_stp/4)*np.arange(4*nperiods-2*nskip)+n_s_stp/2-nperiods*n_stp/2+(nskip-1)*n_stp/4
+#     v2=ph2[v1[0]:v1[-1]+n_stp/4:n_stp/4]
+#
+#
+#     #'linear fit'
+#     A=np.vstack([v1,np.ones(len(v1))]).T
+#
+#     m,intercept=np.linalg.lstsq(A, v2, rcond=None)[0]
+#     Omega0=2*np.pi/(m*n_stp)
+#
+#     v2=ph[v1[0]:v1[-1]+n_stp/4:n_stp/4]
+#
+#
+#     #'fit function'
+#     A=np.vstack([v1,np.ones(len(v1))]).T
+#
+#     m,intercept=np.linalg.lstsq(A, v2, rcond=None)[0]
+#
+#     phfit=intercept+m*v1
+#
+#
+#     ph=v2-phfit
+#     pherr=np.sum(ph**2)*Omega0**2
+#
+#     pherr=np.sqrt(pherr/(4*nperiods+1-2*nskip))*360.0/(2.0*np.pi)
+#     return (pherr, trajectories)
 
-    phfit=intercept+m*v1
-    
-    
-    ph=v2-phfit
-    pherr=np.sum(ph**2)*Omega0**2
-    
-    pherr=np.sqrt(pherr/(4*nperiods+1-2*nskip))*360.0/(2.0*np.pi)
-    return (pherr, trajectories)
-    
-def calculate_phase_error3(info, b_array):
-    Energy = 3.0  #ideally needs to be tunable. Is a machine parameter. Would need a new Machine Class
-    Const = (0.03/Energy)*1e-2  # appears to be defining 10^5eV...(Includes random 1e4 B factor)
-    c=2.9911124e8 #The speed of light. For now.
-    Mass =0.511e-3
-    Gamma=Energy/Mass
-    
-    #quick hack for central trajectory only
-    i=b_array.shape[0]
-    i=(i+1)/2-1
-    b_array=b_array[i,:,:]
-    
-    
-    nperiods=info['periods']
-    step=info['sstep']
-    n_stp = int(info['period_length']/step)
-    n_s_stp = int(round((info['smax']-info['smin'])/step))
-    
-    nskip=8
-    
-    trap_b_array = np.roll(b_array, 1, 0)
-    trap_b_array[0,:]=0.0
-    trap_b_array = (trap_b_array+b_array)*step/2
-    
-    trajectories = np.zeros([n_s_stp,4]) 
-    
-    trajectories[:,2]=-np.cumsum(np.multiply(Const,trap_b_array[:,1]))
-    trajectories[:,3]=np.cumsum(np.multiply(Const,trap_b_array[:,0]))
-    
-    trap_traj = np.roll(trajectories, 1, 0)
-    trap_traj[0,:]=0.0
-    trap_traj=(trap_traj+trajectories)*step/2
-    
-    trajectories[:,0]=np.cumsum(trap_traj[:,2])
-    trajectories[:,1]=np.cumsum(trap_traj[:,3])
-    
-    #wx=np.cumsum(np.square(trajectories[:,2])*1e-3)
-    #wz=np.cumsum(np.square(trajectories[:,3])*1e-3)
-    
-    detrended_trajectories=signal.detrend(trajectories[:,:],axis=0)
-    a=np.gradient(detrended_trajectories[:,0])
-    b=np.gradient(detrended_trajectories[:,1])
-    w=np.vstack((a,b))
-    w=np.square(np.transpose(w))
-    
-    trap_w = np.roll(w,1,0)
-    trap_w[0,:] = 0.0
-    trap_w= (trap_w+w)*1e-3*1/2
-    
-    ph=np.cumsum(trap_w[:,0]+trap_w[:,1])/(2.0*c)
+# TODO marked for deprecation, never called
+# def calculate_phase_error3(info, b_array):
+#     Energy = 3.0  #ideally needs to be tunable. Is a machine parameter. Would need a new Machine Class
+#     Const = (0.03/Energy)*1e-2  # appears to be defining 10^5eV...(Includes random 1e4 B factor)
+#     c=2.9911124e8 #The speed of light. For now.
+#     Mass =0.511e-3
+#     Gamma=Energy/Mass
+#
+#     #quick hack for central trajectory only
+#     i=b_array.shape[0]
+#     i=(i+1)/2-1
+#     b_array=b_array[i,:,:]
+#
+#
+#     nperiods=info['periods']
+#     step=info['sstep']
+#     n_stp = int(info['period_length']/step)
+#     n_s_stp = int(round((info['smax']-info['smin'])/step))
+#
+#     nskip=8
+#
+#     trap_b_array = np.roll(b_array, 1, 0)
+#     trap_b_array[0,:]=0.0
+#     trap_b_array = (trap_b_array+b_array)*step/2
+#
+#     trajectories = np.zeros([n_s_stp,4])
+#
+#     trajectories[:,2]=-np.cumsum(np.multiply(Const,trap_b_array[:,1]))
+#     trajectories[:,3]=np.cumsum(np.multiply(Const,trap_b_array[:,0]))
+#
+#     trap_traj = np.roll(trajectories, 1, 0)
+#     trap_traj[0,:]=0.0
+#     trap_traj=(trap_traj+trajectories)*step/2
+#
+#     trajectories[:,0]=np.cumsum(trap_traj[:,2])
+#     trajectories[:,1]=np.cumsum(trap_traj[:,3])
+#
+#     #wx=np.cumsum(np.square(trajectories[:,2])*1e-3)
+#     #wz=np.cumsum(np.square(trajectories[:,3])*1e-3)
+#
+#     detrended_trajectories=signal.detrend(trajectories[:,:],axis=0)
+#     a=np.gradient(detrended_trajectories[:,0])
+#     b=np.gradient(detrended_trajectories[:,1])
+#     w=np.vstack((a,b))
+#     w=np.square(np.transpose(w))
+#
+#     trap_w = np.roll(w,1,0)
+#     trap_w[0,:] = 0.0
+#     trap_w= (trap_w+w)*1e-3*1/2
+#
+#     ph=np.cumsum(trap_w[:,0]+trap_w[:,1])/(2.0*c)
+#
+#     ph2=(1*1e-3/(2.0*c*Gamma**2))*np.arange(n_s_stp)+ph
+#
+#
+#     v1=(n_stp/2)*np.arange(2*nperiods-1*nskip)+n_s_stp/2-nperiods*n_stp/2+(nskip-1)*n_stp/4
+#     v2=ph2[v1[0]:v1[-1]+n_stp/2:n_stp/2]
+#
+#
+#     #'linear fit'
+#     A=np.vstack([v1,np.ones(len(v1))]).T
+#
+#     m,intercept=np.linalg.lstsq(A, v2, rcond=None)[0]
+#     Omega0=2*np.pi/(m*n_stp)
+#
+#     v2=ph[v1[0]:v1[-1]+n_stp/2:n_stp/2]
+#
+#
+#     #'fit function'
+#     A=np.vstack([v1,np.ones(len(v1))]).T
+#
+#     m,intercept=np.linalg.lstsq(A, v2, rcond=None)[0]
+#
+#     phfit=intercept+m*v1
+#
+#
+#     ph=v2-phfit
+#     pherr=np.sum(ph**2)*Omega0**2
+#     pherrnew=ph*Omega0*360.0/(2.0*np.pi)
+#
+#     pherr=np.sqrt(pherr/(4*nperiods+1-2*nskip))*360.0/(2.0*np.pi)
+#
+#
+#
+#     return (pherr, trajectories, pherrnew)
 
-    ph2=(1*1e-3/(2.0*c*Gamma**2))*np.arange(n_s_stp)+ph
-    
-    
-    v1=(n_stp/2)*np.arange(2*nperiods-1*nskip)+n_s_stp/2-nperiods*n_stp/2+(nskip-1)*n_stp/4
-    v2=ph2[v1[0]:v1[-1]+n_stp/2:n_stp/2]
-            
-            
-    #'linear fit'
-    A=np.vstack([v1,np.ones(len(v1))]).T
-    
-    m,intercept=np.linalg.lstsq(A, v2, rcond=None)[0]
-    Omega0=2*np.pi/(m*n_stp)
-    
-    v2=ph[v1[0]:v1[-1]+n_stp/2:n_stp/2]
-    
-        
-    #'fit function'
-    A=np.vstack([v1,np.ones(len(v1))]).T
-    
-    m,intercept=np.linalg.lstsq(A, v2, rcond=None)[0]
+# TODO marked for deprecation, never called
+# def straightness(trajectories, nperiods):
+#     points_per_period = (trajectories.shape[0]/nperiods)/3
+#     nskip = 2
+#     skip = (trajectories.shape[0]/3)+(nskip*points_per_period)
+#     xmean=np.mean(trajectories[skip:-skip,0])
+#     dxmean=trajectories[skip:-skip,0]-xmean
+#     zabs=np.abs(trajectories[skip:-skip,1])
+#     strx=np.max(dxmean)
+#     strz=np.max(zabs)
+#
+#     return (strx, strz)
 
-    phfit=intercept+m*v1
-    
-    
-    ph=v2-phfit
-    pherr=np.sum(ph**2)*Omega0**2
-    pherrnew=ph*Omega0*360.0/(2.0*np.pi)
-    
-    pherr=np.sqrt(pherr/(4*nperiods+1-2*nskip))*360.0/(2.0*np.pi)
-    
-    
-
-    return (pherr, trajectories, pherrnew)
-
-def straightness(trajectories, nperiods):
-    points_per_period = (trajectories.shape[0]/nperiods)/3
-    nskip = 2
-    skip = (trajectories.shape[0]/3)+(nskip*points_per_period)
-    xmean=np.mean(trajectories[skip:-skip,0])
-    dxmean=trajectories[skip:-skip,0]-xmean
-    zabs=np.abs(trajectories[skip:-skip,1])
-    strx=np.max(dxmean)
-    strz=np.max(zabs)
-    
-    return (strx, strz)
-
+# TODO duplicated in lookup_generator.py
 'Area for testing new B-Field calculation functions'
 def fortPMB_NEW(testpoint,m,i,magdims, V1):
     '''This function Calculates the B-field in a single orientation according to the calling function
@@ -473,6 +477,7 @@ def fortPMB_NEW(testpoint,m,i,magdims, V1):
 #TODO might be able to remove s_offset altogether
 #TODO not sure about mingap either 
 
+# TODO duplicated in lookup_generator.py
 def wrapCalcB(testpoint, magdims,  V1):
     '''This function takes the arguments 'testpoint' and 's_offset'
     'testpoint' requires an array of floats of length 3 describing the [x,z,s] co-ordinates of the point under consideration
