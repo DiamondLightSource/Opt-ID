@@ -1,12 +1,12 @@
-import os, shutil
-import unittest
-import pickle
+import unittest, os, shutil
 from collections import namedtuple
 
+import pickle
 import h5py
 import numpy as np
 
-from IDSort.src.process_genome import process, MagLists
+from ..src.magnets import MagLists
+from ..src.process_genome import process
 
 
 class ProcessGenomeTest(unittest.TestCase):
