@@ -39,11 +39,15 @@ import h5py
 import numpy as np
 from mpi4py import MPI
 
-import IDSort.src.field_generator as fg
-import IDSort.src.magnet_tools as mt
-from IDSort.src.magnets import Magnets, MagLists
-from IDSort.src.field_generator import generate_reference_magnets, generate_id_field
-from IDSort.src.genome_tools import ID_Shim_BCell, ID_BCell
+from .magnets import Magnets, MagLists
+from .genome_tools import ID_Shim_BCell, ID_BCell
+
+from .field_generator import generate_reference_magnets, \
+                             generate_per_magnet_array,  \
+                             generate_id_field,          \
+                             compare_magnet_arrays
+
+from .magnet_tools import calculate_phase_error
 
 
 logging.basicConfig(level=0,format=' %(asctime)s.%(msecs)03d %(threadName)-16s %(levelname)-6s %(message)s', datefmt='%H:%M:%S')
@@ -56,10 +60,10 @@ def mutations(c, e_star, fitness, scale):
     return int(inverse_proportional_hypermutation + hypermacromuation)
 
 def saveh5(path, best, genome, info, mags, real_bfield, lookup):
-    new_magnets = fg.generate_per_magnet_array(info, best.genome, mags)
-    original_magnets = fg.generate_per_magnet_array(info, genome.genome, mags)
+    new_magnets = generate_per_magnet_array(info, best.genome, mags)
+    original_magnets = generate_per_magnet_array(info, genome.genome, mags)
     
-    update = fg.compare_magnet_arrays(original_magnets, new_magnets, lookup)
+    update = compare_magnet_arrays(original_magnets, new_magnets, lookup) 
     
     updated_bfield = np.array(real_bfield)
     for beam in update.keys() :
@@ -73,13 +77,13 @@ def saveh5(path, best, genome, info, mags, real_bfield, lookup):
     
         total_id_field = real_bfield
         fp.create_dataset('id_Bfield_original', data=total_id_field)
-        trajectory_information=mt.calculate_phase_error(info, total_id_field)
+        trajectory_information=calculate_phase_error(info, total_id_field)
         fp.create_dataset('id_phase_error_original', data = trajectory_information[0])
         fp.create_dataset('id_trajectory_original', data = trajectory_information[1])
 
         total_id_field = updated_bfield
         fp.create_dataset('id_Bfield_shimmed', data=total_id_field)
-        trajectory_information=mt.calculate_phase_error(info, total_id_field)
+        trajectory_information=calculate_phase_error(info, total_id_field)
         fp.create_dataset('id_phase_error_shimmed', data = trajectory_information[0])
         fp.create_dataset('id_trajectory_shimmed', data = trajectory_information[1])
 
@@ -87,7 +91,7 @@ def saveh5(path, best, genome, info, mags, real_bfield, lookup):
         total_id_field = generate_id_field(info, best.genome, ref_mags, lookup)
 
         fp.create_dataset('id_Bfield_perfect', data=total_id_field)
-        trajectory_information=mt.calculate_phase_error(info, total_id_field)
+        trajectory_information=calculate_phase_error(info, total_id_field)
         fp.create_dataset('id_phase_error_perfect', data = trajectory_information[0])
         fp.create_dataset('id_trajectory_perfect', data = trajectory_information[1])
 
@@ -147,13 +151,13 @@ def process(options, args):
     mags = Magnets()
     mags.load(options.magnets_filename)
 
-    logging.debug('mpi runner calling fg.generate_reference_magnets()')
-    ref_mags = fg.generate_reference_magnets(mags)
+    logging.debug('mpi runner calling generate_reference_magnets()')
+    ref_mags = generate_reference_magnets(mags) 
     logging.debug('mpi runner calling MagLists()')
     ref_maglist = MagLists(ref_mags)
     logging.debug('after ref_maglist')
-    ref_total_id_field = fg.generate_id_field(info, ref_maglist, ref_mags, lookup)
-    pherr, ref_trajectories = mt.calculate_phase_error(info, ref_total_id_field)
+    ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, lookup)
+    pherr, ref_trajectories = calculate_phase_error(info, ref_total_id_field)
 
     barrier(options.singlethreaded)
 

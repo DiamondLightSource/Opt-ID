@@ -5,10 +5,11 @@ Takes 3 arguments:
 3. The path and name of the file to output eg. $IDDATA/shim1.txt
 '''
 
-from IDSort.src.genome_tools import ID_BCell
+from .genome_tools import ID_BCell
 
-from IDSort.src.logging_utils import logging, getLogger
+from .logging_utils import logging, getLogger
 logger = getLogger(__name__)
+
 
 def process(options, args):
     logger.debug('Starting')

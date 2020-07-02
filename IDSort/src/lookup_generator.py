@@ -19,9 +19,10 @@ Created on 3 Dec 2013
 @author: ssg37927
 '''
 
-import numpy as np
+
 import h5py
 import json
+import numpy as np
 
 # TODO refactor this file
 

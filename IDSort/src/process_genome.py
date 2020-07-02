@@ -10,12 +10,12 @@ import pickle
 
 import numpy as np
 
-from IDSort.src.magnets import Magnets, MagLists
-import IDSort.src.field_generator as fg
+from .magnets import Magnets, MagLists
+from .field_generator import output_fields
 
-from IDSort.src.logging_utils import logging, getLogger
+from .logging_utils import logging, getLogger
 logger = getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+
 
 def human_output(id_json_path, genome_path, output_dir):
     logger.debug('Starting')
@@ -200,7 +200,7 @@ def process(options, args):
 
             # Offload analysis processing to field_generator::output_fields
             analysis_path = os.path.join(options.output_dir, os.path.split(genome_path)[1] + '.h5')
-            fg.output_fields(analysis_path, options.id_filename, options.id_template, options.magnets_filename, maglists)
+            output_fields(analysis_path, options.id_filename, options.id_template, options.magnets_filename, maglists)
 
     logger.debug('Halting')
 
