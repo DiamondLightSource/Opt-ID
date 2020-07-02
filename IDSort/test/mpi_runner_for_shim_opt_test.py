@@ -1,13 +1,12 @@
-import unittest
-import shutil
-import os
-import pickle
+import unittest, os, shutil
 from collections import namedtuple
 
-import numpy as np
+import pickle
 import h5py
+import numpy as np
 
-from IDSort.src.mpi_runner_for_shim_opt import process, MagLists
+from ..src.magnets import MagLists
+from ..src.mpi_runner_for_shim_opt import process
 
 
 class MpiRunnerForShimOptTest(unittest.TestCase):
