@@ -1,9 +1,9 @@
-import os, shutil
-import unittest
-import json
-from tempfile import NamedTemporaryFile
+import unittest, os, shutil
 from collections import namedtuple
-from IDSort.src.id_setup import process
+
+import json
+
+from ..src.id_setup import process
 
 
 class IDSetupTest(unittest.TestCase):
