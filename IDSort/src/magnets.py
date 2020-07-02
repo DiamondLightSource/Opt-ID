@@ -97,8 +97,8 @@ class Magnets(object):
         assert (new_mag_set_keys == new_mag_flip_keys) and (new_mag_set_keys == new_mag_field_keys)
 
         # Assert set keys between old and new .mag files are consistent with one another
-        if not ((old_mag_set_keys   == new_mag_set_keys)  and \
-                (old_mag_flip_keys  == new_mag_flip_keys) and \
+        if not ((old_mag_set_keys   == new_mag_set_keys)  and
+                (old_mag_flip_keys  == new_mag_flip_keys) and
                 (old_mag_field_keys == new_mag_field_keys)): return False
 
         for set_key in old_mag_set_keys:
@@ -110,11 +110,11 @@ class Magnets(object):
 
             # Assert magnet values in this magnet set between old and new .mag files are consistent with one another
             for magnet in old_mag_set_mag_names:
-                if not all(self.magnet_sets[set_key][magnet] == other.magnet_sets[set_key][magnet]): return False
+                if not np.any(self.magnet_sets[set_key][magnet] == other.magnet_sets[set_key][magnet]): return False
 
             # Assert the flip vectors and mean fields between old and new .mag files are consistent with one another
-            if not all(self.magnet_flip[set_key] == other.magnet_flip[set_key]): return False
-            if not    (self.mean_field[set_key]  == other.mean_field[set_key]):  return False
+            if not np.all(self.magnet_flip[set_key] == other.magnet_flip[set_key]): return False
+            if not       (self.mean_field[set_key]  ==  other.mean_field[set_key]):  return False
 
         # If we have reached here the two objects contain the same data
         return True
