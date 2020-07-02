@@ -15,7 +15,7 @@
 # order  x, z, s
 import json
 
-# TODO refactor this file
+# TODO refactor this file split each ID type into its own submodule
 
 def create_type_list_symmetric_apple(nperiods):
     # do the first end
