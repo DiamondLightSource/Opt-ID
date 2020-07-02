@@ -1,8 +1,7 @@
-import os, shutil
-import unittest
+import unittest, os, shutil
 from collections import namedtuple
 
-from IDSort.src.compare import process
+from ..src.compare import process
 
 
 class CompareTest(unittest.TestCase):
