@@ -26,6 +26,7 @@ import numpy as np
 
 # TODO refactor this file
 
+# TODO duplicated in magnet_tools.py
 def fortPMB_NEW(testpoint,m,i,magdims, V1):
     '''
     This function Calculates the B-field in a single orientation according to the calling function
@@ -97,6 +98,7 @@ def fortPMB_NEW(testpoint,m,i,magdims, V1):
 
     return B
 
+# TODO duplicated in magnet_tools.py
 def wrapCalcB(testpoint, magdims,  V1):
     '''This function takes the arguments 'testpoint' and 's_offset'
     'testpoint' requires an array of floats of length 3 describing the [x,z,s] co-ordinates of the point under consideration
