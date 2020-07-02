@@ -17,10 +17,15 @@ Created on 5 Dec 2013
 
 @author: ssg37927
 '''
-import numpy as np
-import random
+
 import pickle
-import logging
+
+import random
+import numpy as np
+
+from .logging_utils import logging, getLogger
+logger = getLogger(__name__)
+
 
 class Magnets(object):
     '''
