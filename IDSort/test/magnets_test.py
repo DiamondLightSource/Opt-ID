@@ -1,7 +1,8 @@
-import os, shutil
-import unittest
+import unittest, os, shutil
 from collections import namedtuple
-from IDSort.src.magnets import process, Magnets, MagLists
+
+from ..src.magnets import process, Magnets
+
 
 class MagnetsTest(unittest.TestCase):
 

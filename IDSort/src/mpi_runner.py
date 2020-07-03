@@ -34,16 +34,18 @@
 import os
 import socket
 import logging
-import random
-import json
 
+import json
 import h5py
 from mpi4py import MPI
 
-from IDSort.src.magnets import Magnets, MagLists
-from IDSort.src.genome_tools import ID_BCell
-import IDSort.src.field_generator as fg
-import IDSort.src.magnet_tools as mt
+import random
+import numpy as np
+
+from .magnets import Magnets, MagLists
+from .genome_tools import ID_BCell
+from .field_generator import generate_reference_magnets, generate_id_field
+from .magnet_tools import calculate_phase_error
 
 
 logging.basicConfig(level=0,format=' %(asctime)s.%(msecs)03d %(threadName)-16s %(levelname)-6s %(message)s', datefmt='%H:%M:%S')
@@ -99,12 +101,12 @@ def process(options, args):
     mags = Magnets()
     mags.load(options.magnets_filename)
 
-    ref_mags = fg.generate_reference_magnets(mags)
+    ref_mags = generate_reference_magnets(mags)
     ref_maglist = MagLists(ref_mags)
-    ref_total_id_field = fg.generate_id_field(info, ref_maglist, ref_mags, lookup)
+    ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, lookup)
     #logging.debug("before phase calculate error call")
     #logging.debug(ref_total_id_field.shape())
-    pherr, ref_trajectories = mt.calculate_phase_error(info, ref_total_id_field)
+    pherr, ref_trajectories = calculate_phase_error(info, ref_total_id_field)
 
     barrier(options.singlethreaded)
 

@@ -1,9 +1,10 @@
-import os, shutil
-import unittest
-import numpy as np
-import h5py
+import unittest, os, shutil
 from collections import namedtuple
-from IDSort.src.lookup_generator import process
+
+import h5py
+import numpy as np
+
+from ..src.lookup_generator import process
 
 
 class LookupGeneratorTest(unittest.TestCase):

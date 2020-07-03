@@ -17,18 +17,16 @@ Created on 5 Dec 2013
 
 @author: ssg37927
 '''
-import logging
-import threading
-import copy
-import json
 
+import threading
 import numpy as np
 import h5py
+import json
 
-from IDSort.src.magnets import Magnets, MagLists
-import IDSort.src.magnet_tools as mt
+from .magnets import Magnets, MagLists
+from .magnet_tools import calculate_phase_error
 
-from IDSort.src.logging_utils import logging, getLogger
+from .logging_utils import logging, getLogger
 logger = getLogger(__name__)
 
 
@@ -160,12 +158,12 @@ def calculate_cached_fitness(info, lookup, magnets, maglist, ref_total_id_field)
 
 def calculate_cached_trajectory_fitness(info, lookup, magnets, maglist, ref_trajectories):
     total_id_field = generate_id_field(info, maglist, magnets, lookup)
-    pherr, test_array = mt.calculate_phase_error(info, total_id_field)
+    pherr, test_array = calculate_phase_error(info, total_id_field)
     return (total_id_field, generate_id_field_cost(test_array, ref_trajectories))
 
 
 def calculate_trajectory_fitness_from_array(total_id_field, info, ref_trajectories):
-    pherr, test_array = mt.calculate_phase_error(info, total_id_field)
+    pherr, test_array = calculate_phase_error(info, total_id_field)
     return generate_id_field_cost(test_array, ref_trajectories)
 
 # TODO refactor and remove this code
@@ -210,7 +208,7 @@ def output_fields(filename, id_filename, lookup_filename, magnets_filename, magl
             fp.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
 
         fp.create_dataset('id_Bfield', data=total_id_field)
-        trajectory_information=mt.calculate_phase_error(info, total_id_field)
+        trajectory_information=calculate_phase_error(info, total_id_field)
         fp.create_dataset('id_phase_error', data=trajectory_information[0])
         fp.create_dataset('id_trajectory',  data=trajectory_information[1])
 
@@ -221,7 +219,7 @@ def output_fields(filename, id_filename, lookup_filename, magnets_filename, magl
             fp.create_dataset("%s_per_beam_perfect" % (name), data=per_beam_field[name])
 
         fp.create_dataset('id_Bfield_perfect', data=total_id_field)
-        trajectory_information = mt.calculate_phase_error(info, total_id_field)
+        trajectory_information = calculate_phase_error(info, total_id_field)
         fp.create_dataset('id_phase_error_perfect', data=trajectory_information[0])
         fp.create_dataset('id_trajectory_perfect',  data=trajectory_information[1])
 
@@ -247,7 +245,7 @@ def output_fields(filename, id_filename, lookup_filename, magnets_filename, magl
 #     ref_mags = generate_reference_magnets(mags)
 #     ref_maglist = MagLists(ref_mags)
 #     ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, lookup)
-#     ref_pherr, ref_trajectories = mt.calculate_phase_error(info, ref_total_id_field)
+#     ref_pherr, ref_trajectories = calculate_phase_error(info, ref_total_id_field)
 #
 #     maglist = MagLists(mags)
 #     maglist.shuffle_all()
@@ -281,7 +279,7 @@ def output_fields(filename, id_filename, lookup_filename, magnets_filename, magl
 #
 #     per_beam_field = generate_per_beam_b_field(info, maglist0, mags, lookup)
 #     total_id_field = generate_id_field(info, maglist0, mags, lookup)
-#     pherr, trajectories = mt.calculate_phase_error(info,total_id_field)
+#     pherr, trajectories = calculate_phase_error(info,total_id_field)
 #
 #     with h5py.File('real_data.h5', 'w') as fp:
 #

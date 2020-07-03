@@ -1,11 +1,10 @@
-import unittest
-import shutil
-import os
-import pickle
-import tempfile
+import unittest, os, shutil
 from collections import namedtuple
 
-from IDSort.src.mpi_runner import process, MagLists
+import pickle
+
+from ..src.magnets import MagLists
+from ..src.mpi_runner import process
 
 
 class MpiRunnerTest(unittest.TestCase):

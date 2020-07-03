@@ -12,13 +12,14 @@
 # either express or implied. See the License for the specific 
 # language governing permissions and limitations under the License.
 
-import os
-import magnets
-import genome_tools
-import random
-from genome_tools import ID_BCell
-import field_generator as fg
 import sys
+import os
+
+import random
+
+from .magnets import Magnets, MagLists
+from .genome_tools import ID_BCell
+from .field_generator import output_fields
 
 E_STAR = 0.0
 M_STAR = 1.0
@@ -48,10 +49,11 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
 
     print("Loading magnets")
-    mags = magnets.Magnets()
+    mags = Magnets()
     mags.load(options.magnets_filename)
 
     if options.build:
+
         for filename in args[1::]:
             print("Processing file %s" % (filename))
             # load the genome
@@ -59,15 +61,15 @@ if __name__ == "__main__":
             genome.load(filename)
             
             outfile = os.path.join(args[0], os.path.split(filename)[1]+'.h5')
-            fg.output_fields(outfile, options.id_filename, options.lookup_filename, 
-                              options.magnets_filename, genome.genome);
+            output_fields(outfile, options.id_filename, options.lookup_filename, options.magnets_filename, genome.genome)
+
         sys.exit(0)
 
     if options.setup > 0:
         print("Running setup")
         for i in range(options.setup):
             # create a fresh maglist
-            maglist = magnets.MagLists(mags)
+            maglist = MagLists(mags)
             maglist.shuffle_all()
             genome = ID_BCell(options.id_filename, options.lookup_filename, options.magnets_filename)
             genome.create(maglist)

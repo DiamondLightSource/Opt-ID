@@ -19,12 +19,14 @@ Created on 3 Dec 2013
 @author: ssg37927
 '''
 
-import numpy as np
+
 import h5py
 import json
+import numpy as np
 
 # TODO refactor this file
 
+# TODO duplicated in magnet_tools.py
 def fortPMB_NEW(testpoint,m,i,magdims, V1):
     '''
     This function Calculates the B-field in a single orientation according to the calling function
@@ -96,6 +98,7 @@ def fortPMB_NEW(testpoint,m,i,magdims, V1):
 
     return B
 
+# TODO duplicated in magnet_tools.py
 def wrapCalcB(testpoint, magdims,  V1):
     '''This function takes the arguments 'testpoint' and 's_offset'
     'testpoint' requires an array of floats of length 3 describing the [x,z,s] co-ordinates of the point under consideration
@@ -113,9 +116,9 @@ def wrapCalcB(testpoint, magdims,  V1):
         m=np.zeros(3)
         m[i]=1
         for j in range(i,3):
-            B[:,:,:,i,j]= fortPMB_NEW(testpoint,m,j, magdims, V1)
+            B[...,i,j]= fortPMB_NEW(testpoint,m,j, magdims, V1)
             if i!=j:
-                B[:,:,:,j,i]=B[:,:,:,i,j]
+                B[...,j,i]=B[...,i,j]
     return B
 
 def process(options, args):
@@ -156,7 +159,7 @@ def process(options, args):
                 for mag in data['beams'][b]['mags']:
                     print("processing beam %02i magnet %04i" % (b, count))
                     dataset = wrapCalcB(testpoints, np.array(mag['dimensions']), np.array(mag['position']))
-                    ds[:, :, :, :, :, count] = dataset.dot(np.array(mag['direction_matrix']))
+                    ds[..., count] = dataset.dot(np.array(mag['direction_matrix']))
                     count += 1
         
     if data['type'] == 'APPLE_Symmetric':
@@ -186,8 +189,7 @@ def process(options, args):
                         datasetc2 = wrapCalcB(testpoints, np.array([data['clampcut'],data['clampcut'],mag['dimensions'][2]]), c2pos)
                     dataset=datasetblock-datasetc1-datasetc2
 
-                    ds[:, :, :, :, :, count] = dataset.dot(np.array(mag['direction_matrix']))
-    #                ds[:, :, :, :, :, count] = np.array(mag['direction_matrix']).dot(dataset)
+                    ds[..., count] = dataset.dot(np.array(mag['direction_matrix']))
                     count += 1
 
 if __name__ == "__main__":
