@@ -125,7 +125,9 @@ class MagLists():
     '''
     
     def __init__(self, magnets):
-        self.raw_magnets  = magnets
+        self.raw_magnets = magnets
+        self.raw_magnets_availability = self.raw_magnets.availability()
+
         self.magnet_lists = {}
         for magnet_set in magnets.magnet_sets.keys():
             mags = []
@@ -161,44 +163,63 @@ class MagLists():
         if magnet[1] < 0:
             magdata = magdata.dot(flip)
         return magdata
-    
-    def mutate(self, number_of_mutations, available=None):
-        #     Removed hardcoded numbers, available based on magnet input file. 18/02/19 ZP+MB
-#    def mutate(self, number_of_mutations, available={'VE':range(20), 'HE':range(20), 'HH':range(576), 'VV':range(419), 'HT':range(20)}):
-        if (available == None):
-            #logging.debug("No available list specified, getting from magnet list")
-            available = self.raw_magnets.availability()
+
+    # TODO benchmark severity of logger.debug() on the hot path
+    def mutate(self, num_mutations, available=None, flip_prob=0.5):
+
+        # If no availability is given then use the full set of magnet lists
+        if available is None:
+            logger.debug('No availability lists provides, using full set')
+            available = self.raw_magnets_availability
         
-        #logging.debug("Magnet keys are %s"%(available.keys()))    
-        
-        for i in range(number_of_mutations):
-            # pick a list at random
-            key = random.choice(list(available.keys()))
-            # pick a flip or swap
-            if random.random() > 0.5 :
-                # swap
-                p1 = random.choice(available[key])
-                p2 = random.choice(available[key])
-                # logging.debug("swapping key %s at %s and %s" % (key, p1, p2))
-                self.swap(key, p1, p2)
+        logger.debug('Available magnet lists [%s]', list(available.keys()))
+
+        # Perform a set of mutations using the same availability criteria
+        for mutation_index in range(num_mutations):
+
+            # Sample a random magnet list
+            list_key = random.choice(list(available.keys()))
+
+            # Sample mutation type
+            if random.random() > flip_prob:
+                # Swap two random magnets from the magnet list
+                mag_a = random.choice(available[list_key])
+                mag_b = random.choice(available[list_key])
+                self.swap(list_key, mag_a, mag_b)
+
+                logger.debug('%03d of %03d : [%s] Swapping magnets [%s] and [%s]',
+                             mutation_index, num_mutations, list_key, mag_a, mag_b)
+
             else:
-                p1 = random.choice(available[key])
-                # logging.debug("flipping key %s at %s" % (key, p1))
-                self.flip(key , (p1,))
-    
+                # Flip one random magnet from the magnet list
+                mag = random.choice(available[list_key])
+                self.flip(list_key, (mag,))
+
+                logger.debug('%03d of %03d : [%s] Flipping magnet [%s]',
+                             mutation_index, num_mutations, list_key, mag)
+
+    # TODO benchmark severity of logger.debug() on the hot path
     def mutate_from_list(self, mutation_list):
-        for mutation in mutation_list:
+
+        # Perform a set of mutations using as specified
+        for mutation_index, mutation in enumerate(mutation_list):
+
             if mutation[0] == 'S':
-                key = mutation[1]
-                p1 = mutation[2]
-                p2 = mutation[3]
-                logging.debug("swapping key %s at %s and %s" % (key, p1, p2) )
-                self.swap(key, p1, p2)
+                # Swap two magnets from the magnet list
+                list_key, mag_a, mag_b = mutation[1:4]
+                self.swap(list_key, mag_a, mag_b)
+
+                logger.debug('%03d of %03d : [%s] Swapping magnets [%s] and [%s]',
+                             mutation_index, len(mutation_list), list_key, mag_a, mag_b)
+
             else:
-                key = mutation[1]
-                p1 = mutation[2]
-                logging.debug("flipping key %s at %s" % (key, p1) )
-                self.flip(key , (p1,))
+                # Flip one magnet from the magnet list
+                list_key, mag = mutation[1:3]
+                self.flip(list_key, (mag,))
+
+                logger.debug('%03d of %03d : [%s] Flipping magnet [%s]',
+                             mutation_index, len(mutation_list), list_key, mag)
+
 
     def __eq__(self, other):
 
