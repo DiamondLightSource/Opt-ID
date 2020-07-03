@@ -1,7 +1,7 @@
 import logging
 
 def getLogger(module):
-    logging.basicConfig(format='[ %(asctime)s.%(msecs)03d | %(threadName)s | %(levelname)s | %(module)s::%(funcName)s::%(lineno)-4d ] %(message)s',
+    logging.basicConfig(format='%(asctime)s.%(msecs)03d [ %(threadName)s | %(levelname)s | %(module)s::%(funcName)s::%(lineno)-4d ] %(message)s',
                         datefmt='%H:%M:%S')
     logger = logging.getLogger(module)
     logger.addHandler(logging.NullHandler())
