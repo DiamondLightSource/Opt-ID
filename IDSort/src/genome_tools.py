@@ -100,7 +100,7 @@ class ID_BCell(BCell):
         for i in range(number_of_children):
             maglist = copy.deepcopy(self.genome)
             available_magnets = {key : range(len(magnets.magnet_sets[key])) for key in magnets.magnet_sets.keys()}
-            maglist.mutate(number_of_mutations,available_magnets)
+            maglist.mutate(number_of_mutations, available=available_magnets)
             new_magnets = generate_per_magnet_array(info, maglist, magnets)
             update = compare_magnet_arrays(original_magnets, new_magnets, lookup)
             child = ID_BCell()

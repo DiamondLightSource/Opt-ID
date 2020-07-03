@@ -1,12 +1,16 @@
 import logging
 
 def getLogger(module):
-    logging.basicConfig(format='%(asctime)s.%(msecs)03d [ %(threadName)s | %(levelname)s | %(module)s::%(funcName)s::%(lineno)-4d ] %(message)s',
+    logging.basicConfig(format='%(asctime)s.%(msecs)03d %(levelname)8s | %(threadName)s | %(module)s::%(funcName)s::%(lineno)-4d | %(message)s',
                         datefmt='%H:%M:%S')
     logger = logging.getLogger(module)
     logger.addHandler(logging.NullHandler())
     logger.setLevel(logging.CRITICAL)
     return logger
+
+def setLoggerLevel(logger, level):
+    levels = [logging.CRITICAL, logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG]
+    logger.setLevel(levels[max(0, min((len(levels) - 1), level))])
 
 # logger = getLogger(__name__)
 #

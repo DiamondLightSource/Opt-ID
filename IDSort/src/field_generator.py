@@ -29,7 +29,7 @@ from .magnet_tools import calculate_phase_error
 from .logging_utils import logging, getLogger
 logger = getLogger(__name__)
 
-
+# TODO trace if "magnets" always is equivalent to "maglist.raw_magnets"
 def generate_per_magnet_array(info, maglist, magnets):
     # Result dict for each beams data
     beams = {}
@@ -70,6 +70,7 @@ def compare_magnet_arrays(mag_array_a, mag_array_b, lookup):
     return difference_map
 
 # TODO refactor use of results input being destructively modified
+# TODO usage involves multi-threading!!! Can data be corrupted while appending?
 def generate_sub_array(beam_array, eval_list, lookup, beam, results):
     # This sum is calculated like this to avoid memory errors
     result = np.sum((lookup[beam][..., eval_list[0]] * beam_array[:, eval_list[0]]), axis=4)
@@ -146,7 +147,7 @@ def generate_reference_magnets(mags):
         unit = np.zeros(3)
         unit[mag_dir] = mags.mean_field[magtype]
         #ref_mags.add_perfect_magnet_set(magtype, len(mags.magnet_sets[magtype]) , unit, mags.magnet_flip[magtype])
-        ref_mags.add_perfect_magnet_set_duplicate(magtype, mags.magnet_sets[magtype] , unit, mags.magnet_flip[magtype])
+        ref_mags.add_perfect_magnet_set_duplicate(magtype, mags.magnet_sets[magtype].keys(), unit, mags.magnet_flip[magtype])
         #logging.debug("ref_mags shape %s"%(str(ref_mags.shape))) magnets object has no attribute shape
     return ref_mags
 
