@@ -13,7 +13,7 @@ import numpy as np
 from .magnets import Magnets, MagLists
 from .field_generator import output_fields
 
-from .logging_utils import logging, getLogger
+from .logging_utils import logging, getLogger, setLoggerLevel
 logger = getLogger(__name__)
 
 
@@ -135,6 +135,10 @@ def human_output(id_json_path, genome_path, output_dir):
     logger.debug('Halting')
 
 def process(options, args):
+
+    if hasattr(options, 'verbose'):
+        setLoggerLevel(logger, options.verbose)
+
     logger.debug('Starting')
 
     # Process all genome files converting them from human readable to machine readable files
@@ -206,15 +210,34 @@ def process(options, args):
 
 if __name__ == '__main__':
     import optparse
-    usage = "%prog [options] Genome_filenames"
+    usage = '%prog [options] [genome_files+]'
     parser = optparse.OptionParser(usage=usage)
-    parser.add_option("-a", "--analyse", dest="analysis", help="Analyses the genome and puts results in HDF5 format", action="store_true", default=False)
-    parser.add_option("-r", "--readable", dest="readable", help="Writes the genome in a human /Excel readable format", action="store_true", default=False)
-    parser.add_option("-g", "--create_genome", dest="create_genome", help="Reverses the analysis option and turns a human readable list to a genome pickle", action="store_true", default=False)
-    parser.add_option("-i", "--info", dest="id_filename", help="Set the path to the id data", default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015test.json', type="string")
-    parser.add_option("-m", "--magnets", dest="magnets_filename", help="Set the path to the magnet description file", default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/magnets.mag', type="string")
-    parser.add_option("-t", "--template", dest="id_template", help="Set the path to the magnet description file", default='/home/gdy32713/DAWN_stable/optid/Opt-ID/IDSort/src/v2/2015test.h5', type="string")
-    parser.add_option("-o", "--output-dir", dest="output_dir", help="Set the path of the directory that the output files are written to")
+    parser.add_option('-v', '--verbose', dest='verbose', help='Set the verbosity level [0-4]', default=0, type='int')
+
+    parser.add_option('-a', '--analyse', dest='analysis', action='store_true', default=False,
+                      help='Analyses the genome and puts results in HDF5 format')
+
+    parser.add_option('-r', '--readable', dest='readable', action='store_true', default=False,
+                      help='Writes the genome in a human Excel readable format')
+
+    parser.add_option('-g', '--create_genome', dest='create_genome', action='store_true', default=False,
+                      help='Reverses the analysis option and turns a human readable list to a genome pickle')
+
+    parser.add_option('-i', '--info', dest='id_filename',
+                      help='Set the path to the id data', type='string')
+
+    parser.add_option('-m', '--magnets', dest='magnets_filename',
+                      help='Set the path to the magnet description file', type='string')
+
+    parser.add_option('-t', '--template', dest='id_template',
+                      help='Set the path to the magnet description file', type='string')
+
+    parser.add_option('-o', '--output-dir', dest='output_dir',
+                      help='Set the path of the directory that the output files are written to')
 
     (options, args) = parser.parse_args()
-    process(options, args)
+    
+    try:
+        process(options, args)
+    except Exception as ex:
+        logger.critical('Fatal exception in process_genome::process', exc_info=ex)
