@@ -33,17 +33,16 @@ class MagnetsTest(unittest.TestCase):
         # TODO refactor output file path to use named tuple
         # Prepare parameters for process function
         options = {
-            'hmags'   : inp_hmags_path,
-            'hemags'  : inp_hemags_path,
-            'htmags'  : inp_htmags_path,
-            'vmags'   : None,
-            'vemags'  : None,
-            'verbose' : 4,
+            'hmags'       : inp_hmags_path,
+            'hemags'      : inp_hemags_path,
+            'htmags'      : inp_htmags_path,
+            'vmags'       : None,
+            'vemags'      : None,
+            'verbose'     : 0,
+            'output_path' : obs_mag_path,
         }
         options_named = namedtuple("options", options.keys())(**options)
-        args = [
-            obs_mag_path
-        ]
+        args = []
 
         try:
 

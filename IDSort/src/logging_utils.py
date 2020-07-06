@@ -9,8 +9,15 @@ def getLogger(module):
     return logger
 
 def setLoggerLevel(logger, level):
-    levels = [logging.CRITICAL, logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG]
-    logger.setLevel(levels[max(0, min((len(levels) - 1), level))])
+    try:
+        levels = [logging.CRITICAL, logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG]
+        old_level = logging.getLevelName(logger.level)
+        logger.setLevel(levels[max(0, min((len(levels) - 1), level))])
+        new_level = logging.getLevelName(logger.level)
+        logger.info('Changing logging level from [%s] to [%s]', old_level, new_level)
+    except Exception as ex:
+        logger.error('Error attempting to change logging level to [%s] [%s]', type(level), str(level), exc_info=ex)
+        raise ex
 
 # logger = getLogger(__name__)
 #
