@@ -43,7 +43,7 @@ class BCell(object):
         self.genome = None
         self.uid = binascii.hexlify(os.urandom(6)).decode()
 
-    def create(self):
+    def create(self, *args, **kargs):
         raise Exception("create needs to be implemented")
 
     def age_bcell(self):
@@ -65,7 +65,7 @@ class BCell(object):
         self.age = int(params[1])
         self.uid = params[2].split('.')[0]
 
-    def generate_children(self, number_of_children, number_of_mutations):
+    def generate_children(self, *args, **kargs):
         raise Exception("generate_children needs to be implemented")
 
 
