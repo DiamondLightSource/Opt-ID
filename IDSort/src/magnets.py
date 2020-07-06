@@ -321,33 +321,69 @@ def process(options, args):
     if hasattr(options, 'verbose'):
         setLoggerLevel(logger, options.verbose)
 
+    logger.debug('Starting')
+
+    if hasattr(options, 'output_path'):
+        if (len(args) > 0):
+            logger.warning('Output path argument overrides unnamed trailing argument!')
+            logger.warning('Ignoring all %d unnamed arguments [%s]', len(args), args)
+
+        # Output path is the value of the named argument
+        output_path = options.output_path
+    else:
+        if (len(args) == 0):
+            error_message = 'Output path argument not provided, so must provide one unnamed trailing argument!'
+            logger.error(error_message)
+            raise Exception(error_message)
+
+        elif (len(args) > 1):
+            logger.warning('Multiple unnamed trailing arguments provided but only need one for output path!')
+            logger.warning('Ignoring remaining %d unnamed arguments [%s]', len(args[1:]), args[1:])
+
+        # Output path is first unnamed argument
+        output_path = args[0]
+
+    logger.info('Output path set to [%s]', output_path)
+
     mags = Magnets()
 
-    if options.hmags:
-        mags.add_magnet_set('HH', options.hmags, (-1.,-1.,1.))
-    if options.hemags:
+    # TODO make named constant flip vectors when we refactor Magnets class into modules
+    if options.hmags  is not None:
+        mags.add_magnet_set('HH', options.hmags,  (-1.,-1.,1.))
+    if options.hemags is not None:
         mags.add_magnet_set('HE', options.hemags, (-1.,-1.,1.))
-    if options.vmags:
-        mags.add_magnet_set('VV', options.vmags, (-1.,1.,-1.))
-    if options.vemags:
+    if options.vmags  is not None:
+        mags.add_magnet_set('VV', options.vmags,  (-1.,1.,-1.))
+    if options.vemags is not None:
         mags.add_magnet_set('VE', options.vemags, (-1.,1.,-1.))
-    if options.htmags:
+    if options.htmags is not None:
         mags.add_magnet_set('HT', options.htmags, (-1.,-1.,1.))
     
-    mags.save(args[0])
+    try:
+        mags.save(output_path)
+    except Exception as ex:
+        logger.error('Failed to save magnets to [%s]', output_path, exc_info=ex)
+        raise ex
 
+    logger.debug('Halting')
 
-if __name__ == "__main__" :
+if __name__ == '__main__' :
     import optparse
-    usage = "%prog [options] OutputFile"
+    usage = '%prog [options] [output_path?]'
     parser = optparse.OptionParser(usage=usage)
-    parser.add_option(  "-H", "--hmaglist",  dest="hmags",  help="Set the path to the H magnet data",  default=None, type="string")
-    parser.add_option("--HE", "--hemaglist", dest="hemags", help="Set the path to the HE magnet data", default=None, type="string")
-    parser.add_option(  "-V", "--vmaglist",  dest="vmags",  help="Set the path to the V magnet data",  default=None, type="string")
-    parser.add_option("--VE", "--vemaglist", dest="vemags", help="Set the path to the VE magnet data", default=None, type="string")
-    parser.add_option("--HT", "--htmaglist", dest="htmags", help="Set the path to the HT magnet data", default=None, type="string")
+    parser.add_option('-v', '--verbose', dest='verbose', help='Set the verbosity level [0-4]', default=0, type='int')
 
-    parser.add_option('-v', '--verbose', dest='verbose', help='Set the verbosity level', action='count', type='int')
+    parser.add_option(  '-H', '--hmaglist',  dest='hmags',  help='Set the path to the H magnet data',  default=None, type='string')
+    parser.add_option('--HE', '--hemaglist', dest='hemags', help='Set the path to the HE magnet data', default=None, type='string')
+    parser.add_option(  '-V', '--vmaglist',  dest='vmags',  help='Set the path to the V magnet data',  default=None, type='string')
+    parser.add_option('--VE', '--vemaglist', dest='vemags', help='Set the path to the VE magnet data', default=None, type='string')
+    parser.add_option('--HT', '--htmaglist', dest='htmags', help='Set the path to the HT magnet data', default=None, type='string')
+
+    parser.add_option('-o', '--output', dest='output_path', help='Set the path to write the output to', default=None, type='string')
 
     (options, args) = parser.parse_args()
-    process(options, args)
+
+    try:
+        process(options, args)
+    except Exception as ex:
+        logger.critical('Fatal exception in magnets::process', exc_info=ex)
