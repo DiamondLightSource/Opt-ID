@@ -20,7 +20,7 @@ Created on 16 Jan 2012
 
 import numpy as np
 
-def calculate_phase_error(info, b_array):
+def calculate_bfield_phase_error(info, b_array):
     Energy = 3.0                    # Ideally needs to be tunable. Is a machine parameter. Would need a new Machine Class
     Const  = (0.03 / Energy) * 1e-2 # Appears to be defining 10^5eV... (Includes random 1e4 B factor)
     c      = 2.9911124e8            # The speed of light. For now.
@@ -77,7 +77,7 @@ def calculate_phase_error(info, b_array):
 
 
 # TODO marked for deprecation, never called
-def straightness(trajectories, nperiods):
+def calculate_trajectory_straightness(trajectories, nperiods):
 
     points_per_period = (trajectories.shape[0] / nperiods) / 3
 

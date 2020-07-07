@@ -26,8 +26,8 @@ import binascii
 import random
 import numpy as np
 
-from .field_generator import calculate_trajectory_fitness_from_array, \
-                             calculate_cached_trajectory_fitness,     \
+from .field_generator import calculate_trajectory_loss_from_array, \
+                             calculate_cached_trajectory_loss,     \
                              generate_per_magnet_array,               \
                              compare_magnet_arrays
 
@@ -77,7 +77,7 @@ class ID_BCell(BCell):
 
     def create(self, info, lookup, magnets, maglist, ref_trajectories):
         self.genome = maglist
-        field_unused, self.fitness = calculate_cached_trajectory_fitness(info, lookup, magnets, maglist, ref_trajectories)
+        field_unused, self.fitness = calculate_cached_trajectory_loss(info, lookup, magnets, maglist, ref_trajectories)
 
     def generate_children(self, number_of_children, number_of_mutations, info, lookup, magnets, ref_trajectories, real_bfield=None):
         # first age, as we are now creating children
@@ -87,7 +87,7 @@ class ID_BCell(BCell):
         # Generate the IDfiled for the parent, as we need to calculate it fully here.
         original_bfield = None
         if real_bfield == None:
-            original_bfield, calculated_fitness = calculate_cached_trajectory_fitness(info, lookup, magnets, self.genome, ref_trajectories)
+            original_bfield, calculated_fitness = calculate_cached_trajectory_loss(info, lookup, magnets, self.genome, ref_trajectories)
             fitness_error = abs(self.fitness - calculated_fitness)
             logging.debug("Estimated fitness to real fitness error %2.10e"%(fitness_error))
             self.fitness = calculated_fitness
@@ -110,7 +110,7 @@ class ID_BCell(BCell):
             for beam in update.keys() :
                 if update[beam].size != 0:
                     updated_bfield = updated_bfield - update[beam]
-            child.fitness = calculate_trajectory_fitness_from_array(updated_bfield, info, ref_trajectories)
+            child.fitness = calculate_trajectory_loss_from_array(info, updated_bfield, ref_trajectories)
             #child.create(info, lookup, magnets, maglist, ref_total_id_field)
             children.append(child)
             logging.debug("Child created with fitness : %f" % (child.fitness))
@@ -138,7 +138,7 @@ class ID_Shim_BCell(BCell):
         for beam in update.keys() :
             if update[beam].size != 0:
                 updated_bfield = updated_bfield - update[beam]
-        self.fitness = calculate_trajectory_fitness_from_array(updated_bfield, info, ref_trajectories)
+        self.fitness = calculate_trajectory_loss_from_array(info, updated_bfield, ref_trajectories)
 
 #     Hardcoded numbers! Based on length of sim file available for shimming! Warning!
 #     Removed hardcoded numbers, available based on magnet input file. 18/02/19 ZP+MB
@@ -200,13 +200,13 @@ class ID_Shim_BCell(BCell):
         original_bfield = None
         original_fitness = None
         if real_bfield is None:
-            original_bfield, original_fitness = calculate_cached_trajectory_fitness(info, lookup, magnets, self.genome, ref_trajectories)
+            original_bfield, original_fitness = calculate_cached_trajectory_loss(info, lookup, magnets, self.genome, ref_trajectories)
             fitness_error = abs(self.fitness - original_fitness)
             logging.debug("Estimated fitness to real fitness error %2.10e"%(fitness_error))
 
         else :
             original_bfield = real_bfield
-            original_fitness = calculate_trajectory_fitness_from_array(original_bfield, info, ref_trajectories)
+            original_fitness = calculate_trajectory_loss_from_array(info, original_bfield, ref_trajectories)
             fitness_error = abs(self.fitness - original_fitness)
             logging.debug("Using real bfield")
         
@@ -221,7 +221,7 @@ class ID_Shim_BCell(BCell):
         for beam in update.keys() :
             if update[beam].size != 0:
                 updated_bfield = updated_bfield - update[beam]
-        self.fitness = calculate_trajectory_fitness_from_array(updated_bfield, info, ref_trajectories)
+        self.fitness = calculate_trajectory_loss_from_array(info, updated_bfield, ref_trajectories)
 
         for i in range(number_of_children):
             maglist = copy.deepcopy(self.maglist)
@@ -237,7 +237,7 @@ class ID_Shim_BCell(BCell):
             for beam in update.keys() :
                 if update[beam].size != 0:
                     updated_bfield = updated_bfield - update[beam]
-            child.fitness = calculate_trajectory_fitness_from_array(updated_bfield, info, ref_trajectories)
+            child.fitness = calculate_trajectory_loss_from_array(info, updated_bfield, ref_trajectories)
             children.append(child)
             logging.debug("Child created with fitness : %2.10e" % (child.fitness))
         return children

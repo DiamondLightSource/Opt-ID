@@ -24,7 +24,7 @@ import h5py
 import json
 
 from .magnets import Magnets, MagLists
-from .magnet_tools import calculate_phase_error
+from .magnet_tools import calculate_bfield_phase_error
 
 from .logging_utils import logging, getLogger
 logger = getLogger(__name__)
@@ -70,116 +70,88 @@ def compare_magnet_arrays(mag_array_a, mag_array_b, lookup):
     return difference_map
 
 
-def generate_per_beam_b_field(info, maglist, mags, lookup):
+def generate_per_beam_bfield(info, maglist, mags, lookup, nthreads=8):
 
-    # TODO refactor use of results input being destructively modified
-    # TODO usage involves multi-threading!!! Can data be corrupted while appending?
     def generate_sub_array(beam_array, eval_list, lookup, beam, results):
         # This sum is calculated like this to avoid memory errors
-        result = np.sum((lookup[beam][..., eval_list[0]] * beam_array[:, eval_list[0]]), axis=4)
-        for m in eval_list[1:]:
-            result += np.sum((lookup[beam][..., m] * beam_array[:, m]), axis=4)
+        result = sum(np.sum((lookup[beam][..., m] * beam_array[:, m]), axis=4) for m in eval_list)
         results.append(result)
 
-    beam_arrays = generate_per_magnet_array(info, maglist, mags) #beam_arrays is a dictionary
-    procs = 8
-    fields = {}
-    for beam in beam_arrays.keys(): #go over Bottom Beam key then Top Beam key
-        #logging.debug("beam arrays keys are %s"%(beam_arrays.keys())) #Bottom Beam & Top Beam
-        beam_array = beam_arrays[beam]
-        #logging.debug("beam array shape is %s"%(s(beam_array.shape))) #(3,234)
-        indexes = range(lookup[beam].shape[5]) #lookup is a dictionary
-        #logging.debug("lookup[beam] shape is %s"%(s(lookup[beam].shape))) #(17, 5, 2622, 3, 3, 234) 
-        #logging.debug("indexes is %s"%(indexes)) #indexes is a list of numbers 0-233
-        length = len(indexes)//procs
-        #logging.debug("length is %s"%(s(length)))
-        chunks=[indexes[x : x+length] for x in range(0, len(indexes), length)]
-        #logging.debug("chunks shape is %s"%(s(chunks.shape))) doesn't work
-        results = []
-        pp = []
-        for i in range(len(chunks)):
-            chunk = chunks[i]
-            pp1 = threading.Thread(name='ProcThread-%02i'%(i), target=generate_sub_array, args = (beam_array, chunk, lookup, beam, results))
-            pp1.daemon = True
-            pp1.start()
-            pp.append(pp1)
+    beam_arrays = generate_per_magnet_array(info, maglist, mags)
+
+    bfields = {}
+    for beam, beam_array in beam_arrays.items():
+
+        indexes = range(lookup[beam].shape[5])
+        length  = len(indexes) // nthreads
+        chunks  = [indexes[x : x+length] for x in range(0, len(indexes), length)]
+
+        results   = []
+        processes = []
+        for index, chunk in enumerate(chunks):
+            process = threading.Thread(name=f'ProcThread-{index:02d}', daemon=True, target=generate_sub_array,
+                                       args=(beam_array, chunk, lookup, beam, results))
+            process.start()
+            processes.append(process)
         
-        for pp1 in pp:
-            pp1.join()
-        
-        # This sum is calculated like this to avoid memory errors
-        result = results[0]
-        for m in range(1, len(results)):
-            result += results[m]
-        #logging.debug("results is %d"%(len(results))) #Length = 9
-        #logging.debug("result shape is %s"%(result.shape())) "tuple object is not callable
-        fields[beam] = result
-        #logging.debug("fields is %d"%(len(fields))) #Length = 2 
-        #logging.debug("fields keys are %s"%(fields.keys())) #Bottom Beam and Top Beam
-        #logging.debug("fields values are %s"%(fields.items())) gives truncated arrays, not helpful
-    return fields #returns a dictionary containing keys Bottom Beam and Top Beam
+        for process in processes:
+            process.join()
+
+        # Merge chunk results
+        bfields[beam] = sum(results)
+
+    return bfields
 
 
-def generate_id_field(info, maglist, mags, f1):
-    fields = generate_per_beam_b_field(info, maglist, mags, f1)
-    id_fields = np.zeros(next(iter(fields.values())).shape) #iterates over the values in the dictionary fields to create the array id_fields
-    #logging.debug("id fields shape is %s"%(str(id_fields.shape))) #(17,5,2622,3)
-    for beam in fields.keys():
-        id_fields+=fields[beam]
-    #logging.debug("id_fields %s"%(str(id_fields.shape))) #(17,5,2622,3)
-    return id_fields #returns an array (17,5,2622,3)
-
-
-def generate_id_field_cost(field, ref_field):
-    # TODO why only slice [...,2:4] ?
-    return np.sum(np.square(field[...,2:4] - ref_field[...,2:4]))
+def generate_bfield(info, maglist, mags, f1):
+    bfields = generate_per_beam_bfield(info, maglist, mags, f1)
+    return sum(bfields.values()) # shape == (17,5,2622,3)
 
 
 def generate_reference_magnets(mags):
+    # Result to hold the set of 'perfect' magnets
     ref_mags = Magnets()
-    for magtype in list(mags.magnet_sets.keys()):
-        mag_dir = list(mags.magnet_sets[magtype].values())[0].argmax()
-        unit = np.zeros(3)
-        unit[mag_dir] = mags.mean_field[magtype]
-        #ref_mags.add_perfect_magnet_set(magtype, len(mags.magnet_sets[magtype]) , unit, mags.magnet_flip[magtype])
-        ref_mags.add_perfect_magnet_set_duplicate(magtype, mags.magnet_sets[magtype].keys(), unit, mags.magnet_flip[magtype])
-        #logging.debug("ref_mags shape %s"%(str(ref_mags.shape))) magnets object has no attribute shape
+
+    # Process all magnet types
+    for mag_type, mag_set in mags.magnet_sets.items():
+
+        # Observe the major field direction of the 0th magnet of this type (safe^TM due to manufacturing tolerances)
+        field_vector = next(iter(mag_set.values())) # next(iter(...)) avoids full list conversion
+
+        # Make a 'perfect' field vector biased in that direction using the mean field strength of the magnet set
+        ref_field_vector = np.zeros_like(field_vector)
+        ref_field_vector[np.argmax(field_vector)] = mags.mean_field[mag_type]
+
+        # Add a set of 'perfect' magnets using the same name keys as the observed real magnet set
+        ref_mags.add_perfect_magnet_set_duplicate(mag_type, mag_set.keys(),
+                                                  ref_field_vector, mags.magnet_flip[mag_type])
+
     return ref_mags
 
 
-def calculate_cached_fitness(info, lookup, magnets, maglist, ref_total_id_field):
-    total_id_field = generate_id_field(info, maglist, magnets, lookup)
-    return generate_id_field_cost(total_id_field, ref_total_id_field)
+def calculate_bfield_loss(bfield, ref_bfield):
+    # TODO why only slice [...,2:4] ?
+    return np.sum(np.square(bfield[...,2:4] - ref_bfield[...,2:4]))
 
 
-def calculate_cached_trajectory_fitness(info, lookup, magnets, maglist, ref_trajectories):
-    total_id_field = generate_id_field(info, maglist, magnets, lookup)
-    pherr, test_array = calculate_phase_error(info, total_id_field)
-    return (total_id_field, generate_id_field_cost(test_array, ref_trajectories))
+def calculate_cached_bfield_loss(info, lookup, magnets, maglist, ref_bfield):
+    bfield = generate_bfield(info, maglist, magnets, lookup)
+    return calculate_bfield_loss(bfield, ref_bfield)
 
+def calculate_trajectory_loss(trajectories, ref_trajectories):
+    # TODO why only slice [...,2:4] ?
+    return np.sum(np.square(trajectories[...,2:4] - ref_trajectories[...,2:4]))
 
-def calculate_trajectory_fitness_from_array(total_id_field, info, ref_trajectories):
-    pherr, test_array = calculate_phase_error(info, total_id_field)
-    return generate_id_field_cost(test_array, ref_trajectories)
+def calculate_cached_trajectory_loss(info, lookup, magnets, maglist, ref_trajectories):
+    # Calculate bfield loss and also return reference array to reuse later
+    bfield = generate_bfield(info, maglist, magnets, lookup)
+    phase_error, trajectories = calculate_bfield_phase_error(info, bfield)
+    trajectory_loss = calculate_trajectory_loss(trajectories, ref_trajectories)
+    return bfield, trajectory_loss
 
-# TODO refactor and remove this code
-# def calculate_fitness(id_filename, lookup_filename, magnets_filename, maglist):
-#     # TODO this will be slow, but should be optimizable with lookups
-#     with open(id_filename, 'r') as fp:
-#         info = json.load(fp)
-#
-#     with h5py.File(lookup_filename, 'r') as lookup:
-#
-#         mags = Magnets()
-#         mags.load(magnets_filename)
-#
-#         ref_mags           = generate_reference_magnets(mags)
-#         ref_maglist        = MagLists(ref_mags)
-#         ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, lookup)
-#
-#         result = calculate_cached_fitness(info, lookup, mags, maglist, ref_total_id_field)
-#
-#     return result
+def calculate_trajectory_loss_from_array(info, bfield, ref_trajectories):
+    phase_error, trajectories = calculate_bfield_phase_error(info, bfield)
+    return calculate_trajectory_loss(trajectories, ref_trajectories)
 
 
 def write_bfields(filename, id_filename, lookup_filename, magnets_filename, maglist):
@@ -194,28 +166,28 @@ def write_bfields(filename, id_filename, lookup_filename, magnets_filename, magl
 
     mags = Magnets()
     mags.load(magnets_filename)
-    ref_mags=generate_reference_magnets(mags)
+    ref_mags = generate_reference_magnets(mags)
 
     with h5py.File(filename, 'w') as fp:
     
-        per_beam_field = generate_per_beam_b_field(info, maglist, mags, lookup)
-        total_id_field = generate_id_field(info, maglist, mags, lookup)
+        per_beam_field = generate_per_beam_bfield(info, maglist, mags, lookup)
+        total_id_field = generate_bfield(info, maglist, mags, lookup)
 
         for name in per_beam_field.keys():
             fp.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
 
         fp.create_dataset('id_Bfield', data=total_id_field)
-        trajectory_information=calculate_phase_error(info, total_id_field)
+        trajectory_information = calculate_bfield_phase_error(info, total_id_field)
         fp.create_dataset('id_phase_error', data=trajectory_information[0])
         fp.create_dataset('id_trajectory',  data=trajectory_information[1])
 
-        per_beam_field = generate_per_beam_b_field(info, maglist, ref_mags, lookup)
-        total_id_field = generate_id_field(info, maglist, ref_mags, lookup)
+        per_beam_field = generate_per_beam_bfield(info, maglist, ref_mags, lookup)
+        total_id_field = generate_bfield(info, maglist, ref_mags, lookup)
 
         for name in per_beam_field.keys():
             fp.create_dataset("%s_per_beam_perfect" % (name), data=per_beam_field[name])
 
         fp.create_dataset('id_Bfield_perfect', data=total_id_field)
-        trajectory_information = calculate_phase_error(info, total_id_field)
+        trajectory_information = calculate_bfield_phase_error(info, total_id_field)
         fp.create_dataset('id_phase_error_perfect', data=trajectory_information[0])
         fp.create_dataset('id_trajectory_perfect',  data=trajectory_information[1])

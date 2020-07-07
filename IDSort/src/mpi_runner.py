@@ -44,8 +44,8 @@ import numpy as np
 
 from .magnets import Magnets, MagLists
 from .genome_tools import ID_BCell
-from .field_generator import generate_reference_magnets, generate_id_field
-from .magnet_tools import calculate_phase_error
+from .field_generator import generate_reference_magnets, generate_bfield
+from .magnet_tools import calculate_bfield_phase_error
 
 
 logging.basicConfig(level=0,format=' %(asctime)s.%(msecs)03d %(threadName)-16s %(levelname)-6s %(message)s', datefmt='%H:%M:%S')
@@ -103,10 +103,10 @@ def process(options, args):
 
     ref_mags = generate_reference_magnets(mags)
     ref_maglist = MagLists(ref_mags)
-    ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, lookup)
+    ref_total_id_field = generate_bfield(info, ref_maglist, ref_mags, lookup)
     #logging.debug("before phase calculate error call")
     #logging.debug(ref_total_id_field.shape())
-    pherr, ref_trajectories = calculate_phase_error(info, ref_total_id_field)
+    phase_error, ref_trajectories = calculate_bfield_phase_error(info, ref_total_id_field)
 
     barrier(options.singlethreaded)
 

@@ -44,10 +44,10 @@ from .genome_tools import ID_Shim_BCell, ID_BCell
 
 from .field_generator import generate_reference_magnets, \
                              generate_per_magnet_array,  \
-                             generate_id_field,          \
+                             generate_bfield,          \
                              compare_magnet_arrays
 
-from .magnet_tools import calculate_phase_error
+from .magnet_tools import calculate_bfield_phase_error
 
 
 logging.basicConfig(level=0,format=' %(asctime)s.%(msecs)03d %(threadName)-16s %(levelname)-6s %(message)s', datefmt='%H:%M:%S')
@@ -77,21 +77,21 @@ def saveh5(path, best, genome, info, mags, real_bfield, lookup):
     
         total_id_field = real_bfield
         fp.create_dataset('id_Bfield_original', data=total_id_field)
-        trajectory_information=calculate_phase_error(info, total_id_field)
+        trajectory_information = calculate_bfield_phase_error(info, total_id_field)
         fp.create_dataset('id_phase_error_original', data = trajectory_information[0])
         fp.create_dataset('id_trajectory_original', data = trajectory_information[1])
 
         total_id_field = updated_bfield
         fp.create_dataset('id_Bfield_shimmed', data=total_id_field)
-        trajectory_information=calculate_phase_error(info, total_id_field)
+        trajectory_information = calculate_bfield_phase_error(info, total_id_field)
         fp.create_dataset('id_phase_error_shimmed', data = trajectory_information[0])
         fp.create_dataset('id_trajectory_shimmed', data = trajectory_information[1])
 
         ref_mags=generate_reference_magnets(mags)
-        total_id_field = generate_id_field(info, best.genome, ref_mags, lookup)
+        total_id_field = generate_bfield(info, best.genome, ref_mags, lookup)
 
         fp.create_dataset('id_Bfield_perfect', data=total_id_field)
-        trajectory_information=calculate_phase_error(info, total_id_field)
+        trajectory_information = calculate_bfield_phase_error(info, total_id_field)
         fp.create_dataset('id_phase_error_perfect', data = trajectory_information[0])
         fp.create_dataset('id_trajectory_perfect', data = trajectory_information[1])
 
@@ -156,8 +156,8 @@ def process(options, args):
     logging.debug('mpi runner calling MagLists()')
     ref_maglist = MagLists(ref_mags)
     logging.debug('after ref_maglist')
-    ref_total_id_field = generate_id_field(info, ref_maglist, ref_mags, lookup)
-    pherr, ref_trajectories = calculate_phase_error(info, ref_total_id_field)
+    ref_total_id_field = generate_bfield(info, ref_maglist, ref_mags, lookup)
+    phase_error, ref_trajectories = calculate_bfield_phase_error(info, ref_total_id_field)
 
     barrier(options.singlethreaded)
 
