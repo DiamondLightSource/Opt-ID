@@ -69,19 +69,18 @@ def compare_magnet_arrays(mag_array_a, mag_array_b, lookup):
 
     return difference_map
 
-# TODO refactor use of results input being destructively modified
-# TODO usage involves multi-threading!!! Can data be corrupted while appending?
-def generate_sub_array(beam_array, eval_list, lookup, beam, results):
-    # This sum is calculated like this to avoid memory errors
-    result = np.sum((lookup[beam][..., eval_list[0]] * beam_array[:, eval_list[0]]), axis=4)
-
-    for m in eval_list[1:]:
-        result += np.sum((lookup[beam][..., m] * beam_array[:, m]), axis=4)
-
-    results.append(result)
-
 
 def generate_per_beam_b_field(info, maglist, mags, lookup):
+
+    # TODO refactor use of results input being destructively modified
+    # TODO usage involves multi-threading!!! Can data be corrupted while appending?
+    def generate_sub_array(beam_array, eval_list, lookup, beam, results):
+        # This sum is calculated like this to avoid memory errors
+        result = np.sum((lookup[beam][..., eval_list[0]] * beam_array[:, eval_list[0]]), axis=4)
+        for m in eval_list[1:]:
+            result += np.sum((lookup[beam][..., m] * beam_array[:, m]), axis=4)
+        results.append(result)
+
     beam_arrays = generate_per_magnet_array(info, maglist, mags) #beam_arrays is a dictionary
     procs = 8
     fields = {}
