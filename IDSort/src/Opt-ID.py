@@ -19,7 +19,7 @@ import random
 
 from .magnets import Magnets, MagLists
 from .genome_tools import ID_BCell
-from .field_generator import output_fields
+from .field_generator import write_bfields
 
 E_STAR = 0.0
 M_STAR = 1.0
@@ -61,7 +61,7 @@ if __name__ == "__main__":
             genome.load(filename)
             
             outfile = os.path.join(args[0], os.path.split(filename)[1]+'.h5')
-            output_fields(outfile, options.id_filename, options.lookup_filename, options.magnets_filename, genome.genome)
+            write_bfields(outfile, options.id_filename, options.lookup_filename, options.magnets_filename, genome.genome)
 
         sys.exit(0)
 

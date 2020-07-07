@@ -11,7 +11,7 @@ import pickle
 import numpy as np
 
 from .magnets import Magnets, MagLists
-from .field_generator import output_fields
+from .field_generator import write_bfields
 
 from .logging_utils import logging, getLogger, setLoggerLevel
 logger = getLogger(__name__)
@@ -204,7 +204,7 @@ def process(options, args):
 
             # Offload analysis processing to field_generator::output_fields
             analysis_path = os.path.join(options.output_dir, os.path.split(genome_path)[1] + '.h5')
-            output_fields(analysis_path, options.id_filename, options.id_template, options.magnets_filename, maglists)
+            write_bfields(analysis_path, options.id_filename, options.id_template, options.magnets_filename, maglists)
 
     logger.debug('Halting')
 

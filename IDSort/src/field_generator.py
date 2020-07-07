@@ -181,7 +181,8 @@ def calculate_trajectory_fitness_from_array(total_id_field, info, ref_trajectori
 #
 #     return result
 
-def output_fields(filename, id_filename, lookup_filename, magnets_filename, maglist):
+
+def write_bfields(filename, id_filename, lookup_filename, magnets_filename, maglist):
 
     with open(id_filename, 'r') as fp:
         info = json.load(fp)
