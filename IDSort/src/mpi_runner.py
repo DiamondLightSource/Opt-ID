@@ -44,9 +44,10 @@ import numpy as np
 
 from .magnets import Magnets, MagLists
 from .genome_tools import ID_BCell
-from .field_generator import generate_reference_magnets, generate_bfield
-from .magnet_tools import calculate_bfield_phase_error
 
+from .field_generator import generate_reference_magnets,  \
+                             generate_bfield,             \
+                             calculate_bfield_phase_error
 
 logging.basicConfig(level=0,format=' %(asctime)s.%(msecs)03d %(threadName)-16s %(levelname)-6s %(message)s', datefmt='%H:%M:%S')
 

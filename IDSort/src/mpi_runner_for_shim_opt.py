@@ -44,10 +44,9 @@ from .genome_tools import ID_Shim_BCell, ID_BCell
 
 from .field_generator import generate_reference_magnets, \
                              generate_per_magnet_array,  \
-                             generate_bfield,          \
-                             compare_magnet_arrays
-
-from .magnet_tools import calculate_bfield_phase_error
+                             generate_bfield,            \
+                             compare_magnet_arrays,      \
+                             calculate_bfield_phase_error
 
 
 logging.basicConfig(level=0,format=' %(asctime)s.%(msecs)03d %(threadName)-16s %(levelname)-6s %(message)s', datefmt='%H:%M:%S')
