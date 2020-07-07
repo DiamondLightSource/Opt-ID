@@ -131,12 +131,8 @@ def generate_id_field(info, maglist, mags, f1):
 
 
 def generate_id_field_cost(field, ref_field):
-    cost=field-ref_field
-    cost=np.square(cost)
-    #cost=np.sqrt(cost)
-    cost=np.sum(cost[:,:,:,2:4])
-    
-    return cost
+    # TODO why only slice [...,2:4] ?
+    return np.sum(np.square(field[...,2:4] - ref_field[...,2:4]))
 
 
 def generate_reference_magnets(mags):
