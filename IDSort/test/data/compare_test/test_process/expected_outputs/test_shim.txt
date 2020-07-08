@@ -1,0 +1,3 @@
+Type    Shim no.    Original   Orientation    Replacement    Orientation
+HH 	251  		501   	1  		501  		-1
+HH 	322  		533   	1  		533  		-1

@@ -68,30 +68,28 @@ def saveh5(path, best, genome, info, mags, real_bfield, lookup):
     
     outfile = os.path.join(path, genome.uid+'-'+best.uid+'.h5')
     logging.debug("filename is %s" % (outfile))
-    f = h5py.File(outfile, 'w')
+
+    with h5py.File(outfile, 'w') as fp:
     
-    total_id_field = real_bfield
-    f.create_dataset('id_Bfield_original', data=total_id_field)
-    trajectory_information=mt.calculate_phase_error(info, total_id_field)
-    f.create_dataset('id_phase_error_original', data = trajectory_information[0])
-    f.create_dataset('id_trajectory_original', data = trajectory_information[1])
-    
-    total_id_field = updated_bfield
-    f.create_dataset('id_Bfield_shimmed', data=total_id_field)
-    trajectory_information=mt.calculate_phase_error(info, total_id_field)
-    f.create_dataset('id_phase_error_shimmed', data = trajectory_information[0])
-    f.create_dataset('id_trajectory_shimmed', data = trajectory_information[1])
-    
-    
-    ref_mags=generate_reference_magnets(mags)
-    total_id_field = generate_id_field(info, best.genome, ref_mags, lookup)
-    
-    f.create_dataset('id_Bfield_perfect', data=total_id_field)
-    trajectory_information=mt.calculate_phase_error(info, total_id_field)
-    f.create_dataset('id_phase_error_perfect', data = trajectory_information[0])
-    f.create_dataset('id_trajectory_perfect', data = trajectory_information[1])
-    
-    f.close()
+        total_id_field = real_bfield
+        fp.create_dataset('id_Bfield_original', data=total_id_field)
+        trajectory_information=mt.calculate_phase_error(info, total_id_field)
+        fp.create_dataset('id_phase_error_original', data = trajectory_information[0])
+        fp.create_dataset('id_trajectory_original', data = trajectory_information[1])
+
+        total_id_field = updated_bfield
+        fp.create_dataset('id_Bfield_shimmed', data=total_id_field)
+        trajectory_information=mt.calculate_phase_error(info, total_id_field)
+        fp.create_dataset('id_phase_error_shimmed', data = trajectory_information[0])
+        fp.create_dataset('id_trajectory_shimmed', data = trajectory_information[1])
+
+        ref_mags=generate_reference_magnets(mags)
+        total_id_field = generate_id_field(info, best.genome, ref_mags, lookup)
+
+        fp.create_dataset('id_Bfield_perfect', data=total_id_field)
+        trajectory_information=mt.calculate_phase_error(info, total_id_field)
+        fp.create_dataset('id_phase_error_perfect', data = trajectory_information[0])
+        fp.create_dataset('id_trajectory_perfect', data = trajectory_information[1])
 
 def barrier(is_single_threaded):
     if is_single_threaded:
@@ -126,24 +124,21 @@ def process(options, args):
     logging.debug("Process %d ip address is : %s" % (rank, ip))
 
 
-    f2 = open(options.id_filename, 'r')
-    info = json.load(f2)
-    f2.close()
+    with open(options.id_filename, 'r') as fp:
+        info = json.load(fp)
 
     logging.debug("Loading Lookup")
-    f1 = h5py.File(options.lookup_filename, 'r')
-    lookup = {}
-    for beam in info['beams']:
-        logging.debug("Loading beam %s" %(beam['name']))
-        lookup[beam['name']] = f1[beam['name']][...]
-    f1.close()
+    with h5py.File(options.lookup_filename, 'r') as fp:
+        lookup = {}
+        for beam in info['beams']:
+            logging.debug("Loading beam %s" %(beam['name']))
+            lookup[beam['name']] = fp[beam['name']][...]
 
     barrier(options.singlethreaded)
 
     logging.debug("Loading Initial Bfield")
-    f1 = h5py.File(options.bfield_filename, 'r')
-    real_bfield = f1['id_Bfield'][...]
-    f1.close()
+    with h5py.File(options.bfield_filename, 'r') as fp:
+        real_bfield = fp['id_Bfield'][...]
     logging.debug(real_bfield)
 
     barrier(options.singlethreaded)
@@ -321,7 +316,6 @@ def process(options, args):
 
 if __name__ == "__main__":
     import optparse
-
     usage = "%prog [options] run_directory"
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-f", "--fitness", dest="fitness", help="Set the target fitness", default=0.0, type="float")

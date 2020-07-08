@@ -1,0 +1,51 @@
+id_setup:
+  periods: 113
+  fullmagdims:
+    - 50.0
+    - 30.0
+    - 5.76
+  hemagdims:
+    - 50.0
+    - 30.0
+    - 3.48
+  htmagdims:
+    - 50.0
+    - 30.0
+    - 0.87
+  poledims:
+    - 30.0
+    - 26.0
+    - 2.96
+  interstice: 0.04
+  gap: 5.1
+  type: 'Hybrid_Symmetric'
+  name: 'test_cpmu'
+  x:
+    - -2.0
+    - 2.1
+    - 2.5
+  z:
+    - -0.0
+    - 0.1
+    - 0.1
+  steps: 1
+  endgapsym: 5.0
+  terminalgapsymhyb: 5.0
+  output_filename: 'test_cpmu.json'
+magnets:
+  hmags: '/home/tow31676/id_sort_code/Opt-ID/IDSort/data/I03H.sim'
+  hemags: '/home/tow31676/id_sort_code/Opt-ID/IDSort/data/I03HEC.sim'
+  htmags: '/home/tow31676/id_sort_code/Opt-ID/IDSort/data/I03HTE.sim'
+  vmags: null
+  vemags: null
+  output_filename: 'test_cpmu.mag'
+lookup_generator:
+  random: False
+  output_filename: 'test_cpmu.h5'
+mpi_runner:
+  iterations: 3
+  setup: 24
+  c: 1
+  e: 0.0
+  max_age: 10
+  scale: 10.0

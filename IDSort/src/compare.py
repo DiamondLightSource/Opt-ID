@@ -9,30 +9,32 @@ from IDSort.src.genome_tools import ID_BCell
 
 
 def process(options, args):
+    # TODO refactor arguments to use options named tuple
     g1 = ID_BCell()
-    g2 = ID_BCell()
     g1.load(args[0])
+
+    g2 = ID_BCell()
     g2.load(args[1])
-    if len(args)>2:
-        filepath=args[2]
-    else:
-        filepath="compare"
-    
-    f1 = open(filepath+".txt",'w')
-    f1.write("Type    Shim no.    Original   Orientation    Replacement    Orientation\n")
-    
-    for listkey in g1.genome.magnet_lists.keys():
-        for i in range(len(g1.genome.magnet_lists[listkey])):
-            if g1.genome.magnet_lists[listkey][i] != g2.genome.magnet_lists[listkey][i]:
-                allwrite=("%2s \t%3i  \t\t%3s   \t%1i  \t\t%3s  \t\t%1i"%(listkey, i, g1.genome.magnet_lists[listkey][i][0], g1.genome.magnet_lists[listkey][i][1], g2.genome.magnet_lists[listkey][i][0], g2.genome.magnet_lists[listkey][i][1]))
-                f1.write(allwrite)
-                f1.write("\n")
-                
-    f1.close()
+
+    filepath = args[2] if (len(args) > 2) else 'compare.txt'
+
+    # TODO convert output to pandas .csv file
+    with open(filepath, 'w') as fp:
+        fp.write("Type    Shim no.    Original   Orientation    Replacement    Orientation\n")
+
+        for list_key in g1.genome.magnet_lists.keys():
+            for i, (g1_mag, g2_mag) in enumerate(zip(g1.genome.magnet_lists[list_key],
+                                                     g2.genome.magnet_lists[list_key])):
+                if g1_mag != g2_mag:
+                    fp.write('%2s \t%3i  \t\t%3s   \t%1i  \t\t%3s  \t\t%1i\n' % (list_key, i,
+                                                                                 g1_mag[0], g1_mag[1],
+                                                                                 g2_mag[0], g2_mag[1]))
 
 if __name__ == '__main__' :
     import optparse
     usage = "%prog [options] OutputFile"
     parser = optparse.OptionParser(usage=usage)
+    # TODO refactor arguments to use named values
+
     (options, args) = parser.parse_args()
     process(options, args)

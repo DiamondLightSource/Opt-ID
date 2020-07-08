@@ -11,16 +11,38 @@ from IDSort.src.mpi_runner import process, MagLists
 class MpiRunnerTest(unittest.TestCase):
 
     def test_process(self):
+        # inp == Inputs
+        # exp == Expected Outputs
+        # obs == Observed Outputs
 
-        test_json_filepath = 'IDSort/data/test_data/sort/test_cpmu.json'
-        test_mag_filepath  = 'IDSort/data/test_data/sort/test_cpmu.mag'
-        test_h5_filepath   = 'IDSort/data/test_data/sort/test_cpmu.h5'
+        data_path = 'IDSort/test/data/mpi_runner_test/test_process'
+        inp_path  = os.path.join(data_path, 'inputs')
+        exp_path  = os.path.join(data_path, 'expected_outputs')
+        obs_path  = os.path.join(data_path, 'observed_outputs')
 
+        # Prepare input file paths
+        inp_json_path   = os.path.join(inp_path, 'test_cpmu.json')
+        inp_mag_path    = os.path.join(inp_path, 'test_cpmu.mag')
+        inp_h5_path     = os.path.join(inp_path, 'test_cpmu.h5')
+
+        # Prepare expected output file paths
+        exp_genome_paths = [
+            os.path.join(exp_path, '1.12875826e-08_000_7c51ecd01f73.genome'),
+            os.path.join(exp_path, '1.49788342e-08_000_b6059e1c0884.genome'),
+            os.path.join(exp_path, '1.81441854e-08_000_645a52b2bb2d.genome'),
+            os.path.join(exp_path, '4.05007630e-08_000_47a4f43ecf86.genome'),
+        ]
+
+        # Always clear any observed output files before running test
+        shutil.rmtree(obs_path, ignore_errors=True)
+        os.makedirs(obs_path)
+
+        # Prepare parameters for process function
         options = {
             'iterations'       : 3,
-            'id_filename'      : test_json_filepath,
-            'magnets_filename' : test_mag_filepath,
-            'lookup_filename'  : test_h5_filepath,
+            'id_filename'      : inp_json_path,
+            'magnets_filename' : inp_mag_path,
+            'lookup_filename'  : inp_h5_path,
             'setup'            : 24,
             'c'                : 1,
             'e'                : 0.0,
@@ -32,56 +54,100 @@ class MpiRunnerTest(unittest.TestCase):
             'seed_value'       : 30
         }
         options_named  = namedtuple("options", options.keys())(*options.values())
-        new_genome_dir = tempfile.mkdtemp()
-        args           = [new_genome_dir]
-
-        test_genome_filepaths = [
-            'IDSort/data/test_data/sort/mpi_runner_output/1.12875826e-08_000_7c51ecd01f73.genome',
-            'IDSort/data/test_data/sort/mpi_runner_output/1.49788342e-08_000_b6059e1c0884.genome',
-            'IDSort/data/test_data/sort/mpi_runner_output/1.81441854e-08_000_645a52b2bb2d.genome',
-            'IDSort/data/test_data/sort/mpi_runner_output/4.05007630e-08_000_47a4f43ecf86.genome'
+        args = [
+            obs_path
         ]
 
         try:
+
+            # Execute the function under test
             process(options_named, args)
-            new_genome_filenames = os.listdir(new_genome_dir)
 
-            assert len(new_genome_filenames) > 0
+            # Compare the output files to the expected ones
+            for exp_genome_path in exp_genome_paths:
 
-            for new_genome_filename in new_genome_filenames:
-                genome_to_compare_with = None
-                genome_fitness = new_genome_filename.split('_')[0]
-                for test_genome_filepath in test_genome_filepaths:
-                    if genome_fitness in test_genome_filepath:
-                        genome_to_compare_with = test_genome_filepath
+                # Assert the expected genome exists for comparison
+                assert os.path.exists(exp_genome_path)
 
-                assert genome_to_compare_with is not None
+                # TODO reliance on floating point precision in filename might not be stable between versions
+                exp_genome_fitness = os.path.split(exp_genome_path)[1].split('_')[0]
 
-                with open(os.path.join(new_genome_dir, new_genome_filename), 'rb') as new_genome_file, \
-                                                open(genome_to_compare_with, 'rb') as old_genome_file:
+                # Scan file names in the observed output directory and look for the genome with the matching fitness
+                obs_genome_path = None
+                for candidate_genome_name in os.listdir(obs_path):
+                    if exp_genome_fitness in candidate_genome_name:
+                        obs_genome_path = os.path.join(obs_path, candidate_genome_name)
+                        break
 
-                    old_maglist = pickle.load(old_genome_file)
-                    new_maglist = pickle.load(new_genome_file)
+                # Assert we found the matching genome
+                assert (obs_genome_path is not None)
 
-                assert (type(old_maglist) is MagLists)
-                assert (type(new_maglist) is MagLists)
+                # Compare the output file to the expected one
+                with open(exp_genome_path, 'rb') as exp_genome_file, \
+                     open(obs_genome_path, 'rb') as obs_genome_file:
 
-                # Offloads comparison to MagLists::__eq__ method
-                assert old_maglist == new_maglist
+                    exp_maglist = pickle.load(exp_genome_file)
+                    obs_maglist = pickle.load(obs_genome_file)
 
-        finally:
-            shutil.rmtree(new_genome_dir)
+                    assert (type(exp_maglist) is MagLists)
+                    assert (type(obs_maglist) is MagLists)
+
+                    # Offloads comparison to MagLists::__eq__ method
+                    assert exp_maglist == obs_maglist
+
+        # Use (except + else) instead of (finally) so that output files can be inspected if the test fails
+        except Exception as ex: raise ex
+        else:
+
+            # Clear any observed output files after running successful test
+            shutil.rmtree(obs_path, ignore_errors=True)
+            os.makedirs(obs_path)
 
     def test_process_initial_population(self):
+        # inp == Inputs
+        # exp == Expected Outputs
+        # obs == Observed Outputs
 
-        test_json_filepath = 'IDSort/data/test_data/sort/test_cpmu.json'
-        test_mag_filepath  = 'IDSort/data/test_data/sort/test_cpmu.mag'
-        test_h5_filepath   = 'IDSort/data/test_data/sort/test_cpmu.h5'
+        data_path = 'IDSort/test/data/mpi_runner_test/test_process_initial_population'
+        inp_path  = os.path.join(data_path, 'inputs')
+        exp_path  = os.path.join(data_path, 'expected_outputs')
+        obs_path  = os.path.join(data_path, 'observed_outputs')
+
+        # Prepare input file paths
+        inp_json_path    = os.path.join(inp_path, 'test_cpmu.json')
+        inp_mag_path     = os.path.join(inp_path, 'test_cpmu.mag')
+        inp_h5_path      = os.path.join(inp_path, 'test_cpmu.h5')
+        inp_genome_paths = [
+            os.path.join(inp_path, '1.12875826e-08_000_7c51ecd01f73.genome'),
+            os.path.join(inp_path, '1.49788342e-08_000_b6059e1c0884.genome'),
+            os.path.join(inp_path, '1.81441854e-08_000_645a52b2bb2d.genome'),
+            os.path.join(inp_path, '4.05007630e-08_000_47a4f43ecf86.genome')
+        ]
+
+        # Prepare expected output file paths
+        exp_genome_paths = [
+            os.path.join(exp_path, '1.09170425e-08_000_88d39698a4f7.genome'),
+            os.path.join(exp_path, '6.42786056e-09_000_aaf866db3206.genome'),
+            os.path.join(exp_path, '7.03009938e-09_000_a90b37ecedb9.genome'),
+            os.path.join(exp_path, '7.06840992e-09_000_a12a86932596.genome')
+        ]
+
+        # Always clear any observed output files before running test
+        shutil.rmtree(obs_path, ignore_errors=True)
+        os.makedirs(obs_path)
+
+        # Make a fresh copy of the initial genomes in the observed output directory
+        for inp_genome_path in inp_genome_paths:
+            # Assert the expected genome exists for comparison
+            assert os.path.exists(inp_genome_path)
+            shutil.copy(inp_genome_path, obs_path)
+
+        # Prepare parameters for process function
         options = {
             'iterations'       : 3,
-            'id_filename'      : test_json_filepath,
-            'magnets_filename' : test_mag_filepath,
-            'lookup_filename'  : test_h5_filepath,
+            'id_filename'      : inp_json_path,
+            'magnets_filename' : inp_mag_path,
+            'lookup_filename'  : inp_h5_path,
             'setup'            : 24,
             'c'                : 1,
             'e'                : 0.0,
@@ -93,52 +159,52 @@ class MpiRunnerTest(unittest.TestCase):
             'seed_value'       : 30
         }
         options_named = namedtuple("options", options.keys())(*options.values())
-        genome_dir    = 'IDSort/data/test_data/sort/mpi_runner_output'
-        args          = [genome_dir]
-
-        test_genome_filepaths = [
-            'IDSort/data/test_data/sort/mpi_runner_initial_population/1.09170425e-08_000_88d39698a4f7.genome',
-            'IDSort/data/test_data/sort/mpi_runner_initial_population/6.42786056e-09_000_aaf866db3206.genome',
-            'IDSort/data/test_data/sort/mpi_runner_initial_population/7.03009938e-09_000_a90b37ecedb9.genome',
-            'IDSort/data/test_data/sort/mpi_runner_initial_population/7.06840992e-09_000_a12a86932596.genome'
+        args = [
+            obs_path
         ]
 
         try:
+
+            # Execute the function under test
             process(options_named, args)
 
-            genome_filenames = os.listdir(genome_dir)
+            # Compare the output files to the expected ones
+            for exp_genome_path in exp_genome_paths:
 
-            assert len(genome_filenames) > 0
+                # Assert the expected genome exists for comparison
+                assert os.path.exists(exp_genome_path)
 
-            new_population = []
+                # TODO reliance on floating point precision in filename might not be stable between versions
+                exp_genome_fitness_and_age = '_'.join(os.path.split(exp_genome_path)[1].split('_')[0:2])
 
-            for test_genome_filepath in test_genome_filepaths:
-                genome_to_compare_with = None
-                test_genome_filename = os.path.split(test_genome_filepath)[1]
-                test_genome_split = test_genome_filename.split('_')
-                test_genome_fitness_and_age = '_'.join(test_genome_split[0:2])
-
-                for genome_filename in genome_filenames:
-                    if test_genome_fitness_and_age in genome_filename:
-                        genome_to_compare_with = genome_filename
-                        new_population.append(genome_filename)
+                # Scan file names in the observed output directory and look for the genome with the matching fitness
+                obs_genome_path = None
+                for candidate_genome_name in os.listdir(obs_path):
+                    if exp_genome_fitness_and_age in candidate_genome_name:
+                        obs_genome_path = os.path.join(obs_path, candidate_genome_name)
                         break
 
-                assert genome_to_compare_with is not None
+                # Assert we found the matching genome
+                assert (obs_genome_path is not None)
 
-                with open(os.path.join(genome_dir, genome_to_compare_with), 'rb') as new_genome_file, \
-                                                 open(test_genome_filepath, 'rb') as old_genome_file:
+                # Compare the output file to the expected one
+                with open(exp_genome_path, 'rb') as exp_genome_file, \
+                     open(obs_genome_path, 'rb') as obs_genome_file:
 
-                    old_maglist = pickle.load(old_genome_file)
-                    new_maglist = pickle.load(new_genome_file)
+                    exp_maglist = pickle.load(exp_genome_file)
+                    obs_maglist = pickle.load(obs_genome_file)
 
-                assert (type(old_maglist) is MagLists)
-                assert (type(new_maglist) is MagLists)
+                    assert (type(exp_maglist) is MagLists)
+                    assert (type(obs_maglist) is MagLists)
 
-                # Offloads comparison to MagLists::__eq__ method
-                assert old_maglist == new_maglist
+                    # Offloads comparison to MagLists::__eq__ method
+                    assert exp_maglist == obs_maglist
 
-        finally:
+        # Use (except + else) instead of (finally) so that output files can be inspected if the test fails
+        except Exception as ex: raise ex
+        else:
 
-            for genome_filename in new_population:
-                os.remove(os.path.join(genome_dir, genome_filename))
+            # Clear any observed output files after running successful test
+            shutil.rmtree(obs_path, ignore_errors=True)
+            os.makedirs(obs_path)
+

@@ -1,7 +1,6 @@
+import os, shutil
 import unittest
-import os
 import pickle
-
 from collections import namedtuple
 
 import h5py
@@ -13,90 +12,152 @@ from IDSort.src.process_genome import process, MagLists
 class ProcessGenomeTest(unittest.TestCase):
 
     def test_process(self):
+        # inp == Inputs
+        # exp == Expected Outputs
+        # obs == Observed Outputs
 
-        test_json_filepath = 'IDSort/data/test_data/sort/test_cpmu.json'
-        test_mag_filepath  = 'IDSort/data/test_data/sort/test_cpmu.mag'
-        test_h5_filepath   = 'IDSort/data/test_data/sort/test_cpmu.h5'
+        data_path = 'IDSort/test/data/process_genome_test/test_process'
+        inp_path  = os.path.join(data_path, 'inputs')
+        exp_path  = os.path.join(data_path, 'expected_outputs')
+        obs_path  = os.path.join(data_path, 'observed_outputs')
 
+        # Base name for test genome file
+        base_genome_name = '1.12875826e-08_000_7c51ecd01f73.genome'
+
+        # Prepare input file paths
+        inp_json_path   = os.path.join(inp_path, 'test_cpmu.json')
+        inp_mag_path    = os.path.join(inp_path, 'test_cpmu.mag')
+        inp_h5_path     = os.path.join(inp_path, 'test_cpmu.h5')
+        inp_genome_path = os.path.join(inp_path, base_genome_name)
+
+        # Prepare expected output file paths
+        exp_h5_path  = os.path.join(exp_path, base_genome_name + '.h5')
+        exp_inp_path = os.path.join(exp_path, base_genome_name + '.inp')
+
+        # Prepare observed output file paths
+        obs_h5_path  = os.path.join(obs_path, base_genome_name + '.h5')
+        obs_inp_path = os.path.join(obs_path, base_genome_name + '.inp')
+
+        # Always clear any observed output files before running test
+        shutil.rmtree(obs_path, ignore_errors=True)
+        os.makedirs(obs_path)
+
+        # TODO refactor to allow output file names to be specified as named parameters
+        # Prepare parameters for process function
         options = {
             'analysis'         : True,
             'readable'         : True,
-            'id_filename'      : test_json_filepath,
-            'magnets_filename' : test_mag_filepath,
-            'id_template'      : test_h5_filepath,
-            'create_genome'    : False
+            'id_filename'      : inp_json_path,
+            'magnets_filename' : inp_mag_path,
+            'id_template'      : inp_h5_path,
+            'create_genome'    : False,
+            'output_dir'       : obs_path
         }
         options_named = namedtuple("options", options.keys())(*options.values())
-
-        old_genome_filepath = 'IDSort/data/test_data/sort/mpi_runner_output/1.12875826e-08_000_7c51ecd01f73.genome'
-        args = [old_genome_filepath]
-
-        new_genome_h5_filename  = os.path.split(old_genome_filepath)[1] + '.h5'
-        new_genome_inp_filename = os.path.split(old_genome_filepath)[1] + '.inp'
-
-        new_genome_h5_filepath  = os.path.join(os.getcwd(), new_genome_h5_filename)
-        old_genome_h5_filepath  = 'IDSort/data/test_data/sort/process_genome_analyse_output/1.12875826e-08_000_7c51ecd01f73.genome.h5'
-        new_genome_inp_filepath = os.path.join(os.getcwd(), new_genome_inp_filename)
-        old_genome_inp_filepath = 'IDSort/data/test_data/sort/process_genome_analyse_output/1.12875826e-08_000_7c51ecd01f73.genome.inp'
+        args = [
+            inp_genome_path
+        ]
 
         try:
+
+            # Execute the function under test
             process(options_named, args)
 
-            with h5py.File(new_genome_h5_filepath, 'r') as new_h5_file,  \
-                 h5py.File(old_genome_h5_filepath, 'r') as old_h5_file,  \
-                          open(new_genome_inp_filepath) as new_inp_file, \
-                          open(old_genome_inp_filepath) as old_inp_file:
+            # Compare the output file to the expected one
+            with h5py.File(exp_h5_path, 'r') as exp_h5_file, \
+                 h5py.File(obs_h5_path, 'r') as obs_h5_file:
 
-                for dataset in new_h5_file:
+                assert sorted(list(exp_h5_file.keys())) == sorted(list(obs_h5_file.keys()))
+
+                for dataset in exp_h5_file.keys():
                     if 'perfect' not in dataset:
-                        new_data = new_h5_file.get(dataset)[()]
-                        old_data = old_h5_file.get(dataset)[()]
-                        assert np.allclose(new_data, old_data)
+
+                        exp_data = exp_h5_file.get(dataset)[()]
+                        obs_data = obs_h5_file.get(dataset)[()]
+                        assert np.allclose(exp_data, obs_data)
+
+            # Compare the output file to the expected one
+            with open(exp_inp_path, 'r') as exp_inp_file, \
+                 open(obs_inp_path, 'r') as obs_inp_file:
 
                 # Bytewise comparison between ASCII files is safe (within reason, need to be careful with file layout)
-                assert new_inp_file.read().strip() == old_inp_file.read().strip()
+                assert exp_inp_file.read().strip() == obs_inp_file.read().strip()
 
-        finally:
-            os.remove(new_genome_h5_filepath)
-            os.remove(new_genome_inp_filepath)
+        # Use (except + else) instead of (finally) so that output files can be inspected if the test fails
+        except Exception as ex: raise ex
+        else:
+
+            # Clear any observed output files after running successful test
+            shutil.rmtree(obs_path, ignore_errors=True)
+            os.makedirs(obs_path)
 
     def test_process_create_genome(self):
+        # inp == Inputs
+        # exp == Expected Outputs
+        # obs == Observed Outputs
 
-        test_json_filepath = 'IDSort/data/test_data/sort/test_cpmu.json'
-        test_mag_filepath  = 'IDSort/data/test_data/sort/test_cpmu.mag'
-        test_h5_filepath   = 'IDSort/data/test_data/sort/test_cpmu.h5'
-        test_inp_filepath  = 'IDSort/data/test_data/sort/process_genome_analyse_output/1.12875826e-08_000_7c51ecd01f73.genome.inp'
+        data_path = 'IDSort/test/data/process_genome_test/test_process_create_genome'
+        inp_path  = os.path.join(data_path, 'inputs')
+        exp_path  = os.path.join(data_path, 'expected_outputs')
+        obs_path  = os.path.join(data_path, 'observed_outputs')
 
+        # Base name for test genome file
+        base_inp_name = '1.12875826e-08_000_7c51ecd01f73.genome.inp'
+
+        # Prepare input file paths
+        inp_json_path = os.path.join(inp_path, 'test_cpmu.json')
+        inp_mag_path  = os.path.join(inp_path, 'test_cpmu.mag')
+        inp_h5_path   = os.path.join(inp_path, 'test_cpmu.h5')
+        inp_inp_path  = os.path.join(inp_path, base_inp_name)
+
+        # Prepare expected output file paths
+        exp_genome_path = os.path.join(exp_path, base_inp_name + '.genome')
+
+        # Prepare observed output file paths
+        obs_genome_path = os.path.join(obs_path, base_inp_name + '.genome')
+
+        # Always clear any observed output files before running test
+        shutil.rmtree(obs_path, ignore_errors=True)
+        os.makedirs(obs_path)
+
+        # TODO refactor to allow output file names to be specified as named parameters
+        # Prepare parameters for process function
         options = {
             'create_genome'    : True,
             'readable'         : False,
             'analysis'         : False,
-            'id_filename'      : test_json_filepath,
-            'magnets_filename' : test_mag_filepath,
-            'id_template'      : test_h5_filepath
+            'id_filename'      : inp_json_path,
+            'magnets_filename' : inp_mag_path,
+            'id_template'      : inp_h5_path,
+            'output_dir'       : obs_path
         }
-
         options_named = namedtuple("options", options.keys())(*options.values())
-        args = [test_inp_filepath]
-
-        old_genome_filepath = 'IDSort/data/test_data/sort/1.12875826e-08_000_7c51ecd01f73.genome.inp.genome'
-        new_genome_filename = os.path.split(test_inp_filepath)[1] + '.genome'
-        new_genome_filepath = os.path.join(os.getcwd(), new_genome_filename)
+        args = [
+            inp_inp_path
+        ]
 
         try:
+
+            # Execute the function under test
             process(options_named, args)
 
-            with open(old_genome_filepath, 'rb') as old_genome_file, \
-                 open(new_genome_filepath, 'rb') as new_genome_file:
+            # Compare the output file to the expected one
+            with open(exp_genome_path, 'rb') as exp_genome_file, \
+                 open(obs_genome_path, 'rb') as obs_genome_file:
 
-                old_maglist = pickle.load(old_genome_file)
-                new_maglist = pickle.load(new_genome_file)
+                exp_maglist = pickle.load(exp_genome_file)
+                obs_maglist = pickle.load(obs_genome_file)
 
-            assert (type(old_maglist) is MagLists)
-            assert (type(new_maglist) is MagLists)
+                assert (type(exp_maglist) is MagLists)
+                assert (type(obs_maglist) is MagLists)
 
-            # Offloads comparison to MagLists::__eq__ method
-            assert old_maglist == new_maglist
+                # Offloads comparison to MagLists::__eq__ method
+                assert exp_maglist == obs_maglist
 
-        finally:
-            os.remove(new_genome_filepath)
+        # Use (except + else) instead of (finally) so that output files can be inspected if the test fails
+        except Exception as ex: raise ex
+        else:
+
+            # Clear any observed output files after running successful test
+            shutil.rmtree(obs_path, ignore_errors=True)
+            os.makedirs(obs_path)

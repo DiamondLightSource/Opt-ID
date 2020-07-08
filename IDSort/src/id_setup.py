@@ -15,6 +15,7 @@
 # order  x, z, s
 import json
 
+# TODO refactor this file
 
 def create_type_list_symmetric_apple(nperiods):
     # do the first end
