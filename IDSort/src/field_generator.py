@@ -240,25 +240,29 @@ def write_bfields(filename, id_filename, lookup_filename, magnets_filename, magl
     ref_mags = generate_reference_magnets(mags)
 
     with h5py.File(filename, 'w') as fp:
-    
-        per_beam_field = generate_per_beam_bfield(info, maglist, mags, lookup)
-        total_id_field = generate_bfield(info, maglist, mags, lookup)
 
-        for name in per_beam_field.keys():
-            fp.create_dataset("%s_per_beam" % (name), data=per_beam_field[name])
+        # Store the bfield data for the real magnets
+        per_beam_bfield = generate_per_beam_bfield(info, maglist, mags, lookup)
+        bfield          = generate_bfield(info, maglist, mags, lookup)
 
-        fp.create_dataset('id_Bfield', data=total_id_field)
-        trajectory_information = calculate_bfield_phase_error(info, total_id_field)
-        fp.create_dataset('id_phase_error', data=trajectory_information[0])
-        fp.create_dataset('id_trajectory',  data=trajectory_information[1])
+        for name in per_beam_bfield.keys():
+            fp.create_dataset("%s_per_beam" % (name), data=per_beam_bfield[name])
 
-        per_beam_field = generate_per_beam_bfield(info, maglist, ref_mags, lookup)
-        total_id_field = generate_bfield(info, maglist, ref_mags, lookup)
+        fp.create_dataset('id_Bfield', data=bfield)
 
-        for name in per_beam_field.keys():
-            fp.create_dataset("%s_per_beam_perfect" % (name), data=per_beam_field[name])
+        phase_error, trajectories = calculate_bfield_phase_error(info, bfield)
+        fp.create_dataset('id_phase_error', data=phase_error)
+        fp.create_dataset('id_trajectory',  data=trajectories)
 
-        fp.create_dataset('id_Bfield_perfect', data=total_id_field)
-        trajectory_information = calculate_bfield_phase_error(info, total_id_field)
-        fp.create_dataset('id_phase_error_perfect', data=trajectory_information[0])
-        fp.create_dataset('id_trajectory_perfect',  data=trajectory_information[1])
+        # Store the bfield data for the reference magnets
+        ref_per_beam_bfield = generate_per_beam_bfield(info, maglist, ref_mags, lookup)
+        ref_bfield          = generate_bfield(info, maglist, ref_mags, lookup)
+
+        for name in per_beam_bfield.keys():
+            fp.create_dataset("%s_per_beam_perfect" % (name), data=ref_per_beam_bfield[name])
+
+        fp.create_dataset('id_Bfield_perfect', data=ref_bfield)
+
+        ref_phase_error, ref_trajectories = calculate_bfield_phase_error(info, ref_bfield)
+        fp.create_dataset('id_phase_error_perfect', data=ref_phase_error)
+        fp.create_dataset('id_trajectory_perfect',  data=ref_trajectories)
