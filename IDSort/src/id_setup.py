@@ -160,12 +160,12 @@ def create_flip_matrix_list_symmetric_apple_q4(nperiods):
     flip.append(((1,0,0),(0,1,0),(0,0,1)))
     flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
     return flip
-    
-def create_location_list_symmetric_apple_q2(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+
+def create_location_list_symmetric_apple_q1(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
     #locate most negative point of block on x,z,s axes
     V1 = []
     length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
-    x=-fullmagdims[0]-phasinggap/2.0
+    x=phasinggap/2.0
     z=mingap/2.0
     s=-length/2.0
     V1.append((x,z,s))
@@ -184,11 +184,11 @@ def create_location_list_symmetric_apple_q2(period, nperiods, fullmagdims, vemag
     V1.append((x,z,s))
     return V1
 
-def create_location_list_symmetric_apple_q1(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+def create_location_list_symmetric_apple_q2(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
     #locate most negative point of block on x,z,s axes
     V1 = []
     length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
-    x=phasinggap/2.0
+    x=-fullmagdims[0]-phasinggap/2.0
     z=mingap/2.0
     s=-length/2.0
     V1.append((x,z,s))
@@ -252,6 +252,7 @@ def create_location_list_symmetric_apple_q3(period, nperiods, fullmagdims, vemag
     s+=(vemagdims[2]+endgap)
     V1.append((x,z,s))
     return V1
+
 
 def create_type_list_symmetric_hybrid(nperiods):
     # do the first end
@@ -338,6 +339,7 @@ def create_location_list_symmetric_hybrid_bottom(nperiods,fullmagdims,hemagdims,
     V1.append((x,z,s))
     return V1
 
+
 def create_type_list_antisymetric_ppm(nperiods):
     # do the first end
     types = []
@@ -364,7 +366,6 @@ def create_type_list_antisymetric_ppm(nperiods):
     types.append('HE')
 
     return types
-
 
 def create_direction_list_antisymetric_ppm_bottom(nperiods):
     direction = []
@@ -398,7 +399,6 @@ def create_flip_matrix_antisymmetric_ppm_bottom(nperiods):
     
     flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
     return flip
-
 
 def create_direction_list_antisymetric_ppm_top(nperiods):
     direction = []
@@ -469,6 +469,7 @@ def create_location_list_antisymmetric_ppm_bottom(period, nperiods,fullmagdims,v
     V1.append((x,z,s))
     return V1
 
+
 def process(options, args):
     if options.type == 'Hybrid_Symmetric':
         output = {}
@@ -493,13 +494,13 @@ def process(options, args):
         output['interstice'] = options.interstice
 
         # calculate all magnet values
-        types = create_type_list_symmetric_hybrid(options.periods)
-        top_directions_matrix = create_direction_matrix_list_symmetric_hybrid_top(options.periods)
+        types                    = create_type_list_symmetric_hybrid(options.periods)
+        top_directions_matrix    = create_direction_matrix_list_symmetric_hybrid_top(options.periods)
         bottom_directions_matrix = create_direction_matrix_list_symmetric_hybrid_bottom(options.periods)
-        top_positions = create_location_list_symmetric_hybrid_top(options.periods, options.fullmagdims, options.hemagdims, options.htmagdims, options.poledims, options.gap, options.endgapsym, options.terminalgapsymhyb, options.interstice)
-        bottom_positions = create_location_list_symmetric_hybrid_bottom(options.periods, options.fullmagdims, options.hemagdims, options.htmagdims, options.poledims, options.gap, options.endgapsym, options.terminalgapsymhyb,options.interstice)
-        top_flip_matrix = create_flip_matrix_symmetric_hybrid_bottom_top(options.periods)
-        bottom_flip_matrix = create_flip_matrix_symmetric_hybrid_bottom_top(options.periods)
+        top_positions            = create_location_list_symmetric_hybrid_top(options.periods, options.fullmagdims, options.hemagdims, options.htmagdims, options.poledims, options.gap, options.endgapsym, options.terminalgapsymhyb, options.interstice)
+        bottom_positions         = create_location_list_symmetric_hybrid_bottom(options.periods, options.fullmagdims, options.hemagdims, options.htmagdims, options.poledims, options.gap, options.endgapsym, options.terminalgapsymhyb,options.interstice)
+        top_flip_matrix          = create_flip_matrix_symmetric_hybrid_bottom_top(options.periods)
+        bottom_flip_matrix       = create_flip_matrix_symmetric_hybrid_bottom_top(options.periods)
         # output beams
         output['beams'] = []
         top_beam = {}
@@ -513,10 +514,11 @@ def process(options, args):
         # top beam
         for i in range(len(types)):
             mag = {}
-            mag['type'] = types[i]
+            mag['type']             = types[i]
             mag['direction_matrix'] = top_directions_matrix[i]
-            mag['position'] = top_positions[i]
-            mag['flip_matrix'] = top_flip_matrix[i]
+            mag['position']         = top_positions[i]
+            mag['flip_matrix']      = top_flip_matrix[i]
+
             if types[i] == 'VV':
                 mag['dimensions'] = options.fullmagdims
             elif types[i] == 'HH':
@@ -532,10 +534,11 @@ def process(options, args):
         # bottom beam
         for i in range(len(types)):
             mag = {}
-            mag['type'] = types[i]
+            mag['type']             = types[i]
             mag['direction_matrix'] = bottom_directions_matrix[i]
-            mag['position'] = bottom_positions[i]
-            mag['flip_matrix'] = bottom_flip_matrix[i]
+            mag['position']         = bottom_positions[i]
+            mag['flip_matrix']      = bottom_flip_matrix[i]
+
             if types[i] == 'VV':
                 mag['dimensions'] = options.fullmagdims
             elif types[i] == 'HH':
@@ -791,6 +794,8 @@ if __name__ == "__main__":  #program starts here
     parser.add_option("-x", "--xstartstopstep", dest="x", help="X start stop and step", nargs=3, default=(-5.0, 5.1, 2.5), type="float")
     parser.add_option("-z", "--zstartstopstep", dest="z", help="Z start stop and step", nargs=3, default=(-0.0,.1, 0.1), type="float")
     parser.add_option("-s", "--stepsperperiod", dest="steps", help="Number of steps in S per quarter period", default=5, type="float")
+
+    # TODO Arg string says PPM or APPLE but code only applies to Hybrid and APPLE, not PPM which is only anti-symmetric in the code
     parser.add_option("--endgapsym", dest="endgapsym", help="Symmetric PPM or APPLE devices require an end gap in the termination structure, set gap length in mm", default=5.0, type="float")
     parser.add_option("--terminalgapsymhyb", dest="terminalgapsymhyb", help="Symmetric hybrid devices require a terminal end gap between the final half pole and the terminal H magnet in the termination structure, set gap length in mm", default=5.0, type="float")
     parser.add_option("--phasinggap", dest="phasinggap", help="Gap between Quadrants 1/2 and 3/4 that allow these axes to phase past each other; in mm. APPLES only", default=0.5, type="float")
