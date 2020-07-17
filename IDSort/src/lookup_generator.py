@@ -26,6 +26,10 @@ import numpy as np
 
 # TODO refactor this file
 
+from .logging_utils import logging, getLogger, setLoggerLevel
+logger = getLogger(__name__)
+setLoggerLevel(logger, 4)
+
 def fortPMB_NEW(testpoint,m,i,magdims, V1):
     '''
     This function Calculates the B-field in a single orientation according to the calling function
@@ -56,18 +60,18 @@ def fortPMB_NEW(testpoint,m,i,magdims, V1):
             if ((r1[k].all() > 0) and (r2[k].all() > 0 )) :
                 r1k=r1[k]
                 r2k=r2[k]
-            else :
+            else:
                 r1k=-r2[k]
                 r2k=-r1[k]
 
-            a1=np.sqrt(r2i*r2i+r2j*r2j+r2k*r2k)
-            a2=np.sqrt(r1i*r1i+r1j*r1j+r2k*r2k)
-            a3=np.sqrt(r1i*r1i+r2j*r2j+r1k*r1k)
-            a4=np.sqrt(r2i*r2i+r1j*r1j+r1k*r1k)
-            a5=np.sqrt(r1i*r1i+r2j*r2j+r2k*r2k)
-            a6=np.sqrt(r2i*r2i+r1j*r1j+r2k*r2k)
-            a7=np.sqrt(r2i*r2i+r2j*r2j+r1k*r1k)
-            a8=np.sqrt(r1i*r1i+r1j*r1j+r1k*r1k)
+            a1=np.sqrt(r2i*r2i + r2j*r2j + r2k*r2k)
+            a2=np.sqrt(r1i*r1i + r1j*r1j + r2k*r2k)
+            a3=np.sqrt(r1i*r1i + r2j*r2j + r1k*r1k)
+            a4=np.sqrt(r2i*r2i + r1j*r1j + r1k*r1k)
+            a5=np.sqrt(r1i*r1i + r2j*r2j + r2k*r2k)
+            a6=np.sqrt(r2i*r2i + r1j*r1j + r2k*r2k)
+            a7=np.sqrt(r2i*r2i + r2j*r2j + r1k*r1k)
+            a8=np.sqrt(r1i*r1i + r1j*r1j + r1k*r1k)
 
             b2=r1i*r2k/(r1j*a2)
             b4=r2i*r1k/(r1j*a4)
@@ -197,7 +201,10 @@ if __name__ == "__main__":
 #    parser.add_option("-o", "--output", dest="output", help="Select the file to write the output to", default=None)
     parser.add_option("-p", "--periods", dest="periods", help="Set the number of full periods for the Device", default=5, type="int")
     parser.add_option("-s", "--symmetric", dest="symmetric", help="Set the device to symmetric rather then Anti-symmetric", action="store_true", default=False)
+
+    # TODO remove random as never used
     parser.add_option("-r", "--random", dest="random", help="Choose the magnets randomly instead of sequentially", action="store_true", default=False)
+
     parser.add_option("-v", "--verbose", dest="verbose", help="display debug information", action="store_true", default=False)
 
     (options, args) = parser.parse_args()
