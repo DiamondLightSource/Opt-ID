@@ -193,102 +193,81 @@ def create_direction_matrix_list_ppm_antisymmetric_btm(nperiods):
 def create_type_list_apple_symmetric(nperiods):
     # APPLE Symmetric devices uses horizontal and vertical end magnets
     # Number of periods of the device refers to number of full 4-magnet periods excluding those added by the end magnets
+    # HE, VE, HE, [VV, HH, VV, HH]*, VV, HE, VE, HE
     end_types    = ['HE', 'VE', 'HE']
     magnet_types = [('VV' if (index % 2 == 0) else 'HH') for index in range((4 * nperiods) - 7)]
     # Concatenate full magnet type list
     return end_types + magnet_types + end_types[::-1]
 
-def create_position_list_apple_symmetric_q1(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
-    #locate most negative point of block on x,z,s axes
-    V1 = []
-    length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
-    x=phasinggap/2.0
-    z=mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+endgap)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    for i in range(3,(4*nperiods-1)-3,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+endgap)
-    V1.append((x,z,s))
-    return V1
+def create_flip_matrix_list_apple_symmetric(nperiods):
+    # APPLE Symmetric devices uses horizontal and vertical end magnets
+    # Number of periods of the device refers to number of full 4-magnet periods excluding those added by the end magnets
+    # HE, VE, HE, [VV, HH, VV, HH]*, VV, HE, VE, HE
+    return ([MATRIX_FLIP_XZ, MATRIX_IDENTITY] * ((nperiods + 1) * 2)) + [MATRIX_FLIP_XZ]
 
-def create_position_list_apple_symmetric_q2(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
-    #locate most negative point of block on x,z,s axes
-    V1 = []
-    length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
-    x=-fullmagdims[0]-phasinggap/2.0
-    z=mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+endgap)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    for i in range(3,(4*nperiods-1)-3,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+endgap)
-    V1.append((x,z,s))
-    return V1
+def create_position_list_apple_symmetric(x, z, nperiods, fullmagdims, vemagdims, hemagdims, interstice, endgap):
+    # Full length of the device including end magnets, full magnets, and all spacings
+    length = (4 * hemagdims[2]) + (2 * vemagdims[2]) + \
+             ((4 * (nperiods - 2) + 1) * fullmagdims[2]) + \
+             ((4 * (nperiods - 2) + 4) * interstice) + (2 * endgap)
 
-def create_position_list_apple_symmetric_q4(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
-    #locate most negative point of block on x,z,s axes
-    V1 = []
-    length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
-    x=phasinggap/2.0
-    z=-fullmagdims[1]-mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+endgap)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    for i in range(3,(4*nperiods-1)-3,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+endgap)
-    V1.append((x,z,s))
-    return V1
+    # Location of first HE magnet where step along S-axis between magnets takes into account HE magnet thickness
+    s = -(length / 2)
+    positions = [(x, z, s)]
+    s += (hemagdims[2] + endgap)
 
-def create_position_list_apple_symmetric_q3(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
-    #locate most negative point of block on x,z,s axes
-    V1 = []
-    length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
-    x=-fullmagdims[0]-phasinggap/2.0
-    z=-fullmagdims[1]-mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+endgap)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    for i in range(3,(4*nperiods-1)-3,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+endgap)
-    V1.append((x,z,s))
-    return V1
+    # Location of first VE magnet where step along S-axis between magnets takes into account VE magnet thickness
+    positions += [(x, z, s)]
+    s += (vemagdims[2] + interstice)
+
+    # Location of second HE magnet where step along S-axis between magnets takes into account HE magnet thickness
+    positions += [(x, z, s)]
+    s += (hemagdims[2] + interstice)
+
+    for i in range((4 * nperiods) - 7):
+        # Location of full HH or VV magnet where S-axis step based on full magnet thickness
+        positions += [(x, z, s)]
+        s += (fullmagdims[2] + interstice)
+
+    # Location of second to last HE magnet where step along S-axis between magnets takes into account HE magnet thickness
+    positions += [(x, z, s)]
+    s += (hemagdims[2] + interstice)
+
+    # Location of last VE magnet where step along S-axis between magnets takes into account VE magnet thickness
+    positions += [(x, z, s)]
+    s += (vemagdims[2] + endgap)
+
+    # Location of last HE magnet
+    positions += [(x, z, s)]
+    return positions
+
+def create_position_list_apple_symmetric_q1(nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+    # Full device is centered at 0,0,0
+    # Magnets are located w.r.t the bottom-left-near corner when looking along the S-axis from the start of the device
+    x = (phasinggap / 2)
+    z = (mingap / 2)
+    return create_position_list_apple_symmetric(x, z, nperiods, fullmagdims, vemagdims, hemagdims, interstice, endgap)
+
+def create_position_list_apple_symmetric_q2(nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+    # Full device is centered at 0,0,0
+    # Magnets are located w.r.t the bottom-left-near corner when looking along the S-axis from the start of the device
+    x = -fullmagdims[0] - (phasinggap / 2)
+    z = (mingap / 2)
+    return create_position_list_apple_symmetric(x, z, nperiods, fullmagdims, vemagdims, hemagdims, interstice, endgap)
+
+def create_position_list_apple_symmetric_q3(nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+    # Full device is centered at 0,0,0
+    # Magnets are located w.r.t the bottom-left-near corner when looking along the S-axis from the start of the device
+    x = -fullmagdims[0] - (phasinggap / 2)
+    z = -fullmagdims[1] - (mingap / 2)
+    return create_position_list_apple_symmetric(x, z, nperiods, fullmagdims, vemagdims, hemagdims, interstice, endgap)
+
+def create_position_list_apple_symmetric_q4(nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+    # Full device is centered at 0,0,0
+    # Magnets are located w.r.t the bottom-left-near corner when looking along the S-axis from the start of the device
+    x = (phasinggap / 2)
+    z = -fullmagdims[1] - (mingap / 2)
+    return create_position_list_apple_symmetric(x, z, nperiods, fullmagdims, vemagdims, hemagdims, interstice, endgap)
 
 def create_direction_matrix_list_apple_symmetric_q1(nperiods):
     direction = []
@@ -347,21 +326,6 @@ def create_direction_matrix_list_apple_symmetric_q4(nperiods):
     direction.append(((0,1,0),(-1,0,0),(0,0,1)))
 
     return direction
-
-def create_flip_matrix_list_apple_symmetric(nperiods):
-    flip = []
-    for i in range(0, (4 * nperiods - 1) - 3, 4):
-        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        flip.append(((1,0,0),(0,1,0),(0,0,1)))
-        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        flip.append(((1,0,0),(0,1,0),(0,0,1)))
-
-    # Append last elements
-
-    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-    flip.append(((1,0,0),(0,1,0),(0,0,1)))
-    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-    return flip
 
 def process(options, args):
 
@@ -576,9 +540,6 @@ def process(options, args):
 
         # All beam position functions take same arguments (use dictionary for safety)
         position_params = {
-            # TODO period defined like this indicates interstice is accounted for again inside functions
-            # TODO refactor to use output['period_length']
-            'period'      : options.fullmagdims[2] * 4,
             'nperiods'    : options.periods,
             'fullmagdims' : options.fullmagdims,
             'vemagdims'   : options.vemagdims,
