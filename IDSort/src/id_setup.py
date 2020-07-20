@@ -16,9 +16,9 @@
 import json
 
 # Helper Matrices
-MATRIX_IDENTITY = (( 1, 0, 0),( 0, 1, 0),( 0, 0, 1))
-MATRIX_FLIP_XS  = ((-1, 0, 0),( 0, 1, 0),( 0, 0,-1))
-MATRIX_FLIP_XZ  = ((-1, 0, 0),( 0,-1, 0),( 0, 0, 1))
+MATRIX_IDENTITY = (( 1, 0, 0), ( 0, 1, 0), ( 0, 0, 1))
+MATRIX_FLIP_XS  = ((-1, 0, 0), ( 0, 1, 0), ( 0, 0,-1))
+MATRIX_FLIP_XZ  = ((-1, 0, 0), ( 0,-1, 0), ( 0, 0, 1))
 
 # Helper functions for Hybrid Symmetric devices
 
@@ -41,20 +41,20 @@ def create_position_list_hybrid_symmetric_top(nperiods, fullmagdims, hemagdims, 
     z =  (mingap / 2)
     s = -(length / 2)
 
-    # Location of HT magnet with step along S-axis between magnets takes into account special end spacing
+    # Location of HT magnet where step along S-axis between magnets takes into account special end spacing
     positions = [(x,z,s)]
     s += (htmagdims[2] + endgapsym + terminalgapsymhybrid + (poledims[2] / 2))
 
-    # Location of HE magnet with step along S-axis between magnets takes into account size of HE magnet
+    # Location of HE magnet where step along S-axis between magnets takes into account size of HE magnet
     positions += [(x,z,s)]
     s += (hemagdims[2] + poledims[2] + (2 * interstice))
 
     for _ in range(2 * nperiods):
-        # Location of full HH magnet with S-axis step based on full magnet thickness
+        # Location of full HH magnet where S-axis step based on full magnet thickness
         positions += [(x,z,s)]
         s += (fullmagdims[2] + poledims[2] + (2 * interstice))
 
-    # Location of final HE magnet with step along S-axis taking into account special end spacing
+    # Location of final HE magnet where step along S-axis taking into account special end spacing
     positions += [(x,z,s)]
     s += (hemagdims[2] + (poledims[2] / 2) + endgapsym + terminalgapsymhybrid)
 
@@ -111,48 +111,87 @@ def create_flip_matrix_hybrid_symmetric_top_btm(nperiods):
 # Helper functions for PPM Anti Symmetric devices
 
 def create_type_list_ppm_antisymmetric(nperiods):
-    # PPM Anti Symmetric devices uses horizontal and vertical end magnets as well as one extra full magnet to add anti symmetry
+    # PPM Anti Symmetric devices uses horizontal and vertical end magnets as well as one extra full magnet (HH) to add anti symmetry
     # Number of periods of the device refers to number of full 4-magnet periods
+    # HE, VE, [HH, VV, HH, VV]*, (HH), VE, HE
     end_types    = ['HE', 'VE']
     magnet_types = [('HH' if (index % 2 == 0) else 'VV') for index in range((4 * nperiods) + 1)]
     # Concatenate full magnet type list
     return end_types + magnet_types + end_types[::-1]
 
-def create_position_list_ppm_antisymmetric_top(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice):
-    V1 = []
-    length = (4*(nperiods)+1)*(fullmagdims[2]+interstice)+2*(vemagdims[2]+interstice)+2*(hemagdims[2]+interstice)-interstice
-    x=-fullmagdims[0]/2.0
-    z=mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    for i in range(2,(4*nperiods+5)-2,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    V1.append((x,z,s))
-    return V1
+def create_position_list_ppm_antisymmetric_top(nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice):
+    # PPM Anti Symmetric has 4 magnets rotating through 180 degrees on the X-axis
+    # Top and bottom beams have opposite frontwards / backwards ordering and equal upwards / downwards ordering
+    # -HE, +VE, [+HH, -VV, -HH, +VV]*, (+HH), -VE, -HE
 
-def create_position_list_ppm_antisymmetric_btm(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice):
-    V1 = []
-    length = (4*(nperiods)+1)*(fullmagdims[2]+interstice)+2*(vemagdims[2]+interstice)+2*(hemagdims[2]+interstice)-interstice
-    x=-fullmagdims[0]/2.0
-    z=-fullmagdims[1]-mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    for i in range(2,(4*nperiods+5)-2,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    V1.append((x,z,s))
-    return V1
+    # Full length of the device including end magnets, full magnets, and all spacings
+    length = (((4 * nperiods) + 1) * (fullmagdims[2] + interstice) +
+              (2 * (vemagdims[2] + interstice) + 2 * (hemagdims[2] + interstice))) - interstice
+
+    # Full device is centered at 0,0,0
+    # Magnets are located w.r.t the bottom-left-near corner when looking along the S-axis from the start of the device
+    x = -(fullmagdims[0] / 2)
+    z =  (mingap / 2)
+    s = -(length / 2)
+
+    # Location of first HE magnet where step along S-axis between magnets takes into account HE magnet thickness
+    positions = [(x, z, s)]
+    s += (hemagdims[2] + interstice)
+
+    # Location of first VE magnet where step along S-axis between magnets takes into account VE magnet thickness
+    positions += [(x, z, s)]
+    s += (vemagdims[2] + interstice)
+
+    # Anti Symmetric device has 1 extra magnet after last period to kick the electron beam back
+    for _ in range((4 * nperiods) + 1):
+        # Location of full HH or VV magnet where S-axis step based on full magnet thickness
+        positions += [(x, z, s)]
+        s += (fullmagdims[2] + interstice)
+
+    # Location of last VE magnet where step along S-axis between magnets takes into account VE magnet thickness
+    positions += [(x, z, s)]
+    s += (vemagdims[2] + interstice)
+
+    # Location of last HE magnet
+    positions += [(x, z, s)]
+    return positions
+
+def create_position_list_ppm_antisymmetric_btm(nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice):
+    # PPM Anti Symmetric has 4 magnets rotating through 180 degrees on the X-axis
+    # Top and bottom beams have opposite frontwards / backwards ordering and equal upwards / downwards ordering
+    # +HE, +VE, -HH, -VV, [+HH, +VV, -HH, -VV]*, +HH, +VE, -HE
+
+    # Full length of the device including end magnets, full magnets, and all spacings
+    length = (((4 * nperiods) + 1) * (fullmagdims[2] + interstice) +
+              (2 * (vemagdims[2] + interstice) + 2 * (hemagdims[2] + interstice))) - interstice
+
+    # Full device is centered at 0,0,0
+    # Magnets are located w.r.t the bottom-left-near corner when looking along the S-axis from the start of the device
+    x = -(fullmagdims[0] / 2)
+    z = -fullmagdims[1] - (mingap / 2)
+    s = -(length / 2)
+
+    # Location of first HE magnet where step along S-axis between magnets takes into account HE magnet thickness
+    positions = [(x, z, s)]
+    s += (hemagdims[2] + interstice)
+
+    # Location of first VE magnet where step along S-axis between magnets takes into account VE magnet thickness
+    positions += [(x, z, s)]
+    s += (vemagdims[2] + interstice)
+
+    # Anti Symmetric device has 1 extra magnet after last period to kick the electron beam back
+    for _ in range((4 * nperiods) + 1):
+        # Location of full HH or VV magnet where S-axis step based on full magnet thickness
+        positions += [(x, z, s)]
+        s += (fullmagdims[2] + interstice)
+
+    # Location of last VE magnet where step along S-axis between magnets takes into account VE magnet thickness
+    positions += [(x, z, s)]
+    s += (vemagdims[2] + interstice)
+
+    # Location of last HE magnet
+    positions += [(x, z, s)]
+    return positions
 
 def create_direction_list_ppm_antisymmetric_top(nperiods):
     direction = []
@@ -512,8 +551,7 @@ def process(options, args):
 
         # Top and bottom beam position functions take same arguments (use dictionary for safety)
         position_params = {
-            'period'      : options.fullmagdims[2] * 4, 
-            'nperiods'    : options.periods, 
+            'nperiods'    : options.periods,
             'fullmagdims' : options.fullmagdims, 
             'vemagdims'   : options.vemagdims, 
             'hemagdims'   : options.hemagdims,
