@@ -15,32 +15,191 @@
 # order  x, z, s
 import json
 
+# Helper functions for Hybrid Symmetric devices
+
+def create_type_list_hybrid_symmetric_top_btm(nperiods):
+    # Hybrid Symmetric devices uses end magnets as well as special kicker magnets
+    # Number of periods of the device refers to number of full 2-magnet periods
+    end_types    = ['HT', 'HE']
+    magnet_types = ['HH'] * (2 * nperiods)
+    # Concatenate full magnet type list
+    return end_types + magnet_types + end_types[::-1]
+
+def create_direction_matrix_list_hybrid_symmetric_btm(nperiods):
+    direction = []
+    for i in range(0, (2 * nperiods + 4), 2):
+        direction.append(((1,0,0),(0,1,0),(0,0,1)))
+        #no V magnet in Hybrids
+        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+        #no V magnets in hybrid
+
+    return direction
+
+def create_direction_matrix_list_hybrid_symmetric_top(nperiods):
+    direction = []
+    for i in range(0, (2 * nperiods + 4), 2):
+        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+        #no V magnets in Hybrids
+        direction.append(((1,0,0),(0,1,0),(0,0,1)))
+        #no V magnets in Hybrids
+
+    return direction
+
+def create_flip_matrix_hybrid_symmetric_top_btm(nperiods):
+    flip = []
+    for i in range(0, (2 * nperiods + 4)):
+        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
+
+    return flip
+
+def create_position_list_hybrid_symmetric_top(nperiods, fullmagdims, hemagdims, htmagdims, poledims, mingap, endgapsym, terminalgapsymhybrid, interstice):
+    V1 = []
+    length = nperiods * (2 * poledims[2]+2*fullmagdims[2]+4*interstice)+2*(poledims[2]+interstice + hemagdims[2] + endgapsym + terminalgapsymhybrid + htmagdims[2])
+    x=-fullmagdims[0]/2.0
+    z= mingap/2.0
+    s=-length/2.0
+    V1.append((x,z,s))
+    s+= (htmagdims[2]+endgapsym + terminalgapsymhybrid + poledims[2]/2)
+    V1.append((x,z,s))
+    s+=hemagdims[2]+poledims[2]+2*interstice
+    for i in range(2,(2*nperiods+4)-2,1):
+        V1.append((x,z,s))
+        s+=(fullmagdims[2]+poledims[2]+2*interstice)
+    V1.append((x,z,s))
+    s+=hemagdims[2]+poledims[2]/2+endgapsym+terminalgapsymhybrid
+    V1.append((x,z,s))
+    return V1
+
+def create_position_list_hybrid_symmetric_btm(nperiods, fullmagdims, hemagdims, htmagdims, poledims, mingap, endgapsym, terminalgapsymhybrid, interstice):
+    V1 = []
+    length = nperiods * (2 * poledims[2]+2*fullmagdims[2]+4*interstice)+2*(poledims[2]+interstice + hemagdims[2] + endgapsym + terminalgapsymhybrid + htmagdims[2])
+    x=-fullmagdims[0]/2.0
+    z= -fullmagdims[1]-mingap/2.0
+    s=-length/2.0
+    V1.append((x,z,s))
+    s+= (htmagdims[2]+endgapsym + terminalgapsymhybrid + poledims[2]/2)
+    V1.append((x,z,s))
+    s+=hemagdims[2]+poledims[2]+2*interstice
+    for i in range(2,(2*nperiods+4)-2,1):
+        V1.append((x,z,s))
+        s+=(fullmagdims[2]+poledims[2]+2*interstice)
+    V1.append((x,z,s))
+    s+=hemagdims[2]+poledims[2]/2+endgapsym+terminalgapsymhybrid
+    V1.append((x,z,s))
+    return V1
+
+# Helper functions for PPM Anti Symmetric devices
+
+def create_type_list_ppm_antisymmetric(nperiods):
+    # PPM Anti Symmetric devices uses horizontal and vertical end magnets as well as one extra full magnet to add anti symmetry
+    # Number of periods of the device refers to number of full 4-magnet periods
+    end_types    = ['HE', 'VE']
+    magnet_types = [('HH' if (index % 2 == 0) else 'VV') for index in range((4 * nperiods) + 1)]
+    # Concatenate full magnet type list
+    return end_types + magnet_types + end_types[::-1]
+
+def create_position_list_ppm_antisymmetric_top(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice):
+    V1 = []
+    length = (4*(nperiods)+1)*(fullmagdims[2]+interstice)+2*(vemagdims[2]+interstice)+2*(hemagdims[2]+interstice)-interstice
+    x=-fullmagdims[0]/2.0
+    z=mingap/2.0
+    s=-length/2.0
+    V1.append((x,z,s))
+    s+=(hemagdims[2]+interstice)
+    V1.append((x,z,s))
+    s+=(vemagdims[2]+interstice)
+    for i in range(2,(4*nperiods+5)-2,1):
+        V1.append((x,z,s))
+        s+=(fullmagdims[2]+interstice)
+    V1.append((x,z,s))
+    s+=(vemagdims[2]+interstice)
+    V1.append((x,z,s))
+    return V1
+
+def create_position_list_ppm_antisymmetric_btm(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice):
+    V1 = []
+    length = (4*(nperiods)+1)*(fullmagdims[2]+interstice)+2*(vemagdims[2]+interstice)+2*(hemagdims[2]+interstice)-interstice
+    x=-fullmagdims[0]/2.0
+    z=-fullmagdims[1]-mingap/2.0
+    s=-length/2.0
+    V1.append((x,z,s))
+    s+=(hemagdims[2]+interstice)
+    V1.append((x,z,s))
+    s+=(vemagdims[2]+interstice)
+    for i in range(2,(4*nperiods+5)-2,1):
+        V1.append((x,z,s))
+        s+=(fullmagdims[2]+interstice)
+    V1.append((x,z,s))
+    s+=(vemagdims[2]+interstice)
+    V1.append((x,z,s))
+    return V1
+
+def create_direction_list_ppm_antisymmetric_top(nperiods):
+    direction = []
+    for i in range(0, (4 * nperiods + 5) - 1, 4):
+        direction.append((-1, 1, -1))
+        direction.append((1, 1, 1))
+        direction.append((1, 1, 1))
+        direction.append((-1, -1, 1))
+
+    # Append last element
+    direction.append((-1, 1, -1))
+    return direction
+
+def create_direction_list_ppm_antisymmetric_btm(nperiods):
+    direction = []
+    for i in range(0, (4 * nperiods + 5) - 1, 4):
+        direction.append((1, 1, 1))
+        direction.append((1, 1, 1))
+        direction.append((-1, 1, -1))
+        direction.append((-1, -1, 1))
+
+    # Append last element
+    direction.append((1, 1, 1))
+    return direction
+
+def create_direction_matrix_list_ppm_antisymmetric_top(nperiods):
+    direction = []
+    for i in range(0, (4 * nperiods + 5) - 1, 4):
+        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+        direction.append(((1,0,0),(0,1,0),(0,0,1)))
+        direction.append(((1,0,0),(0,1,0),(0,0,1)))
+        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+
+    # Append last element
+    direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+    return direction
+
+def create_direction_matrix_list_ppm_antisymmetric_btm(nperiods):
+    direction = []
+    for i in range(0, (4 * nperiods + 5) - 1, 4):
+        direction.append(((1,0,0),(0,1,0),(0,0,1)))
+        direction.append(((1,0,0),(0,1,0),(0,0,1)))
+        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+
+    # Append last element
+    direction.append(((1,0,0),(0,1,0),(0,0,1)))
+    return direction
+
+def create_flip_matrix_list_ppm_antisymmetric_top_btm(nperiods):
+    flip = []
+    for i in range(0, (4 * nperiods + 5) - 1, 2):
+        flip.append(((-1, 0, 0), (0, -1, 0), (0, 0, 1)))
+        flip.append(((-1, 0, 0), (0, 1, 0), (0, 0, -1)))
+
+    flip.append(((-1, 0, 0), (0, -1, 0), (0, 0, 1)))
+    return flip
+
 # Helper functions for APPLE-II Symmetric devices
 
 def create_type_list_apple_symmetric(nperiods):
-    # do the first end
-    types = []
-    vertical = True
-
-    types.append('HE')
-    types.append('VE')
-    types.append('HE')
-    
-    # now put in all the middle periods
-    for i in range(3, (4 * nperiods - 1) - 3, 1):
-        if vertical :
-            types.append('VV')
-            vertical = False
-        else :
-            types.append('HH')
-            vertical = True
-
-    # finally add in the other end
-    types.append('HE')
-    types.append('VE')
-    types.append('HE')
-
-    return types
+    # APPLE Symmetric devices uses horizontal and vertical end magnets
+    # Number of periods of the device refers to number of full 4-magnet periods excluding those added by the end magnets
+    end_types    = ['HE', 'VE', 'HE']
+    magnet_types = [('VV' if (index % 2 == 0) else 'HH') for index in range((4 * nperiods) - 7)]
+    # Concatenate full magnet type list
+    return end_types + magnet_types + end_types[::-1]
 
 def create_position_list_apple_symmetric_q1(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
     #locate most negative point of block on x,z,s axes
@@ -189,7 +348,7 @@ def create_direction_matrix_list_apple_symmetric_q4(nperiods):
     direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
     direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
     direction.append(((0,1,0),(-1,0,0),(0,0,1)))
-    
+
     return direction
 
 def create_flip_matrix_list_apple_symmetric(nperiods):
@@ -199,223 +358,13 @@ def create_flip_matrix_list_apple_symmetric(nperiods):
         flip.append(((1,0,0),(0,1,0),(0,0,1)))
         flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
         flip.append(((1,0,0),(0,1,0),(0,0,1)))
-    
+
     # Append last elements
-    
+
     flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
     flip.append(((1,0,0),(0,1,0),(0,0,1)))
     flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
     return flip
-
-# Helper functions for Hybrid Symmetric devices
-
-def create_type_list_hybrid_symmetric_top_btm(nperiods):
-    # do the first end
-    types = []
-    #start = 0
-    #stop = 0
-
-    types.append('HT')
-    types.append('HE')
-
-    start, stop = (2, (2*nperiods+4)-2)
-
-    # now put in all the middle periods
-    for i in range(start, stop):
-        types.append('HH')
-
-
-    # finally add in the other end
-    types.append('HE')
-    types.append('HT')
-
-    return types
-
-def create_direction_matrix_list_hybrid_symmetric_btm(nperiods):
-    direction = []
-    for i in range(0, (2 * nperiods + 4), 2):
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        #no V magnet in Hybrids
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-        #no V magnets in hybrid
-
-    return direction
-
-def create_direction_matrix_list_hybrid_symmetric_top(nperiods):
-    direction = []
-    for i in range(0, (2 * nperiods + 4), 2):
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-        #no V magnets in Hybrids
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        #no V magnets in Hybrids
-
-    return direction
-
-def create_flip_matrix_hybrid_symmetric_top_btm(nperiods):
-    flip = []
-    for i in range(0, (2 * nperiods + 4)):
-        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-
-    return flip
-
-def create_position_list_hybrid_symmetric_top(nperiods, fullmagdims, hemagdims, htmagdims, poledims, mingap, endgapsym, terminalgapsymhybrid, interstice):
-    V1 = []
-    length = nperiods * (2 * poledims[2]+2*fullmagdims[2]+4*interstice)+2*(poledims[2]+interstice + hemagdims[2] + endgapsym + terminalgapsymhybrid + htmagdims[2])
-    x=-fullmagdims[0]/2.0
-    z= mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+= (htmagdims[2]+endgapsym + terminalgapsymhybrid + poledims[2]/2)
-    V1.append((x,z,s))
-    s+=hemagdims[2]+poledims[2]+2*interstice
-    for i in range(2,(2*nperiods+4)-2,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+poledims[2]+2*interstice)
-    V1.append((x,z,s))
-    s+=hemagdims[2]+poledims[2]/2+endgapsym+terminalgapsymhybrid
-    V1.append((x,z,s))
-    return V1
-
-def create_position_list_hybrid_symmetric_btm(nperiods, fullmagdims, hemagdims, htmagdims, poledims, mingap, endgapsym, terminalgapsymhybrid, interstice):
-    V1 = []
-    length = nperiods * (2 * poledims[2]+2*fullmagdims[2]+4*interstice)+2*(poledims[2]+interstice + hemagdims[2] + endgapsym + terminalgapsymhybrid + htmagdims[2])
-    x=-fullmagdims[0]/2.0
-    z= -fullmagdims[1]-mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+= (htmagdims[2]+endgapsym + terminalgapsymhybrid + poledims[2]/2)
-    V1.append((x,z,s))
-    s+=hemagdims[2]+poledims[2]+2*interstice
-    for i in range(2,(2*nperiods+4)-2,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+poledims[2]+2*interstice)
-    V1.append((x,z,s))
-    s+=hemagdims[2]+poledims[2]/2+endgapsym+terminalgapsymhybrid
-    V1.append((x,z,s))
-    return V1
-
-# Helper functions for PPM Anti Symmetric devices
-
-def create_type_list_ppm_antisymmetric(nperiods):
-    # do the first end
-    types = []
-    #start = 0
-    #stop = 0
-    vertical = False
-
-    types.append('HE')
-    types.append('VE')
-
-    start, stop = (2, (4*nperiods+5)-2)
-
-    # now put in all the middle periods
-    for i in range(start, stop):
-        if vertical :
-            types.append('VV')
-            vertical = False
-        else :
-            types.append('HH')
-            vertical = True
-
-    # finally add in the other end
-    types.append('VE')
-    types.append('HE')
-
-    return types
-
-def create_position_list_ppm_antisymmetric_top(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice):
-    V1 = []
-    length = (4*(nperiods)+1)*(fullmagdims[2]+interstice)+2*(vemagdims[2]+interstice)+2*(hemagdims[2]+interstice)-interstice
-    x=-fullmagdims[0]/2.0
-    z=mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    for i in range(2,(4*nperiods+5)-2,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    V1.append((x,z,s))
-    return V1
-
-def create_position_list_ppm_antisymmetric_btm(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice):
-    V1 = []
-    length = (4*(nperiods)+1)*(fullmagdims[2]+interstice)+2*(vemagdims[2]+interstice)+2*(hemagdims[2]+interstice)-interstice
-    x=-fullmagdims[0]/2.0
-    z=-fullmagdims[1]-mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    for i in range(2,(4*nperiods+5)-2,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    V1.append((x,z,s))
-    return V1
-
-def create_direction_list_ppm_antisymmetric_top(nperiods):
-    direction = []
-    for i in range(0, (4 * nperiods + 5) - 1, 4):
-        direction.append((-1, 1, -1))
-        direction.append((1, 1, 1))
-        direction.append((1, 1, 1))
-        direction.append((-1, -1, 1))
-
-    # Append last element
-    direction.append((-1, 1, -1))
-    return direction
-
-def create_direction_list_ppm_antisymmetric_btm(nperiods):
-    direction = []
-    for i in range(0, (4 * nperiods + 5) - 1, 4):
-        direction.append((1, 1, 1))
-        direction.append((1, 1, 1))
-        direction.append((-1, 1, -1))
-        direction.append((-1, -1, 1))
-
-    # Append last element
-    direction.append((1, 1, 1))
-    return direction
-
-def create_direction_matrix_list_ppm_antisymmetric_top(nperiods):
-    direction = []
-    for i in range(0, (4 * nperiods + 5) - 1, 4):
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
-
-    # Append last element
-    direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-    return direction
-
-def create_direction_matrix_list_ppm_antisymmetric_btm(nperiods):
-    direction = []
-    for i in range(0, (4 * nperiods + 5) - 1, 4):
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
-
-    # Append last element
-    direction.append(((1,0,0),(0,1,0),(0,0,1)))
-    return direction
-
-def create_flip_matrix_list_ppm_antisymmetric_top_btm(nperiods):
-    flip = []
-    for i in range(0, (4 * nperiods + 5) - 1, 2):
-        flip.append(((-1, 0, 0), (0, -1, 0), (0, 0, 1)))
-        flip.append(((-1, 0, 0), (0, 1, 0), (0, 0, -1)))
-
-    flip.append(((-1, 0, 0), (0, -1, 0), (0, 0, 1)))
-    return flip
-
 
 def process(options, args):
 
