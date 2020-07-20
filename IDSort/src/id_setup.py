@@ -580,6 +580,8 @@ def process(options, args):
 
         # All beam position functions take same arguments (use dictionary for safety)
         position_params = {
+            # TODO period defined like this indicates interstice is accounted for again inside functions
+            # TODO refactor to use output['period_length']
             'period'      : options.fullmagdims[2] * 4,
             'nperiods'    : options.periods,
             'fullmagdims' : options.fullmagdims,
