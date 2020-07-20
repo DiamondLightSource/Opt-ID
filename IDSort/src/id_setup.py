@@ -22,15 +22,25 @@ MATRIX_FLIP_XZ  = ((-1, 0, 0), ( 0,-1, 0), ( 0, 0, 1))
 
 # Helper functions for Hybrid Symmetric devices
 
-def create_type_list_hybrid_symmetric_top_btm(nperiods):
-    # Hybrid Symmetric devices uses end magnets as well as special kicker magnets
+def create_type_list_hybrid_symmetric(nperiods):
+    # Hybrid Symmetric devices uses end magnets (HE) as well as special kicker magnets (HT)
     # Number of periods of the device refers to number of full 2-magnet periods
+    # HT, HE, [HH, HH]*, HE, HT
     end_types    = ['HT', 'HE']
     magnet_types = ['HH'] * (2 * nperiods)
     # Concatenate full magnet type list
     return end_types + magnet_types + end_types[::-1]
 
+def create_flip_matrix_hybrid_symmetric(nperiods):
+    # Flip over the X and Z axes without altering the easy S-axis
+    # HT, HE, [HH, HH]*, HE, HT
+    return [MATRIX_FLIP_XZ] * ((2 * nperiods) + 4)
+
 def create_position_list_hybrid_symmetric_top(nperiods, fullmagdims, hemagdims, htmagdims, poledims, mingap, endgapsym, terminalgapsymhybrid, interstice):
+    # Hybrid Symmetric has all magnets aligned to the S-axis alternating between frontward and backward facing easy axis
+    # Top and bottom beams have opposite frontwards / backwards ordering
+    # -HT, +HE, [-HH, +HH]*, -HE, +HT
+
     # Full length of the device including end magnets, full magnets, iron poles, and all spacings
     length = (nperiods * ((2 * poledims[2]) + (2 * fullmagdims[2]) + (4 * interstice))) + \
              (2 * (poledims[2] + interstice + hemagdims[2] + endgapsym + terminalgapsymhybrid + htmagdims[2]))
@@ -63,6 +73,10 @@ def create_position_list_hybrid_symmetric_top(nperiods, fullmagdims, hemagdims, 
     return positions
 
 def create_position_list_hybrid_symmetric_btm(nperiods, fullmagdims, hemagdims, htmagdims, poledims, mingap, endgapsym, terminalgapsymhybrid, interstice):
+    # Hybrid Symmetric has all magnets aligned to the S-axis alternating between frontward and backward facing easy axis
+    # Top and bottom beams have opposite frontwards / backwards ordering
+    # +HT, -HE, [+HH, -HH]*, +HE, -HT
+
     # Full length of the device including end magnets, full magnets, iron poles, and all spacings
     length = (nperiods * ((2 * poledims[2]) + (2 * fullmagdims[2]) + (4 * interstice))) + \
              (2 * (poledims[2] + interstice + hemagdims[2] + endgapsym + terminalgapsymhybrid + htmagdims[2]))
@@ -97,16 +111,14 @@ def create_position_list_hybrid_symmetric_btm(nperiods, fullmagdims, hemagdims, 
 def create_direction_matrix_list_hybrid_symmetric_top(nperiods):
     # Hybrid Symmetric has all magnets aligned to the S-axis alternating between frontward and backward facing easy axis
     # Top and bottom beams have opposite frontwards / backwards ordering
+    # -HT, +HE, [-HH, +HH]*, -HE, +HT
     return [MATRIX_FLIP_XS, MATRIX_IDENTITY] * (nperiods + 2)
 
 def create_direction_matrix_list_hybrid_symmetric_btm(nperiods):
     # Hybrid Symmetric has all magnets aligned to the S-axis alternating between frontward and backward facing easy axis
     # Top and bottom beams have opposite frontwards / backwards ordering
+    # +HT, -HE, [+HH, -HH]*, +HE, -HT
     return [MATRIX_IDENTITY, MATRIX_FLIP_XS] * (nperiods + 2)
-
-def create_flip_matrix_hybrid_symmetric_top_btm(nperiods):
-    # Flip over the X and Z axes without altering the easy S-axis
-    return [MATRIX_FLIP_XZ] * ((2 * nperiods) + 4)
 
 # Helper functions for PPM Anti Symmetric devices
 
@@ -452,8 +464,8 @@ def process(options, args):
         output['smax']  =  (eval_length / 2.0) + output['sstep']
 
         # Hybrid Symmetric device has the same type ordering and flip matrices on both top and bottom beams
-        types         = create_type_list_hybrid_symmetric_top_btm(options.periods)
-        flip_matrices = create_flip_matrix_hybrid_symmetric_top_btm(options.periods)
+        types         = create_type_list_hybrid_symmetric(options.periods)
+        flip_matrices = create_flip_matrix_hybrid_symmetric(options.periods)
 
         # Top and bottom beam position functions take same arguments (use dictionary for safety)
         postion_params = {
