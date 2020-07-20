@@ -272,14 +272,14 @@ def create_position_list_apple_symmetric_q4(nperiods, fullmagdims, vemagdims, he
 def create_direction_matrix_list_apple_symmetric_q1(nperiods):
     direction = []
     for i in range(0, (4 * nperiods - 1) - 3, 4):
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+        direction.append(MATRIX_IDENTITY)
+        direction.append(MATRIX_FLIP_XZ)
         direction.append(((0,1,0),(1,0,0),(0,0,-1)))
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
+        direction.append(MATRIX_IDENTITY)
 
     # Append last elements
-    direction.append(((1,0,0),(0,1,0),(0,0,1)))
-    direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+    direction.append(MATRIX_IDENTITY)
+    direction.append(MATRIX_FLIP_XZ)
     direction.append(((0,1,0),(1,0,0),(0,0,-1)))
     return direction
 
@@ -288,27 +288,27 @@ def create_direction_matrix_list_apple_symmetric_q2(nperiods):
     for i in range(0, (4 * nperiods - 1) - 3, 4):
         direction.append(((0,-1,0),(1,0,0),(0,0,1)))
         direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+        direction.append(MATRIX_FLIP_XS)
+        direction.append(MATRIX_FLIP_XS)
 
     # Append last elements
     direction.append(((0,-1,0),(1,0,0),(0,0,1)))
     direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
-    direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+    direction.append(MATRIX_FLIP_XS)
     return direction
 
 def create_direction_matrix_list_apple_symmetric_q3(nperiods):
     direction = []
     for i in range(0, (4 * nperiods - 1) - 3, 4):
         direction.append(((0,-1,0),(-1,0,0),(0,0,-1)))
-        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
+        direction.append(MATRIX_FLIP_XZ)
+        direction.append(MATRIX_FLIP_XZ)
+        direction.append(MATRIX_IDENTITY)
 
     # Append last elements
     direction.append(((0,-1,0),(-1,0,0),(0,0,-1)))
-    direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
-    direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+    direction.append(MATRIX_FLIP_XZ)
+    direction.append(MATRIX_FLIP_XZ)
 
     return direction
 
@@ -318,7 +318,7 @@ def create_direction_matrix_list_apple_symmetric_q4(nperiods):
         direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
         direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
         direction.append(((0,1,0),(-1,0,0),(0,0,1)))
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+        direction.append(MATRIX_FLIP_XS)
 
     # Append last elements
     direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
