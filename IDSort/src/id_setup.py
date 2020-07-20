@@ -15,6 +15,11 @@
 # order  x, z, s
 import json
 
+# Helper Matrices
+MATRIX_IDENTITY = (( 1, 0, 0),( 0, 1, 0),( 0, 0, 1))
+MATRIX_FLIP_XS  = ((-1, 0, 0),( 0, 1, 0),( 0, 0,-1))
+MATRIX_FLIP_XZ  = ((-1, 0, 0),( 0,-1, 0),( 0, 0, 1))
+
 # Helper functions for Hybrid Symmetric devices
 
 def create_type_list_hybrid_symmetric_top_btm(nperiods):
@@ -89,32 +94,19 @@ def create_position_list_hybrid_symmetric_btm(nperiods, fullmagdims, hemagdims, 
     positions += [(x,z,s)]
     return positions
 
-def create_direction_matrix_list_hybrid_symmetric_btm(nperiods):
-    direction = []
-    for i in range(0, (2 * nperiods + 4), 2):
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        #no V magnet in Hybrids
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-        #no V magnets in hybrid
-
-    return direction
-
 def create_direction_matrix_list_hybrid_symmetric_top(nperiods):
-    direction = []
-    for i in range(0, (2 * nperiods + 4), 2):
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-        #no V magnets in Hybrids
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        #no V magnets in Hybrids
+    # Hybrid Symmetric has all magnets aligned to the S-axis alternating between frontward and backward facing easy axis
+    # Top and bottom beams have opposite frontwards / backwards ordering
+    return [MATRIX_FLIP_XS, MATRIX_IDENTITY] * (nperiods + 2)
 
-    return direction
+def create_direction_matrix_list_hybrid_symmetric_btm(nperiods):
+    # Hybrid Symmetric has all magnets aligned to the S-axis alternating between frontward and backward facing easy axis
+    # Top and bottom beams have opposite frontwards / backwards ordering
+    return [MATRIX_IDENTITY, MATRIX_FLIP_XS] * (nperiods + 2)
 
 def create_flip_matrix_hybrid_symmetric_top_btm(nperiods):
-    flip = []
-    for i in range(0, (2 * nperiods + 4)):
-        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-
-    return flip
+    # Flip over the X and Z axes without altering the easy S-axis
+    return [MATRIX_FLIP_XZ] * ((2 * nperiods) + 4)
 
 # Helper functions for PPM Anti Symmetric devices
 
