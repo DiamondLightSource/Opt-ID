@@ -131,6 +131,12 @@ def create_type_list_ppm_antisymmetric(nperiods):
     # Concatenate full magnet type list
     return end_types + magnet_types + end_types[::-1]
 
+def create_flip_matrix_list_ppm_antisymmetric(nperiods):
+    # PPM Anti Symmetric devices uses horizontal and vertical end magnets as well as one extra full magnet (HH) to add anti symmetry
+    # Number of periods of the device refers to number of full 4-magnet periods
+    # HE, VE, [HH, VV, HH, VV]*, (HH), VE, HE
+    return ([MATRIX_FLIP_XZ, MATRIX_FLIP_XS] * ((nperiods + 1) * 2)) + [MATRIX_FLIP_XZ]
+
 def create_position_list_ppm_antisymmetric_top(nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice):
     # PPM Anti Symmetric has 4 magnets rotating through 180 degrees on the X-axis
     # Top and bottom beams have opposite frontwards / backwards ordering and equal upwards / downwards ordering
@@ -242,12 +248,6 @@ def create_direction_matrix_list_ppm_antisymmetric_btm(nperiods):
     # Top and bottom beams have opposite frontwards / backwards ordering and equal upwards / downwards ordering
     # +HE, +VE, [-HH, -VV, +HH, +VV]*, (-HH), -VE, +HE
     return ([MATRIX_IDENTITY, MATRIX_IDENTITY, MATRIX_FLIP_XS, MATRIX_FLIP_XZ] * (nperiods + 1)) + [MATRIX_IDENTITY]
-
-def create_flip_matrix_list_ppm_antisymmetric_top_btm(nperiods):
-    # PPM Anti Symmetric devices uses horizontal and vertical end magnets as well as one extra full magnet (HH) to add anti symmetry
-    # Number of periods of the device refers to number of full 4-magnet periods
-    # HE, VE, [HH, VV, HH, VV]*, (HH), VE, HE
-    return ([MATRIX_FLIP_XZ, MATRIX_FLIP_XS] * ((nperiods + 1) * 2)) + [MATRIX_FLIP_XZ]
 
 # Helper functions for APPLE-II Symmetric devices
 
@@ -546,7 +546,7 @@ def process(options, args):
 
         # PPM Anti Symmetric device has the same type ordering and flip matrices on both top and bottom beams
         types         = create_type_list_ppm_antisymmetric(options.periods)
-        flip_matrices = create_flip_matrix_list_ppm_antisymmetric_top_btm(options.periods)
+        flip_matrices = create_flip_matrix_list_ppm_antisymmetric(options.periods)
 
         # Top and bottom beam position functions take same arguments (use dictionary for safety)
         position_params = {
