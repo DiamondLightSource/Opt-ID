@@ -648,10 +648,10 @@ def process(options, args):
 
         # Top and bottom beams will have same matrices for vertical magnets and alternating for horizontal magnets
         # Each beam still has a unique direction matrices list because of the transpose between beams
-        q1_directions_matrix = create_direction_matrix_list_apple_symmetric_q1(options.periods)
-        q2_directions_matrix = create_direction_matrix_list_apple_symmetric_q2(options.periods)
-        q3_directions_matrix = create_direction_matrix_list_apple_symmetric_q3(options.periods)
-        q4_directions_matrix = create_direction_matrix_list_apple_symmetric_q4(options.periods)
+        q1_directions_matrices = create_direction_matrix_list_apple_symmetric_q1(options.periods)
+        q2_directions_matrices = create_direction_matrix_list_apple_symmetric_q2(options.periods)
+        q3_directions_matrices = create_direction_matrix_list_apple_symmetric_q3(options.periods)
+        q4_directions_matrices = create_direction_matrix_list_apple_symmetric_q4(options.periods)
 
         # Lookup table mapping magnet type keys to dimension tuples
         magnet_dimensions = {
@@ -664,7 +664,7 @@ def process(options, args):
         # Merge the per magnet data arrays computed from each helper function to describe the full Q1 beam
         q1_beam = { 'name' : 'Q1 Beam', 'mags' : [] }
         for index, (type, position, direction_matrix, flip_matrix) in \
-                enumerate(zip(types, q1_positions, q1_directions_matrix, flip_matrices)):
+                enumerate(zip(types, q1_positions, q1_directions_matrices, flip_matrices)):
 
             q1_beam['mags'].append({
                 'type'             : type,
@@ -677,7 +677,7 @@ def process(options, args):
         # Merge the per magnet data arrays computed from each helper function to describe the full Q2 beam
         q2_beam = { 'name' : 'Q2 Beam', 'mags' : [] }
         for index, (type, position, direction_matrix, flip_matrix) in \
-                enumerate(zip(types, q2_positions, q2_directions_matrix, flip_matrices)):
+                enumerate(zip(types, q2_positions, q2_directions_matrices, flip_matrices)):
 
             q2_beam['mags'].append({
                 'type'             : type,
@@ -690,7 +690,7 @@ def process(options, args):
         # Merge the per magnet data arrays computed from each helper function to describe the full Q3 beam
         q3_beam = { 'name' : 'Q3 Beam', 'mags' : [] }
         for index, (type, position, direction_matrix, flip_matrix) in \
-                enumerate(zip(types, q3_positions, q3_directions_matrix, flip_matrices)):
+                enumerate(zip(types, q3_positions, q3_directions_matrices, flip_matrices)):
 
             q3_beam['mags'].append({
                 'type'             : type,
@@ -703,7 +703,7 @@ def process(options, args):
         # Merge the per magnet data arrays computed from each helper function to describe the full Q4 beam
         q4_beam = { 'name' : 'Q4 Beam', 'mags' : [] }
         for index, (type, position, direction_matrix, flip_matrix) in \
-                enumerate(zip(types, q4_positions, q4_directions_matrix, flip_matrices)):
+                enumerate(zip(types, q4_positions, q4_directions_matrices, flip_matrices)):
 
             q4_beam['mags'].append({
                 'type'             : type,
