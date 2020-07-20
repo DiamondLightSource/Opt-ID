@@ -193,6 +193,7 @@ def create_position_list_ppm_antisymmetric_btm(nperiods, fullmagdims, vemagdims,
     positions += [(x, z, s)]
     return positions
 
+# TODO marked for removal, only used in human readable genome output, can be derived directly from direction matrices
 def create_direction_list_ppm_antisymmetric_top(nperiods):
     direction = []
     for i in range(0, (4 * nperiods + 5) - 1, 4):
@@ -205,6 +206,7 @@ def create_direction_list_ppm_antisymmetric_top(nperiods):
     direction.append((-1, 1, -1))
     return direction
 
+# TODO marked for removal, only used in human readable genome output, can be derived directly from direction matrices
 def create_direction_list_ppm_antisymmetric_btm(nperiods):
     direction = []
     for i in range(0, (4 * nperiods + 5) - 1, 4):
@@ -218,37 +220,22 @@ def create_direction_list_ppm_antisymmetric_btm(nperiods):
     return direction
 
 def create_direction_matrix_list_ppm_antisymmetric_top(nperiods):
-    direction = []
-    for i in range(0, (4 * nperiods + 5) - 1, 4):
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
-
-    # Append last element
-    direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-    return direction
+    # PPM Anti Symmetric has 4 magnets rotating through 180 degrees on the X-axis
+    # Top and bottom beams have opposite frontwards / backwards ordering and equal upwards / downwards ordering
+    # -HE, +VE, [+HH, -VV, -HH, +VV]*, (+HH), -VE, -HE
+    return ([MATRIX_FLIP_XS, MATRIX_IDENTITY, MATRIX_IDENTITY, MATRIX_FLIP_XZ] * (nperiods + 1)) + [MATRIX_FLIP_XS]
 
 def create_direction_matrix_list_ppm_antisymmetric_btm(nperiods):
-    direction = []
-    for i in range(0, (4 * nperiods + 5) - 1, 4):
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
-
-    # Append last element
-    direction.append(((1,0,0),(0,1,0),(0,0,1)))
-    return direction
+    # PPM Anti Symmetric has 4 magnets rotating through 180 degrees on the X-axis
+    # Top and bottom beams have opposite frontwards / backwards ordering and equal upwards / downwards ordering
+    # +HE, +VE, [-HH, -VV, +HH, +VV]*, (-HH), -VE, +HE
+    return ([MATRIX_IDENTITY, MATRIX_IDENTITY, MATRIX_FLIP_XS, MATRIX_FLIP_XZ] * (nperiods + 1)) + [MATRIX_IDENTITY]
 
 def create_flip_matrix_list_ppm_antisymmetric_top_btm(nperiods):
-    flip = []
-    for i in range(0, (4 * nperiods + 5) - 1, 2):
-        flip.append(((-1, 0, 0), (0, -1, 0), (0, 0, 1)))
-        flip.append(((-1, 0, 0), (0, 1, 0), (0, 0, -1)))
-
-    flip.append(((-1, 0, 0), (0, -1, 0), (0, 0, 1)))
-    return flip
+    # PPM Anti Symmetric devices uses horizontal and vertical end magnets as well as one extra full magnet (HH) to add anti symmetry
+    # Number of periods of the device refers to number of full 4-magnet periods
+    # HE, VE, [HH, VV, HH, VV]*, (HH), VE, HE
+    return ([MATRIX_FLIP_XZ, MATRIX_FLIP_XS] * ((nperiods + 1) * 2)) + [MATRIX_FLIP_XZ]
 
 # Helper functions for APPLE-II Symmetric devices
 
