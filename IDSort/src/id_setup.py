@@ -25,6 +25,70 @@ def create_type_list_hybrid_symmetric_top_btm(nperiods):
     # Concatenate full magnet type list
     return end_types + magnet_types + end_types[::-1]
 
+def create_position_list_hybrid_symmetric_top(nperiods, fullmagdims, hemagdims, htmagdims, poledims, mingap, endgapsym, terminalgapsymhybrid, interstice):
+    # Full length of the device including end magnets, full magnets, iron poles, and all spacings
+    length = (nperiods * ((2 * poledims[2]) + (2 * fullmagdims[2]) + (4 * interstice))) + \
+             (2 * (poledims[2] + interstice + hemagdims[2] + endgapsym + terminalgapsymhybrid + htmagdims[2]))
+
+    # Full device is centered at 0,0,0
+    # Magnets are located w.r.t the bottom-left-near corner when looking along the S-axis from the start of the device
+    x = -(fullmagdims[0] / 2)
+    z =  (mingap / 2)
+    s = -(length / 2)
+
+    # Location of HT magnet with step along S-axis between magnets takes into account special end spacing
+    positions = [(x,z,s)]
+    s += (htmagdims[2] + endgapsym + terminalgapsymhybrid + (poledims[2] / 2))
+
+    # Location of HE magnet with step along S-axis between magnets takes into account size of HE magnet
+    positions += [(x,z,s)]
+    s += (hemagdims[2] + poledims[2] + (2 * interstice))
+
+    for _ in range(2 * nperiods):
+        # Location of full HH magnet with S-axis step based on full magnet thickness
+        positions += [(x,z,s)]
+        s += (fullmagdims[2] + poledims[2] + (2 * interstice))
+
+    # Location of final HE magnet with step along S-axis taking into account special end spacing
+    positions += [(x,z,s)]
+    s += (hemagdims[2] + (poledims[2] / 2) + endgapsym + terminalgapsymhybrid)
+
+    # Location of final HT magnet
+    positions += [(x,z,s)]
+    return positions
+
+def create_position_list_hybrid_symmetric_btm(nperiods, fullmagdims, hemagdims, htmagdims, poledims, mingap, endgapsym, terminalgapsymhybrid, interstice):
+    # Full length of the device including end magnets, full magnets, iron poles, and all spacings
+    length = (nperiods * ((2 * poledims[2]) + (2 * fullmagdims[2]) + (4 * interstice))) + \
+             (2 * (poledims[2] + interstice + hemagdims[2] + endgapsym + terminalgapsymhybrid + htmagdims[2]))
+
+    # Full device is centered at 0,0,0
+    # Magnets are located w.r.t the bottom-left-near corner when looking along the S-axis from the start of the device
+    x = -(fullmagdims[0] / 2)
+    z = -fullmagdims[1] - (mingap / 2)
+    s = -(length / 2)
+
+    # Location of HT magnet with step along S-axis between magnets takes into account special end spacing
+    positions = [(x,z,s)]
+    s += (htmagdims[2] + endgapsym + terminalgapsymhybrid + (poledims[2] / 2))
+
+    # Location of HE magnet with step along S-axis between magnets takes into account size of HE magnet
+    positions += [(x,z,s)]
+    s += (hemagdims[2] + poledims[2] + (2 * interstice))
+
+    for _ in range(2 * nperiods):
+        # Location of full HH magnet with S-axis step based on full magnet thickness
+        positions += [(x,z,s)]
+        s += (fullmagdims[2] + poledims[2] + (2 * interstice))
+
+    # Location of final HE magnet with step along S-axis taking into account special end spacing
+    positions += [(x,z,s)]
+    s += (hemagdims[2] + (poledims[2] / 2) + endgapsym + terminalgapsymhybrid)
+
+    # Location of final HT magnet
+    positions += [(x,z,s)]
+    return positions
+
 def create_direction_matrix_list_hybrid_symmetric_btm(nperiods):
     direction = []
     for i in range(0, (2 * nperiods + 4), 2):
@@ -51,42 +115,6 @@ def create_flip_matrix_hybrid_symmetric_top_btm(nperiods):
         flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
 
     return flip
-
-def create_position_list_hybrid_symmetric_top(nperiods, fullmagdims, hemagdims, htmagdims, poledims, mingap, endgapsym, terminalgapsymhybrid, interstice):
-    V1 = []
-    length = nperiods * (2 * poledims[2]+2*fullmagdims[2]+4*interstice)+2*(poledims[2]+interstice + hemagdims[2] + endgapsym + terminalgapsymhybrid + htmagdims[2])
-    x=-fullmagdims[0]/2.0
-    z= mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+= (htmagdims[2]+endgapsym + terminalgapsymhybrid + poledims[2]/2)
-    V1.append((x,z,s))
-    s+=hemagdims[2]+poledims[2]+2*interstice
-    for i in range(2,(2*nperiods+4)-2,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+poledims[2]+2*interstice)
-    V1.append((x,z,s))
-    s+=hemagdims[2]+poledims[2]/2+endgapsym+terminalgapsymhybrid
-    V1.append((x,z,s))
-    return V1
-
-def create_position_list_hybrid_symmetric_btm(nperiods, fullmagdims, hemagdims, htmagdims, poledims, mingap, endgapsym, terminalgapsymhybrid, interstice):
-    V1 = []
-    length = nperiods * (2 * poledims[2]+2*fullmagdims[2]+4*interstice)+2*(poledims[2]+interstice + hemagdims[2] + endgapsym + terminalgapsymhybrid + htmagdims[2])
-    x=-fullmagdims[0]/2.0
-    z= -fullmagdims[1]-mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+= (htmagdims[2]+endgapsym + terminalgapsymhybrid + poledims[2]/2)
-    V1.append((x,z,s))
-    s+=hemagdims[2]+poledims[2]+2*interstice
-    for i in range(2,(2*nperiods+4)-2,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+poledims[2]+2*interstice)
-    V1.append((x,z,s))
-    s+=hemagdims[2]+poledims[2]/2+endgapsym+terminalgapsymhybrid
-    V1.append((x,z,s))
-    return V1
 
 # Helper functions for PPM Anti Symmetric devices
 
