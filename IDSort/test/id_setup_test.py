@@ -42,13 +42,16 @@ class IDSetupTest(unittest.TestCase):
             'steps'             : 1,
             'endgapsym'         : 5.0,
             'phasinggap'        : 0.5,
+            'verbose'           : 3,
+            'output_path'       : obs_json_path,
         }
         options_named = namedtuple("options", options.keys())(*options.values())
+        args = []
 
         try:
 
             # Execute the function under test
-            process(options_named, [obs_json_path])
+            process(options_named, args)
 
             # Compare the output file to the expected one
             with open(exp_json_path, 'r') as exp_json_file, \
@@ -100,13 +103,16 @@ class IDSetupTest(unittest.TestCase):
             'x'                 : (-2.0, 2.1, 2.5),
             'z'                 : (-0.0, 0.1, 0.1),
             'steps'             : 1,
+            'verbose'           : 3,
+            'output_path'       : obs_json_path,
         }
         options_named = namedtuple("options", options.keys())(*options.values())
+        args = []
 
         try:
 
             # Execute the function under test
-            process(options_named, [obs_json_path])
+            process(options_named, args)
 
             # Compare the output file to the expected one
             with open(exp_json_path, 'r') as exp_json_file, \
@@ -159,14 +165,17 @@ class IDSetupTest(unittest.TestCase):
             'z'                 : (-0.0, 0.1, 0.1),
             'steps'             : 1,
             'endgapsym'         : 5.0,
-            'terminalgapsymhyb' : 5.0
+            'terminalgapsymhyb' : 5.0,
+            'verbose'           : 3,
+            'output_path'       : obs_json_path,
         }
         options_named = namedtuple("options", options.keys())(*options.values())
+        args = []
 
         try:
 
             # Execute the function under test
-            process(options_named, [obs_json_path])
+            process(options_named, args)
 
             # Compare the output file to the expected one
             with open(exp_json_path, 'r') as exp_json_file, \
@@ -220,14 +229,17 @@ class IDSetupTest(unittest.TestCase):
             'z'                 : (0, 0.1, 1),
             'steps'             : 1,
             'endgapsym'         : 3.0,
-            'terminalgapsymhyb' : 3.0
+            'terminalgapsymhyb' : 3.0,
+            'verbose'           : 3,
+            'output_path'       : obs_json_path,
         }
         options_named = namedtuple("options", options.keys())(*options.values())
+        args = []
 
         try:
 
             # Execute the function under test
-            process(options_named, [obs_json_path])
+            process(options_named, args)
 
             # Compare the output file to the expected one
             with open(exp_json_path, 'r') as exp_json_file, \

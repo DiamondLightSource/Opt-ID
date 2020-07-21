@@ -329,6 +329,33 @@ def create_direction_matrix_list_apple_symmetric_q4(nperiods):
 
 def process(options, args):
 
+    if hasattr(options, 'verbose'):
+        setLoggerLevel(logger, options.verbose)
+
+    logger.debug('Starting')
+
+    if hasattr(options, 'output_path'):
+        if (len(args) > 0):
+            logger.warning('Output path argument overrides unnamed trailing argument!')
+            logger.warning('Ignoring all %d unnamed arguments [%s]', len(args), args)
+
+        # Output path is the value of the named argument
+        output_path = options.output_path
+    else:
+        if (len(args) == 0):
+            error_message = 'Output path argument not provided, so must provide one unnamed trailing argument!'
+            logger.error(error_message)
+            raise Exception(error_message)
+
+        elif (len(args) > 1):
+            logger.warning('Multiple unnamed trailing arguments provided but only need one for output path!')
+            logger.warning('Ignoring remaining %d unnamed arguments [%s]', len(args[1:]), args[1:])
+
+        # Output path is first unnamed argument
+        output_path = args[0]
+
+    logger.info('Output path set to [%s]', output_path)
+
     # Generic data for all device types
     output = {
         # Device identifiers
@@ -346,6 +373,8 @@ def process(options, args):
         'xmin'  : options.x[0], 'xmax'  : options.x[1], 'xstep' : options.x[2],
         'zmin'  : options.z[0], 'zmax'  : options.z[1], 'zstep' : options.z[2],
     }
+
+    logger.info('type [%s]', options.type)
 
     if options.type == 'Hybrid_Symmetric':
 
@@ -626,10 +655,20 @@ def process(options, args):
 
     else:
         # TODO raise properly logged exception in logging refactor
-        raise Exception('Insertion Device Type no implemented!!!')
+        error_message = f'Insertion Device Type not implemented! {options.type}'
+        logger.error(error_message)
+        raise NotImplementedError(error_message)
 
-    with open(args[0], 'w') as fp:
-        json.dump(output, fp, indent=4)
+    try:
+        logger.info('Saving json to [%s]', output_path)
+        with open(output_path, 'w') as fp:
+            json.dump(output, fp)
+
+    except Exception as ex:
+        logger.error('Failed to save json to [%s]', output_path, exc_info=ex)
+        raise ex
+
+    logger.debug('Halting')
 
 
 if __name__ == "__main__":  #program starts here
@@ -658,4 +697,8 @@ if __name__ == "__main__":  #program starts here
     parser.add_option("--clampcut", dest="clampcut", help="Square corners removed to allow magnets to be clamped, dimensioned in mm. APPLEs only", default = 5.0, type="float")
 
     (options, args) = parser.parse_args()
-    process(options, args)
+
+    try:
+        process(options, args)
+    except Exception as ex:
+        logger.critical('Fatal exception in id_setup::process', exc_info=ex)
