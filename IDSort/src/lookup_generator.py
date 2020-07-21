@@ -28,7 +28,6 @@ import numpy as np
 
 from .logging_utils import logging, getLogger, setLoggerLevel
 logger = getLogger(__name__)
-setLoggerLevel(logger, 4)
 
 def fortPMB_NEW(testpoint,m,i,magdims, V1):
     '''
