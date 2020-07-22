@@ -323,7 +323,7 @@ def process(options, args):
 
     logger.debug('Starting')
 
-    if hasattr(options, 'output_path'):
+    if hasattr(options, 'output_path') and (options.output_path is not None):
         if (len(args) > 0):
             logger.warning('Output path argument overrides unnamed trailing argument!')
             logger.warning('Ignoring all %d unnamed arguments [%s]', len(args), args)
