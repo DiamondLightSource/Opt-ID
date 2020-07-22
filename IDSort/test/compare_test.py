@@ -32,7 +32,9 @@ class CompareTest(unittest.TestCase):
 
         # TODO refactor parameters for process function to use named tuple
         # Prepare parameters for process function
-        options = {}
+        options = {
+            'verbose' : 4,
+        }
         options_named = namedtuple("options", options.keys())(*options.values())
         args = [
             inp_original_genome_path,

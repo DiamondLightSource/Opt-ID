@@ -42,7 +42,7 @@ class IDSetupTest(unittest.TestCase):
             'steps'             : 1,
             'endgapsym'         : 5.0,
             'phasinggap'        : 0.5,
-            'verbose'           : 3,
+            'verbose'           : 4,
             'output_path'       : obs_json_path,
         }
         options_named = namedtuple("options", options.keys())(*options.values())
@@ -103,7 +103,7 @@ class IDSetupTest(unittest.TestCase):
             'x'                 : (-2.0, 2.1, 2.5),
             'z'                 : (-0.0, 0.1, 0.1),
             'steps'             : 1,
-            'verbose'           : 3,
+            'verbose'           : 4,
             'output_path'       : obs_json_path,
         }
         options_named = namedtuple("options", options.keys())(*options.values())
@@ -166,7 +166,7 @@ class IDSetupTest(unittest.TestCase):
             'steps'             : 1,
             'endgapsym'         : 5.0,
             'terminalgapsymhyb' : 5.0,
-            'verbose'           : 3,
+            'verbose'           : 4,
             'output_path'       : obs_json_path,
         }
         options_named = namedtuple("options", options.keys())(*options.values())
@@ -230,7 +230,7 @@ class IDSetupTest(unittest.TestCase):
             'steps'             : 1,
             'endgapsym'         : 3.0,
             'terminalgapsymhyb' : 3.0,
-            'verbose'           : 3,
+            'verbose'           : 4,
             'output_path'       : obs_json_path,
         }
         options_named = namedtuple("options", options.keys())(*options.values())
