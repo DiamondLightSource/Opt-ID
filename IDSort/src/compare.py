@@ -7,11 +7,15 @@ Takes 3 arguments:
 
 from .genome_tools import ID_BCell
 
-from .logging_utils import logging, getLogger
+from .logging_utils import logging, getLogger, setLoggerLevel
 logger = getLogger(__name__)
 
 
 def process(options, args):
+
+    if hasattr(options, 'verbose'):
+        setLoggerLevel(logger, options.verbose)
+
     logger.debug('Starting')
 
     # TODO refactor arguments to use options named tuple
@@ -75,7 +79,12 @@ if __name__ == '__main__' :
     import optparse
     usage = "%prog [options] OutputFile"
     parser = optparse.OptionParser(usage=usage)
+    parser.add_option('-v', '--verbose', dest='verbose', help='Set the verbosity level [0-4]', default=0, type='int')
 
     # TODO refactor arguments to use named values
     (options, args) = parser.parse_args()
-    process(options, args)
+
+    try:
+        process(options, args)
+    except Exception as ex:
+        logger.critical('Fatal exception in compare::process', exc_info=ex)
