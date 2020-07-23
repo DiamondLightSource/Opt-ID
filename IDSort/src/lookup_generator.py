@@ -200,7 +200,7 @@ def process(options, args):
                         bfield_c2 = generate_bfield(bfield_eval_points, clampcut_dimensions, position_c2)
 
                         # Bfield of clampcut magnets is the bfield of an uncut magnet minus bfield of the regions to be cut out
-                        per_magnet_bfield = per_magnet_bfield - (bfield_c1 + bfield_c2)
+                        per_magnet_bfield -= (bfield_c1 + bfield_c2)
 
                     # Rotate the calculated bfield for this magnet into the coordinate system the magnet is placed in
                     per_magnet_bfield = np.dot(per_magnet_bfield, np.array(mag['direction_matrix']))
