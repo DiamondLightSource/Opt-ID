@@ -24,74 +24,77 @@ import h5py
 import json
 import numpy as np
 
-# TODO refactor this file
-
 from .logging_utils import logging, getLogger, setLoggerLevel
 logger = getLogger(__name__)
 
 
-def calculate_bfield_major_axis_contribution(bfield_eval_points, major_axis, minor_axis, dimensions, position):
-    '''
-    This function Calculates the B-field in a single orientation according to the calling function
-    '''
+def calculate_bfield_axis_contribution(bfield_eval_points, major_axis, minor_axis, dimensions, position):
+    # This function calculates the bfield in a single orientation according to the calling function
 
-    bfield = 0
+    # Accumulate the bfield strength at each eval point
+    bfield = np.zeros(bfield_eval_points.shape[1:])
 
+    # Transform eval points into the reference frame of the current magnet (spatial region)
     shape = (-1,) + (1,) * (bfield_eval_points.ndim - 1)
     r1 = bfield_eval_points - np.reshape(position, shape)
     r2 = bfield_eval_points - np.reshape(position + dimensions, shape)
 
+    # Process each combination of axes ijk where i is the minor axis and jk are the other two
+    # axes if we use the same handedness for all the coordinate systems
     for j in range(3):
+        k = (3 - minor_axis) - j
+        if (k == major_axis) or (j == minor_axis): continue
 
-        if j != minor_axis:
+        # Rotate the eval points for the bottom-left-near corner of the (magnet) region into the current coordinate system
+        r1i = r1[minor_axis]
+        r1j = r1[j]
+        r1k = r1[k]
 
-            k = 3 - minor_axis - j
-            r1i = r1[minor_axis]
-            r1j = r1[j]
-            r2i = r2[minor_axis]
-            r2j = r2[j]
+        # Rotate the eval points for the upper-right-far corner of the (magnet) region into the current coordinate system
+        r2i = r2[minor_axis]
+        r2j = r2[j]
+        r2k = r2[k]
 
-            if (r1[k].all() > 0) and (r2[k].all() > 0):
-                r1k = r1[k]
-                r2k = r2[k]
-            else:
-                r1k = -r2[k]
-                r2k = -r1[k]
+        # If any values in the k axis are negative in either the bottom-left-near or upper-right-far tensors
+        # then swap the k axis components between the two and negate their values
+        # TODO marked for removal, does not change the resulting field values in tests for all device types
+        if not (np.all(r1k > 0) and np.all(r2k > 0)):
+            r1k, r2k = -r2k, -r1k
 
-            a1 = np.sqrt(r2i * r2i + r2j * r2j + r2k * r2k)
-            a2 = np.sqrt(r1i * r1i + r1j * r1j + r2k * r2k)
-            a3 = np.sqrt(r1i * r1i + r2j * r2j + r1k * r1k)
-            a4 = np.sqrt(r2i * r2i + r1j * r1j + r1k * r1k)
-            a5 = np.sqrt(r1i * r1i + r2j * r2j + r2k * r2k)
-            a6 = np.sqrt(r2i * r2i + r1j * r1j + r2k * r2k)
-            a7 = np.sqrt(r2i * r2i + r2j * r2j + r1k * r1k)
-            a8 = np.sqrt(r1i * r1i + r1j * r1j + r1k * r1k)
+        # Compute the norms multiple field vectors at each eval point
+        a1 = np.sqrt(r2i * r2i + r2j * r2j + r2k * r2k)
+        a2 = np.sqrt(r1i * r1i + r1j * r1j + r2k * r2k)
+        a3 = np.sqrt(r1i * r1i + r2j * r2j + r1k * r1k)
+        a4 = np.sqrt(r2i * r2i + r1j * r1j + r1k * r1k)
+        a5 = np.sqrt(r1i * r1i + r2j * r2j + r2k * r2k)
+        a6 = np.sqrt(r2i * r2i + r1j * r1j + r2k * r2k)
+        a7 = np.sqrt(r2i * r2i + r2j * r2j + r1k * r1k)
+        a8 = np.sqrt(r1i * r1i + r1j * r1j + r1k * r1k)
 
-            if major_axis == minor_axis:
-                b2 = r1i * r2k / (r1j * a2)
-                b4 = r2i * r1k / (r1j * a4)
-                b6 = r2i * r2k / (r1j * a6)
-                b8 = r1i * r1k / (r1j * a8)
+        if major_axis == minor_axis:
+            # Calculate and apply the field contributions when we are on the diagonal of the 3x3 bfield matrix
+            b1 = r2i * r2k / (r2j * a1)
+            b2 = r1i * r2k / (r1j * a2)
+            b3 = r1i * r1k / (r2j * a3)
+            b4 = r2i * r1k / (r1j * a4)
+            b5 = r1i * r2k / (r2j * a5)
+            b6 = r2i * r2k / (r1j * a6)
+            b7 = r2i * r1k / (r2j * a7)
+            b8 = r1i * r1k / (r1j * a8)
+            bfield -= (np.arctan(b1) + np.arctan(b2) + np.arctan(b3) + np.arctan(b4) -
+                       np.arctan(b5) - np.arctan(b6) - np.arctan(b7) - np.arctan(b8)) / (4 * np.pi)
 
-                b1 = r2i * r2k / (r2j * a1)
-                b3 = r1i * r1k / (r2j * a3)
-                b5 = r1i * r2k / (r2j * a5)
-                b7 = r2i * r1k / (r2j * a7)
-
-                bfield -= (np.arctan(b1) + np.arctan(b2) + np.arctan(b3) + np.arctan(b4) -
-                           np.arctan(b5) - np.arctan(b6) - np.arctan(b7) - np.arctan(b8)) / (4 * np.pi)
-
-            if major_axis == j:
-                c1 = a1 + r2k
-                c2 = a2 + r2k
-                c3 = a3 + r1k
-                c4 = a4 + r1k
-                c5 = a5 + r2k
-                c6 = a6 + r2k
-                c7 = a7 + r1k
-                c8 = a8 + r1k
-
-                bfield -= np.log((c1 * c2 * c3 * c4) / (c5 * c6 * c7 * c8)) / (4 * np.pi)
+        elif major_axis == j:
+            # Calculate and apply the field contributions when we are off the diagonal of the 3x3 bfield matrix
+            c1 = a1 + r2k
+            c2 = a2 + r2k
+            c3 = a3 + r1k
+            c4 = a4 + r1k
+            c5 = a5 + r2k
+            c6 = a6 + r2k
+            c7 = a7 + r1k
+            c8 = a8 + r1k
+            bfield -= np.log((c1 * c2 * c3 * c4) / (c5 * c6 * c7 * c8)) / (4 * np.pi)
 
     return bfield
 
@@ -116,7 +119,7 @@ def generate_bfield(bfield_eval_points, dimensions, position):
         for minor_axis in range(major_axis, 3):
 
             # Calculate the bfield contribution of the current major axis w.r.t the current minor axis
-            bfield[..., major_axis, minor_axis] = calculate_bfield_major_axis_contribution(
+            bfield[..., major_axis, minor_axis] = calculate_bfield_axis_contribution(
                 bfield_eval_points, major_axis, minor_axis, dimensions, position)
 
             # Only duplicate if we are not on the diagonal
@@ -218,4 +221,8 @@ if __name__ == "__main__":
     parser.add_option('-v', '--verbose', dest='verbose', help='Set the verbosity level [0-4]', default=0, type='int')
 
     (options, args) = parser.parse_args()
-    process(options, args)
+
+    try:
+        process(options, args)
+    except Exception as ex:
+        logger.critical('Fatal exception in lookup_generator::process', exc_info=ex)
