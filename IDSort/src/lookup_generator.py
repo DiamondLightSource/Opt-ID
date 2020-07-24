@@ -19,9 +19,10 @@ Created on 3 Dec 2013
 @author: ssg37927
 '''
 
-import numpy as np
+
 import h5py
 import json
+import numpy as np
 
 # TODO refactor this file
 
@@ -113,9 +114,9 @@ def wrapCalcB(testpoint, magdims,  V1):
         m=np.zeros(3)
         m[i]=1
         for j in range(i,3):
-            B[:,:,:,i,j]= fortPMB_NEW(testpoint,m,j, magdims, V1)
+            B[...,i,j]= fortPMB_NEW(testpoint,m,j, magdims, V1)
             if i!=j:
-                B[:,:,:,j,i]=B[:,:,:,i,j]
+                B[...,j,i]=B[...,i,j]
     return B
 
 def process(options, args):
@@ -130,15 +131,15 @@ def process(options, args):
     testpoints=np.mgrid[data['xmin']:data['xmax']-(data['xstep']/100.0):data['xstep'],
                         data['zmin']:data['zmax']-(data['zstep']/100.0):data['zstep'],
                         data['smin']:data['smax']-(data['sstep']/100.0):data['sstep']]
-    print("xmin %f"%(data['xmin']))
-    print("xmax %f"%(data['xmax']))
-    print("xstep %f"%(data['xstep']))
-    print("zmin %f"%(data['zmin']))
-    print("zmax %f"%(data['zmax']))
-    print("zstep %f"%(data['zstep']))
-    print("smin %f"%(data['smin']))
-    print("smax %f"%(data['smax']))
-    print("sstep %f"%(data['sstep']))
+    # print("xmin %f"%(data['xmin']))
+    # print("xmax %f"%(data['xmax']))
+    # print("xstep %f"%(data['xstep']))
+    # print("zmin %f"%(data['zmin']))
+    # print("zmax %f"%(data['zmax']))
+    # print("zstep %f"%(data['zstep']))
+    # print("smin %f"%(data['smin']))
+    # print("smax %f"%(data['smax']))
+    # print("sstep %f"%(data['sstep']))
 
     if data['type'] == 'PPM_AntiSymmetric' or data['type'] == 'Hybrid_Symmetric':
 
@@ -146,7 +147,7 @@ def process(options, args):
 
             for b in range(len(data['beams'])):
                 count = 0
-                print("Processing beam %02i" % (b))
+                #print("Processing beam %02i" % (b))
                 datashape = (testpoints.shape[1], testpoints.shape[2], testpoints.shape[3], 3, 3, len(data['beams'][b]['mags']))
                 #print("testpoints.shape[3] %s"%(testpoints.shape[3]))
                 chunkshape = (testpoints.shape[1], testpoints.shape[2], testpoints.shape[3], 3, 3, 1)
@@ -154,9 +155,9 @@ def process(options, args):
                 ds = outfile.create_dataset(data['beams'][b]['name'], shape=datashape, dtype=np.float64, chunks=chunkshape)
 
                 for mag in data['beams'][b]['mags']:
-                    print("processing beam %02i magnet %04i" % (b, count))
+                    #print("processing beam %02i magnet %04i" % (b, count))
                     dataset = wrapCalcB(testpoints, np.array(mag['dimensions']), np.array(mag['position']))
-                    ds[:, :, :, :, :, count] = dataset.dot(np.array(mag['direction_matrix']))
+                    ds[..., count] = dataset.dot(np.array(mag['direction_matrix']))
                     count += 1
         
     if data['type'] == 'APPLE_Symmetric':
@@ -165,14 +166,14 @@ def process(options, args):
 
             for b in range(len(data['beams'])):
                 count = 0
-                print("Processing beam %02i" % (b))
+                #print("Processing beam %02i" % (b))
                 datashape = (testpoints.shape[1], testpoints.shape[2], testpoints.shape[3], 3, 3, len(data['beams'][b]['mags']))
                 chunkshape = (testpoints.shape[1], testpoints.shape[2], testpoints.shape[3], 3, 3, 1)
                 #print ("datashape is : " + str(datashape))
                 ds = outfile.create_dataset(data['beams'][b]['name'], shape=datashape, dtype=np.float64, chunks=chunkshape)
 
                 for mag in data['beams'][b]['mags']:
-                    print("processing beam %02i magnet %04i" % (b, count))
+                    #print("processing beam %02i magnet %04i" % (b, count))
 
                     datasetblock = wrapCalcB(testpoints, np.array(mag['dimensions']), np.array(mag['position']))
                     if b%2==1:
@@ -186,8 +187,7 @@ def process(options, args):
                         datasetc2 = wrapCalcB(testpoints, np.array([data['clampcut'],data['clampcut'],mag['dimensions'][2]]), c2pos)
                     dataset=datasetblock-datasetc1-datasetc2
 
-                    ds[:, :, :, :, :, count] = dataset.dot(np.array(mag['direction_matrix']))
-    #                ds[:, :, :, :, :, count] = np.array(mag['direction_matrix']).dot(dataset)
+                    ds[..., count] = dataset.dot(np.array(mag['direction_matrix']))
                     count += 1
 
 if __name__ == "__main__":

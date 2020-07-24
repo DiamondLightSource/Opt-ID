@@ -34,38 +34,37 @@
 import os
 import socket
 import logging
-import random
-import json
 
+import json
 import h5py
 from mpi4py import MPI
 
-from IDSort.src.magnets import Magnets, MagLists
-from IDSort.src.genome_tools import ID_BCell
-import IDSort.src.field_generator as fg
-import IDSort.src.magnet_tools as mt
+import random
+import numpy as np
 
+from .magnets import Magnets, MagLists
+from .genome_tools import ID_BCell
+
+from .field_generator import generate_reference_magnets,  \
+                             generate_bfield,             \
+                             calculate_bfield_phase_error
 
 logging.basicConfig(level=0,format=' %(asctime)s.%(msecs)03d %(threadName)-16s %(levelname)-6s %(message)s', datefmt='%H:%M:%S')
 
 def mutations(c, e_star, fitness, scale):
-    inverse_proportional_hypermutation =  abs(((1.0-(e_star/fitness)) * c) + c)
+    inverse_proportional_hypermutation =  abs(((1.0 - (e_star / fitness)) * c) + c)
     a = random.random()
     b = random.random()
-    hypermacromuation = abs((a-b) * scale)
+    hypermacromuation = abs((a - b) * scale)
     return int(inverse_proportional_hypermutation + hypermacromuation)
 
 def barrier(is_single_threaded):
-    if is_single_threaded:
-        pass
-    else:
+    if not is_single_threaded:
         MPI.COMM_WORLD.Barrier()
 
 def alltoall(is_single_threaded, trans):
-    if is_single_threaded:
-        return trans
-    else:
-        return MPI.COMM_WORLD.alltoall(trans)
+    return trans if is_single_threaded else MPI.COMM_WORLD.alltoall(trans)
+
 
 def process(options, args):
 
@@ -87,18 +86,15 @@ def process(options, args):
 
     logging.debug("Process %d ip address is : %s" % (rank, ip))
 
-
-    f2 = open(options.id_filename, 'r')
-    info = json.load(f2)
-    f2.close()
+    with open(options.id_filename, 'r') as fp:
+        info = json.load(fp)
 
     logging.debug("Loading Lookup")
-    f1 = h5py.File(options.lookup_filename, 'r')
-    lookup = {}
-    for beam in info['beams']:
-        logging.debug("Loading beam %s" %(beam['name']))
-        lookup[beam['name']] = f1[beam['name']][...]
-    f1.close()
+    with h5py.File(options.lookup_filename, 'r') as fp:
+        lookup = {}
+        for beam in info['beams']:
+            logging.debug("Loading beam %s" %(beam['name']))
+            lookup[beam['name']] = fp[beam['name']][...]
 
     barrier(options.singlethreaded)
 
@@ -106,12 +102,12 @@ def process(options, args):
     mags = Magnets()
     mags.load(options.magnets_filename)
 
-    ref_mags = fg.generate_reference_magnets(mags)
+    ref_mags = generate_reference_magnets(mags)
     ref_maglist = MagLists(ref_mags)
-    ref_total_id_field = fg.generate_id_field(info, ref_maglist, ref_mags, lookup)
+    ref_total_id_field = generate_bfield(info, ref_maglist, ref_mags, lookup)
     #logging.debug("before phase calculate error call")
     #logging.debug(ref_total_id_field.shape())
-    pherr, ref_trajectories = mt.calculate_phase_error(info, ref_total_id_field)
+    phase_error, ref_trajectories = calculate_bfield_phase_error(info, ref_total_id_field)
 
     barrier(options.singlethreaded)
 
@@ -122,25 +118,29 @@ def process(options, args):
     population = []
     estar = options.e
 
-
     if options.restart and (rank == 0) :
-        filenames = os.listdir(args[0])
+
         # sort the genome filenames to ensure that when given the same set of
         # files in a directory, population[0] is the same across different
         # orderings of the listed directory contents: this is to fix the test
         # MpiRunnerTest.test_process_initial_population() in mpi_runner_test.py
         # when run on travis
-        filenames.sort()
+        filenames = sorted(os.listdir(args[0]))
+
         for filename in filenames:
             fullpath = os.path.join(args[0],filename)
+
             try :
                 logging.debug("Trying to load %s" % (fullpath))
                 genome = ID_BCell()
                 genome.load(fullpath)
                 population.append(genome)
                 logging.debug("Loaded %s" % (fullpath))
-            except :
+
+            except Exception as ex:
                 logging.debug("Failed to load %s" % (fullpath))
+                raise ex
+
         if len(population) < options.setup:
             # Seed with children from first
             children = population[0].generate_children(options.setup-len(population), 20, info, lookup, mags, ref_trajectories)

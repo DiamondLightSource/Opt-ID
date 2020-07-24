@@ -1,12 +1,12 @@
-import os, shutil
-import unittest
-import pickle
+import unittest, os, shutil
 from collections import namedtuple
 
+import pickle
 import h5py
 import numpy as np
 
-from IDSort.src.process_genome import process, MagLists
+from ..src.magnets import MagLists
+from ..src.process_genome import process
 
 
 class ProcessGenomeTest(unittest.TestCase):
@@ -51,7 +51,8 @@ class ProcessGenomeTest(unittest.TestCase):
             'magnets_filename' : inp_mag_path,
             'id_template'      : inp_h5_path,
             'create_genome'    : False,
-            'output_dir'       : obs_path
+            'output_dir'       : obs_path,
+            'verbose'          : 0,
         }
         options_named = namedtuple("options", options.keys())(*options.values())
         args = [
@@ -129,7 +130,8 @@ class ProcessGenomeTest(unittest.TestCase):
             'id_filename'      : inp_json_path,
             'magnets_filename' : inp_mag_path,
             'id_template'      : inp_h5_path,
-            'output_dir'       : obs_path
+            'output_dir'       : obs_path,
+            'verbose'          : 0,
         }
         options_named = namedtuple("options", options.keys())(*options.values())
         args = [

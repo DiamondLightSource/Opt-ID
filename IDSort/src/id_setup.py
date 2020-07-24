@@ -15,7 +15,7 @@
 # order  x, z, s
 import json
 
-# TODO refactor this file
+# TODO refactor this file split each ID type into its own submodule
 
 def create_type_list_symmetric_apple(nperiods):
     # do the first end
@@ -288,11 +288,9 @@ def create_direction_matrix_list_symmetric_hybrid_bottom(nperiods):
 def create_direction_matrix_list_symmetric_hybrid_top(nperiods):
     direction = []
     for i in range(0, (2 * nperiods + 4), 2):
-        range(0, (2 * nperiods + 4), 2)
-        {direction.append(((-1,0,0),(0,1,0),(0,0,-1))),
+        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
         #no V magnets in Hybrids
         direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        }
         #no V magnets in Hybrids
 
     return direction

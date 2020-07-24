@@ -18,16 +18,21 @@ Created on 9 Dec 2013
 @author: ssg37927
 '''
 
-import binascii
 import os
-import pickle
-import random
 import copy
-import logging
+import pickle
+import binascii
 
+import random
 import numpy as np
 
-import IDSort.src.field_generator as fg
+from .field_generator import calculate_trajectory_loss_from_array, \
+                             calculate_cached_trajectory_loss,     \
+                             generate_per_magnet_array,               \
+                             compare_magnet_arrays
+
+from .logging_utils import logging, getLogger
+logger = getLogger(__name__)
 
 
 class BCell(object):
@@ -38,7 +43,7 @@ class BCell(object):
         self.genome = None
         self.uid = binascii.hexlify(os.urandom(6)).decode()
 
-    def create(self):
+    def create(self, *args, **kargs):
         raise Exception("create needs to be implemented")
 
     def age_bcell(self):
@@ -46,20 +51,21 @@ class BCell(object):
 
     def save(self, path):
         filename = '%010.8e_%03i_%s.genome' %(self.fitness, self.age, self.uid)
-        fp = open(os.path.join(path, filename), 'wb')
-        pickle.dump(self.genome, fp)
-        fp.close()
+
+        with open(os.path.join(path, filename), 'wb') as fp:
+            pickle.dump(self.genome, fp)
 
     def load(self, filename):
-        fp = open(filename, 'rb')
-        self.genome = pickle.load(fp)
-        fp.close()
+
+        with open(filename, 'rb') as fp:
+            self.genome = pickle.load(fp)
+
         params = os.path.split(filename)[1].split('_')
         self.fitness = float(params[0])
         self.age = int(params[1])
         self.uid = params[2].split('.')[0]
 
-    def generate_children(self, number_of_children, number_of_mutations):
+    def generate_children(self, *args, **kargs):
         raise Exception("generate_children needs to be implemented")
 
 
@@ -71,7 +77,7 @@ class ID_BCell(BCell):
 
     def create(self, info, lookup, magnets, maglist, ref_trajectories):
         self.genome = maglist
-        field_unused, self.fitness = fg.calculate_cached_trajectory_fitness(info, lookup, magnets, maglist, ref_trajectories)
+        field_unused, self.fitness = calculate_cached_trajectory_loss(info, lookup, magnets, maglist, ref_trajectories)
 
     def generate_children(self, number_of_children, number_of_mutations, info, lookup, magnets, ref_trajectories, real_bfield=None):
         # first age, as we are now creating children
@@ -81,7 +87,7 @@ class ID_BCell(BCell):
         # Generate the IDfiled for the parent, as we need to calculate it fully here.
         original_bfield = None
         if real_bfield == None:
-            original_bfield, calculated_fitness = fg.calculate_cached_trajectory_fitness(info, lookup, magnets, self.genome, ref_trajectories)
+            original_bfield, calculated_fitness = calculate_cached_trajectory_loss(info, lookup, magnets, self.genome, ref_trajectories)
             fitness_error = abs(self.fitness - calculated_fitness)
             logging.debug("Estimated fitness to real fitness error %2.10e"%(fitness_error))
             self.fitness = calculated_fitness
@@ -89,14 +95,14 @@ class ID_BCell(BCell):
             original_bfield = real_bfield
             logging.debug("Using real bfield")
             
-        original_magnets = fg.generate_per_magnet_array(info, self.genome, magnets)
+        original_magnets = generate_per_magnet_array(info, self.genome, magnets)
 
         for i in range(number_of_children):
             maglist = copy.deepcopy(self.genome)
             available_magnets = {key : range(len(magnets.magnet_sets[key])) for key in magnets.magnet_sets.keys()}
-            maglist.mutate(number_of_mutations,available_magnets)
-            new_magnets = fg.generate_per_magnet_array(info, maglist, magnets)
-            update = fg.compare_magnet_arrays(original_magnets, new_magnets, lookup)
+            maglist.mutate(number_of_mutations, available=available_magnets)
+            new_magnets = generate_per_magnet_array(info, maglist, magnets)
+            update = compare_magnet_arrays(original_magnets, new_magnets, lookup)
             child = ID_BCell()
             child.mutations = number_of_mutations
             child.genome = maglist
@@ -104,7 +110,7 @@ class ID_BCell(BCell):
             for beam in update.keys() :
                 if update[beam].size != 0:
                     updated_bfield = updated_bfield - update[beam]
-            child.fitness = fg.calculate_trajectory_fitness_from_array(updated_bfield, info, ref_trajectories)
+            child.fitness = calculate_trajectory_loss_from_array(info, updated_bfield, ref_trajectories)
             #child.create(info, lookup, magnets, maglist, ref_total_id_field)
             children.append(child)
             logging.debug("Child created with fitness : %f" % (child.fitness))
@@ -124,15 +130,15 @@ class ID_Shim_BCell(BCell):
         
         maglist = copy.deepcopy(self.maglist)
         maglist.mutate_from_list(self.genome)
-        new_magnets = fg.generate_per_magnet_array(info, maglist, magnets)
-        original_magnets = fg.generate_per_magnet_array(info, self.maglist, magnets)
-        update = fg.compare_magnet_arrays(original_magnets, new_magnets, lookup)
+        new_magnets = generate_per_magnet_array(info, maglist, magnets)
+        original_magnets = generate_per_magnet_array(info, self.maglist, magnets)
+        update = compare_magnet_arrays(original_magnets, new_magnets, lookup)
         updated_bfield = np.array(original_bfield)
         
         for beam in update.keys() :
             if update[beam].size != 0:
                 updated_bfield = updated_bfield - update[beam]
-        self.fitness = fg.calculate_trajectory_fitness_from_array(updated_bfield, info, ref_trajectories)
+        self.fitness = calculate_trajectory_loss_from_array(info, updated_bfield, ref_trajectories)
 
 #     Hardcoded numbers! Based on length of sim file available for shimming! Warning!
 #     Removed hardcoded numbers, available based on magnet input file. 18/02/19 ZP+MB
@@ -194,35 +200,35 @@ class ID_Shim_BCell(BCell):
         original_bfield = None
         original_fitness = None
         if real_bfield is None:
-            original_bfield, original_fitness = fg.calculate_cached_trajectory_fitness(info, lookup, magnets, self.genome, ref_trajectories)
+            original_bfield, original_fitness = calculate_cached_trajectory_loss(info, lookup, magnets, self.genome, ref_trajectories)
             fitness_error = abs(self.fitness - original_fitness)
             logging.debug("Estimated fitness to real fitness error %2.10e"%(fitness_error))
 
         else :
             original_bfield = real_bfield
-            original_fitness = fg.calculate_trajectory_fitness_from_array(original_bfield, info, ref_trajectories)
+            original_fitness = calculate_trajectory_loss_from_array(info, original_bfield, ref_trajectories)
             fitness_error = abs(self.fitness - original_fitness)
             logging.debug("Using real bfield")
         
-        original_magnets = fg.generate_per_magnet_array(info, self.maglist, magnets)
+        original_magnets = generate_per_magnet_array(info, self.maglist, magnets)
         available = magnets.availability()
         maglist = copy.deepcopy(self.maglist)
         mutation_list = self.create_mutant(number_of_mutations,available)
         maglist.mutate_from_list(mutation_list)
-        new_magnets = fg.generate_per_magnet_array(info, maglist, magnets)
-        update = fg.compare_magnet_arrays(original_magnets, new_magnets, lookup)
+        new_magnets = generate_per_magnet_array(info, maglist, magnets)
+        update = compare_magnet_arrays(original_magnets, new_magnets, lookup)
         updated_bfield = np.array(original_bfield)
         for beam in update.keys() :
             if update[beam].size != 0:
                 updated_bfield = updated_bfield - update[beam]
-        self.fitness = fg.calculate_trajectory_fitness_from_array(updated_bfield, info, ref_trajectories)
+        self.fitness = calculate_trajectory_loss_from_array(info, updated_bfield, ref_trajectories)
 
         for i in range(number_of_children):
             maglist = copy.deepcopy(self.maglist)
             mutation_list = self.create_mutant(number_of_mutations,available)
             maglist.mutate_from_list(mutation_list)
-            new_magnets = fg.generate_per_magnet_array(info, maglist, magnets)
-            update = fg.compare_magnet_arrays(original_magnets, new_magnets, lookup)
+            new_magnets = generate_per_magnet_array(info, maglist, magnets)
+            update = compare_magnet_arrays(original_magnets, new_magnets, lookup)
             child = ID_Shim_BCell()
             child.mutations = number_of_mutations
             child.genome = mutation_list
@@ -231,7 +237,7 @@ class ID_Shim_BCell(BCell):
             for beam in update.keys() :
                 if update[beam].size != 0:
                     updated_bfield = updated_bfield - update[beam]
-            child.fitness = fg.calculate_trajectory_fitness_from_array(updated_bfield, info, ref_trajectories)
+            child.fitness = calculate_trajectory_loss_from_array(info, updated_bfield, ref_trajectories)
             children.append(child)
             logging.debug("Child created with fitness : %2.10e" % (child.fitness))
         return children
