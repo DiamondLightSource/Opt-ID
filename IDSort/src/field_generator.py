@@ -102,9 +102,10 @@ def generate_per_beam_bfield(info, maglist, mags, lookup, nthreads=8):
     return bfields
 
 
-def generate_bfield(info, maglist, mags, f1):
-    bfields = generate_per_beam_bfield(info, maglist, mags, f1)
-    return sum(bfields.values()) # shape == (17,5,2622,3)
+def generate_bfield(info, maglist, mags, lookup, return_per_beam_bfield=False):
+    per_beam_bfield = generate_per_beam_bfield(info, maglist, mags, lookup)
+    bfield = sum(per_beam_bfield.values())
+    return bfield if not return_per_beam_bfield else bfield, per_beam_bfield
 
 
 def generate_reference_magnets(mags):
@@ -253,8 +254,7 @@ def write_bfields(filename, id_filename, lookup_filename, magnets_filename, magl
     with h5py.File(filename, 'w') as fp:
 
         # Compute the bfield data for the real magnets
-        bfield          = generate_bfield(info, maglist, mags, lookup)
-        per_beam_bfield = generate_per_beam_bfield(info, maglist, mags, lookup)
+        bfield, per_beam_bfield = generate_bfield(info, maglist, mags, lookup, return_per_beam_bfield=True)
 
         # Save the full bfield
         fp.create_dataset('id_Bfield', data=bfield)
@@ -269,8 +269,7 @@ def write_bfields(filename, id_filename, lookup_filename, magnets_filename, magl
         fp.create_dataset('id_trajectory',  data=trajectories)
 
         # Compute the bfield data for the reference magnets
-        ref_per_beam_bfield = generate_per_beam_bfield(info, maglist, ref_mags, lookup)
-        ref_bfield          = generate_bfield(info, maglist, ref_mags, lookup)
+        ref_bfield, ref_per_beam_bfield = generate_bfield(info, maglist, ref_mags, lookup, return_per_beam_bfield=True)
 
         # Save the full bfield assuming perfect magnets
         fp.create_dataset('id_Bfield_perfect', data=ref_bfield)
