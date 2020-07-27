@@ -113,7 +113,7 @@ def process(options, args):
         logger.error('Failed to load ID info from json [%s]', options.id_filename, exc_info=ex)
         raise ex
 
-    # Attempt to loaf the ID's lookup table for the eval points defined in the JSON file
+    # Attempt to load the ID's lookup table for the eval points defined in the JSON file
     try:
         logger.info('Loading ID lookup table [%s]', options.lookup_filename)
         with h5py.File(options.lookup_filename, 'r') as fp:
