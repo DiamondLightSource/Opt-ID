@@ -105,7 +105,7 @@ def generate_per_beam_bfield(info, maglist, mags, lookup, nthreads=8):
 def generate_bfield(info, maglist, mags, lookup, return_per_beam_bfield=False):
     per_beam_bfield = generate_per_beam_bfield(info, maglist, mags, lookup)
     bfield = sum(per_beam_bfield.values())
-    return bfield if not return_per_beam_bfield else bfield, per_beam_bfield
+    return bfield if (not return_per_beam_bfield) else (bfield, per_beam_bfield)
 
 
 def generate_reference_magnets(mags):
