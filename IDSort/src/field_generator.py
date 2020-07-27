@@ -162,9 +162,7 @@ def calculate_bfield_phase_error(info, b_array):
     gamma          = energy / electron_mass # Ratio of energy of electron to its resting mass
     speed_of_light = 2.9911124e8            # Speed of light in metres per second
 
-    # TODO is skip measured in steps or periods?
-    nskip = 8
-
+    nskip = 8 # Number of periods at the start and end of the device to skip in the calculations
     nperiods               = info['periods']
     s_step_size            = info['sstep']
     s_total_steps          = int(round((info['smax'] - info['smin']) / s_step_size))
@@ -216,14 +214,14 @@ def calculate_bfield_phase_error(info, b_array):
 
     return phase_error, trajectories
 
-
-def calculate_trajectory_straightness(trajectories, nperiods):
-
+# TODO currently broken, fix or remove
+def calculate_trajectory_straightness(info, trajectories):
+    nperiods = info['periods']
     points_per_period = (trajectories.shape[0] / nperiods) / 3
 
     # Magic number not documented (to do with how data is interleaved into trajectories tensor?)
     nskip  = 2 # Value of 8 in other functions...
-    skip   = (trajectories.shape[0] / 3) + (nskip * points_per_period)
+    skip   = int((trajectories.shape[0] / 3) + (nskip * points_per_period))
 
     xmean  = np.mean(trajectories[skip:-skip,0])
     dxmean = trajectories[skip:-skip,0] - xmean
