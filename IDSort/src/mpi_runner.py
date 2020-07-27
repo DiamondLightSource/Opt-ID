@@ -33,7 +33,7 @@
 
 import os
 import socket
-import logging
+import itertools
 
 import json
 import h5py
@@ -49,7 +49,9 @@ from .field_generator import generate_reference_magnets,  \
                              generate_bfield,             \
                              calculate_bfield_phase_error
 
-logging.basicConfig(level=0,format=' %(asctime)s.%(msecs)03d %(threadName)-16s %(levelname)-6s %(message)s', datefmt='%H:%M:%S')
+from .logging_utils import logging, getLogger, setLoggerLevel
+logger = getLogger(__name__)
+
 
 def mutations(c, e_star, fitness, scale):
     inverse_proportional_hypermutation =  abs(((1.0 - (e_star / fitness)) * c) + c)
@@ -58,45 +60,68 @@ def mutations(c, e_star, fitness, scale):
     hypermacromuation = abs((a - b) * scale)
     return int(inverse_proportional_hypermutation + hypermacromuation)
 
-def barrier(is_single_threaded):
-    if not is_single_threaded:
-        MPI.COMM_WORLD.Barrier()
-
-def alltoall(is_single_threaded, trans):
-    return trans if is_single_threaded else MPI.COMM_WORLD.alltoall(trans)
-
 
 def process(options, args):
 
+    if hasattr(options, 'verbose'):
+        setLoggerLevel(logger, options.verbose)
+
+    logger.debug('Starting')
+
     if options.seed:
+        logger.info('Random seed set to %d', int(options.seed_value))
         random.seed(int(options.seed_value))
 
     if options.singlethreaded:
-        rank = 0
-        size = 1
+        # Who am I within the set of compute nodes
+        comm_rank, comm_size, comm_ip = (0, 1, 'localhost')
+
+        # No synchronization needed in single node case
+        def barrier():
+            pass
+
+        # No exchange needed in single node case
+        def exchange_genomes(local_population):
+            return local_population
+
     else:
-        rank = MPI.COMM_WORLD.rank  # The process ID (integer 0-3 for 4-process run)
-        size = MPI.COMM_WORLD.size  # The number of processes in the job.
+        # Who am I within the set of compute nodes
+        comm_rank, comm_size, comm_ip = (MPI.COMM_WORLD.rank, MPI.COMM_WORLD.size,
+                                         socket.gethostbyname(socket.gethostname()))
 
-    # get the hostname
-    if options.singlethreaded:
-        ip = 'localhost'
-    else:
-        ip = socket.gethostbyname(socket.gethostname())
+        # Use a collective MPI barrier to synchronize all compute nodes
+        def barrier():
+            MPI.COMM_WORLD.Barrier()
 
-    logging.debug("Process %d ip address is : %s" % (rank, ip))
+        # Exchange local population of genomes between compute nodes so that every node has the global population
+        def exchange_genomes(local_population):
+            return list(itertools.chain.from_iterable(MPI.COMM_WORLD.alltoall([local_population] * comm_size)))
 
-    with open(options.id_filename, 'r') as fp:
-        info = json.load(fp)
+    logger.info('Node %3d of %3d @ [%s]', comm_rank, comm_size, comm_ip)
 
-    logging.debug("Loading Lookup")
-    with h5py.File(options.lookup_filename, 'r') as fp:
-        lookup = {}
-        for beam in info['beams']:
-            logging.debug("Loading beam %s" %(beam['name']))
-            lookup[beam['name']] = fp[beam['name']][...]
+    # Load the ID json data
+    try:
+        logger.info('Loading ID info from json [%s]', options.id_filename)
+        with open(options.id_filename, 'r') as fp:
+            info = json.load(fp)
 
-    barrier(options.singlethreaded)
+    except Exception as ex:
+        logger.error('Failed to load ID info from json [%s]', options.id_filename, exc_info=ex)
+        raise ex
+
+    try:
+        logger.info('Loading ID lookup table [%s]', options.lookup_filename)
+        with h5py.File(options.lookup_filename, 'r') as fp:
+            lookup = {}
+            for beam in info['beams']:
+                logger.debug('Loading beam [%s]', beam['name'])
+                lookup[beam['name']] = fp[beam['name']][...]
+
+    except Exception as ex:
+        logger.error('Failed to load ID lookup table [%s]', options.lookup_filename, exc_info=ex)
+        raise ex
+
+    barrier()
 
     logging.debug("Loading magnets")
     mags = Magnets()
@@ -109,7 +134,7 @@ def process(options, args):
     #logging.debug(ref_total_id_field.shape())
     phase_error, ref_trajectories = calculate_bfield_phase_error(info, ref_total_id_field)
 
-    barrier(options.singlethreaded)
+    barrier()
 
     #epoch_path = os.path.join(args[0], 'epoch')
     #next_epoch_path = os.path.join(args[0], 'nextepoch')
@@ -118,27 +143,20 @@ def process(options, args):
     population = []
     estar = options.e
 
-    if options.restart and (rank == 0) :
+    if options.restart and (comm_rank == 0):
 
-        # sort the genome filenames to ensure that when given the same set of
-        # files in a directory, population[0] is the same across different
-        # orderings of the listed directory contents: this is to fix the test
-        # MpiRunnerTest.test_process_initial_population() in mpi_runner_test.py
-        # when run on travis
-        filenames = sorted(os.listdir(args[0]))
-
-        for filename in filenames:
-            fullpath = os.path.join(args[0],filename)
+        # Sort genome filenames to ensure test consistency
+        for genome_path in sorted(map((lambda path : os.path.join(args[0], path)), os.listdir(args[0]))):
 
             try :
-                logging.debug("Trying to load %s" % (fullpath))
+                logger.debug("Trying to load %s" % (genome_path))
                 genome = ID_BCell()
-                genome.load(fullpath)
+                genome.load(genome_path)
                 population.append(genome)
-                logging.debug("Loaded %s" % (fullpath))
+                logger.debug("Loaded %s" % (genome_path))
 
             except Exception as ex:
-                logging.debug("Failed to load %s" % (fullpath))
+                logger.debug("Failed to load %s" % (genome_path))
                 raise ex
 
         if len(population) < options.setup:
@@ -147,6 +165,7 @@ def process(options, args):
             # now save the children into the new file
             for child in children:
                 population.append(child)
+
     else :
         logging.debug("make the initial population")
         for i in range(options.setup):
@@ -159,18 +178,11 @@ def process(options, args):
 
     logging.debug("Initial population created")
 
-    # gather the population
-    trans = []
-    for i in range(size):
-        trans.append(population)
+    allpop = exchange_genomes(population)
 
-    allpop = alltoall(options.singlethreaded, trans)
+    barrier()
 
-    barrier(options.singlethreaded)
-
-    newpop = []
-    for pop in allpop:
-        newpop += pop
+    newpop = list(allpop)
 
     # Need to deal with replicas and old genomes
     popdict = {}
@@ -189,19 +201,19 @@ def process(options, args):
 
     newpop.sort(key=lambda x: x.fitness)
 
-    newpop = newpop[options.setup*rank:options.setup*(rank+1)]
+    newpop = newpop[options.setup*comm_rank:options.setup*(comm_rank+1)]
 
     for genome in newpop:
         logging.debug("genome fitness: %1.8E   Age : %2i   Mutations : %4i" % (genome.fitness, genome.age, genome.mutations))
 
     #Checkpoint best solution
-    if rank == 0:
+    if comm_rank == 0:
         newpop[0].save(args[0])
 
     # now run the processing
     for i in range(options.iterations):
 
-        barrier(options.singlethreaded)
+        barrier()
         logging.debug("Starting itteration %i" % (i))
 
         nextpop = []
@@ -222,16 +234,8 @@ def process(options, args):
             # and save the original
             nextpop.append(genome)
 
-        # gather the population
-        trans = []
-        for i in range(size):
-            trans.append(nextpop)
-
-        allpop = alltoall(options.singlethreaded, trans)
-
-        newpop = []
-        for pop in allpop:
-            newpop += pop
+        allpop = exchange_genomes(nextpop)
+        newpop = list(allpop)
 
         popdict = {}
         for genome in newpop:
@@ -252,43 +256,33 @@ def process(options, args):
         estar = newpop[0].fitness * 0.99
         logging.debug("new estar is %f" % (estar) )
 
-        newpop = newpop[options.setup*rank:options.setup*(rank+1)]
+        newpop = newpop[options.setup*comm_rank:options.setup*(comm_rank+1)]
 
         #Checkpoint best solution
-        if rank == 0:
+        if comm_rank == 0:
             newpop[0].save(args[0])
 
         for genome in newpop:
             logging.debug("genome fitness: %1.8E   Age : %2i   Mutations : %4i" % (genome.fitness, genome.age, genome.mutations))
 
-        barrier(options.singlethreaded)
+        barrier()
 
-    barrier(options.singlethreaded)
+    barrier()
 
-    # gather the population
-    trans = []
-    for i in range(size):
-        trans.append(nextpop)
-
-    allpop = alltoall(options.singlethreaded, trans)
+    population = exchange_genomes(nextpop)
 
     newpop = []
     for pop in allpop:
         newpop += pop
 
-    newpop.sort(key=lambda x: x.fitness)
-
-    newpop = newpop[options.setup*rank:options.setup*(rank+1)]
-
-    #Checkpoint best solution
-    if rank == 0:
-        newpop[0].save(args[0])
+    logger.debug('Halting')
 
 if __name__ == "__main__":
     import optparse
 
     usage = "%prog [options] run_directory"
     parser = optparse.OptionParser(usage=usage)
+    parser.add_option('-v', '--verbose', dest='verbose', help='Set the verbosity level [0-4]', default=0, type='int')
     parser.add_option("-f", "--fitness", dest="fitness", help="Set the target fitness", default=0.0, type="float")
     parser.add_option("-p", "--processing", dest="processing", help="Set the total number of processing units per file", default=5, type="int")
     parser.add_option("-n", "--numnodes", dest="nodes", help="Set the total number of nodes to use", default=10, type="int")
