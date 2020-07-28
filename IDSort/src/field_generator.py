@@ -169,39 +169,42 @@ def calculate_bfield_phase_error(info, bfield):
     s_steps_per_period     = int(info['period_length'] / s_step_size)
     s_steps_per_qtr_period = s_steps_per_period // 4
 
-    # "Trap" refers to integrating the first and second integrals of motion in X and Z using the trapezium rule over S
-    trap_bfield = np.roll(bfield, shift=1, axis=0)
-    trap_bfield[...,0,:] = 0
-    trap_bfield = (trap_bfield + bfield) * (s_step_size / 2)
+    # bfield.shape == (eval_x, eval_z, eval_s, 3) where 3 refers to slices for the X, Z, and S field strength measurements
+    # We only care about integrals of motion in X and Z so discard S measurements below
 
-    # Slices 2 and 3 of trajectories are the second integral of motion w.r.t the X and Z axes, along the orbital S axis
-    trajectories        = np.zeros([*bfield.shape[:3], 4])
-    trajectories[...,2] = -np.cumsum((trap_bfield[...,1] * const), axis=2)
-    trajectories[...,3] =  np.cumsum((trap_bfield[...,0] * const), axis=2)
+    # Trapezium rule applied to bfield measurements in X and Z
+    # TODO roll is on X axis (0) between neighbouring eval points, is this correct? Should be S axis (2)?
+    trap_bfield = np.roll(bfield[...,:2], shift=1, axis=0)
+    trap_bfield[...,0,:] = 0 # Set first samples on S axis to 0
+    trap_bfield = (trap_bfield + bfield[...,:2]) * (s_step_size / 2)
+
+    # Compute the second integral of motion w.r.t the X and Z axes, along the orbital S axis
+    # TODO why do we swap X,Z for Z,X order?
+    traj_2nd_integral = np.cumsum((trap_bfield[...,::-1] * np.array([-const, const])), axis=2)
 
     # Trapezium rule applied to second integral of motion helps compute the first integral of motion
-    # TODO why shift by 4 indices?
-    trap_trajectories = np.roll(trajectories, shift=4, axis=0)
-    trap_trajectories[:,:,0,:] = 0
-    trap_trajectories = (trap_trajectories + trajectories) * (s_step_size / 2)
+    # TODO why shift by 4 indices? One period? (no gaurantees on how many world space units 4 indicies corresponds to) Should this be 1?
+    # TODO roll is on X axis (0) between neighbouring eval points, is this correct? Should be S axis (2)?
+    trap_traj_2nd_integral = np.roll(traj_2nd_integral, shift=4, axis=0)
+    trap_traj_2nd_integral[:,:,0,:] = 0 # Set first samples on S axis to 0
+    trap_traj_2nd_integral = (trap_traj_2nd_integral + traj_2nd_integral) * (s_step_size / 2)
 
     # Slices 0 and 1 of trajectories are the first integral of motion w.r.t the X and Z axes, along the orbital S axis
-    trajectories[...,0] = np.cumsum(trap_trajectories[...,2], axis=2)
-    trajectories[...,1] = np.cumsum(trap_trajectories[...,3], axis=2)
+    traj_1st_integral = np.cumsum(trap_traj_2nd_integral, axis=2)
 
     # Trajectory first and second integrals of motion have been computed,
     # now we compute the phase error of those trajectories
+    trajectories = np.concatenate([traj_1st_integral, traj_2nd_integral], axis=-1)
 
     # Extract the second integral of motion for the central trajectory going down the centre of the eval point grid
-    # TODO is +1 and -1 correct? Potentially this is needed in 1 base indexed languages
+    # TODO is +1 and -1 correct? Potentially this is needed in 1 base indexed languages but not python
     i = ((bfield.shape[0] + 1) // 2) - 1
     j = ((bfield.shape[1] + 1) // 2) - 1
-    w = np.square(trajectories[i,j,:,2:4])
+    w = np.square(traj_2nd_integral[i,j])
 
     # Trapezium rule applied to second integral of motion for central trajectory
-    # TODO find purpose of 1e-3 fudge factor
-    trap_w = np.roll(w, shift=1, axis=0)
-    trap_w[0,:] = 0.0
+    trap_w = np.roll(w, shift=1, axis=0) # TODO Axis 0 is S axis in this np.roll! This makes sense, previous two do not!
+    trap_w[0,:] = 0.0 # Set first samples on S axis to 0
     trap_w = (trap_w + w) * 1e-3 * (s_step_size / 2)
 
     # Cumulative sum along S axis for
@@ -211,11 +214,11 @@ def calculate_bfield_phase_error(info, bfield):
     ph1 = ph0 + ((s_step_size * (1e-3 / (2.0 * speed_of_light * gamma ** 2))) * np.arange(s_total_steps))
 
     # v0 is regular sampling interval along S axis
-    v0  = (s_steps_per_qtr_period * np.arange((4 * nperiods) - (2 * nskip))) + \
-          (s_total_steps // 2) - (nperiods * (s_steps_per_period // 2)) + ((nskip - 1) * s_steps_per_qtr_period)
+    v0 = (s_steps_per_qtr_period * np.arange((4 * nperiods) - (2 * nskip))) + \
+         (s_total_steps // 2) - (nperiods * (s_steps_per_period // 2)) + ((nskip - 1) * s_steps_per_qtr_period)
 
     # v1 is resampled from ph1 at the sampling interval that matches v0
-    v1  = ph1[v0[0]:(v0[-1] + s_steps_per_qtr_period):s_steps_per_qtr_period]
+    v1 = ph1[v0[0]:(v0[-1] + s_steps_per_qtr_period):s_steps_per_qtr_period]
 
     # Compute linear line of best fit of x=v0, y=v1
     m, b   = np.linalg.lstsq(np.vstack([v0, np.ones(len(v0))]).T, v1, rcond=None)[0]
