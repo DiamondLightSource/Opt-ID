@@ -154,7 +154,7 @@ def calculate_trajectory_loss_from_array(info, bfield, ref_trajectories):
     return calculate_trajectory_loss(trajectories, ref_trajectories)
 
 
-def calculate_bfield_phase_error(info, b_array):
+def calculate_bfield_phase_error(info, bfield):
     # TODO move ring energy into device JSON file as devices are tied to specific facilities
     energy         = 3.0                    # Diamond synchrotron 3 GeV storage ring
     const          = (0.03 / energy) * 1e-2 # Unknown constant... evaluates to 1e-4 for 3 GeV storage ring
@@ -169,48 +169,61 @@ def calculate_bfield_phase_error(info, b_array):
     s_steps_per_period     = int(info['period_length'] / s_step_size)
     s_steps_per_qtr_period = s_steps_per_period // 4
 
-    trap_b_array = np.roll(b_array, 1, 0)
-    trap_b_array[...,0,:] = 0.0
-    trap_b_array = (trap_b_array + b_array) * (s_step_size / 2)
+    # "Trap" refers to integrating the first and second integrals of motion in X and Z using the trapezium rule over S
+    trap_bfield = np.roll(bfield, shift=1, axis=0)
+    trap_bfield[...,0,:] = 0
+    trap_bfield = (trap_bfield + bfield) * (s_step_size / 2)
 
-    trajectories        = np.zeros([*b_array.shape[:3], 4])
-    trajectories[...,2] = -np.cumsum(np.multiply(const, trap_b_array[...,1]), axis=2)
-    trajectories[...,3] =  np.cumsum(np.multiply(const, trap_b_array[...,0]), axis=2)
+    # Slices 2 and 3 of trajectories are the second integral of motion w.r.t the X and Z axes, along the orbital S axis
+    trajectories        = np.zeros([*bfield.shape[:3], 4])
+    trajectories[...,2] = -np.cumsum((trap_bfield[...,1] * const), axis=2)
+    trajectories[...,3] =  np.cumsum((trap_bfield[...,0] * const), axis=2)
 
-    trap_traj = np.roll(trajectories, 4, 0)
-    trap_traj[:,:,0,:] = 0.0
-    trap_traj = (trap_traj + trajectories) * (s_step_size / 2)
+    # Trapezium rule applied to second integral of motion helps compute the first integral of motion
+    # TODO why shift by 4 indices?
+    trap_trajectories = np.roll(trajectories, shift=4, axis=0)
+    trap_trajectories[:,:,0,:] = 0
+    trap_trajectories = (trap_trajectories + trajectories) * (s_step_size / 2)
 
-    trajectories[...,0] = np.cumsum(trap_traj[...,2], axis=2)
-    trajectories[...,1] = np.cumsum(trap_traj[...,3], axis=2)
+    # Slices 0 and 1 of trajectories are the first integral of motion w.r.t the X and Z axes, along the orbital S axis
+    trajectories[...,0] = np.cumsum(trap_trajectories[...,2], axis=2)
+    trajectories[...,1] = np.cumsum(trap_trajectories[...,3], axis=2)
 
-    i = ((b_array.shape[0] + 1) // 2) - 1
-    j = ((b_array.shape[1] + 1) // 2) - 1
-    w      = np.zeros([s_total_steps, 2])
-    w[:,0] = np.square(trajectories[i,j,:,2])
-    w[:,1] = np.square(trajectories[i,j,:,3])
+    # Trajectory first and second integrals of motion have been computed,
+    # now we compute the phase error of those trajectories
 
-    trap_w = np.roll(w, 1, 0)
+    # Extract the second integral of motion for the central trajectory going down the centre of the eval point grid
+    # TODO is +1 and -1 correct? Potentially this is needed in 1 base indexed languages
+    i = ((bfield.shape[0] + 1) // 2) - 1
+    j = ((bfield.shape[1] + 1) // 2) - 1
+    w = np.square(trajectories[i,j,:,2:4])
+
+    # Trapezium rule applied to second integral of motion for central trajectory
+    # TODO find purpose of 1e-3 fudge factor
+    trap_w = np.roll(w, shift=1, axis=0)
     trap_w[0,:] = 0.0
     trap_w = (trap_w + w) * 1e-3 * (s_step_size / 2)
 
-    # TODO unwind the order of operations going on here...
-    ph0 = np.cumsum(trap_w[:,0] + trap_w[:,1]) / (2.0 * speed_of_light)
+    # Cumulative sum along S axis for
+    ph0 = np.cumsum(np.sum(trap_w, axis=-1), axis=0) / (2.0 * speed_of_light)
+
+    # ph1 is derived from ph0 plus a factor that grows linearly along the length of the S axis
     ph1 = ph0 + ((s_step_size * (1e-3 / (2.0 * speed_of_light * gamma ** 2))) * np.arange(s_total_steps))
 
+    # v0 is regular sampling interval along S axis
     v0  = (s_steps_per_qtr_period * np.arange((4 * nperiods) - (2 * nskip))) + \
-          (s_total_steps // 2) - (nperiods * (s_steps_per_period // 2)) + \
-          ((nskip - 1) * s_steps_per_qtr_period)
+          (s_total_steps // 2) - (nperiods * (s_steps_per_period // 2)) + ((nskip - 1) * s_steps_per_qtr_period)
 
+    # v1 is resampled from ph1 at the sampling interval that matches v0
     v1  = ph1[v0[0]:(v0[-1] + s_steps_per_qtr_period):s_steps_per_qtr_period]
 
-    a    = np.vstack([v0, np.ones(len(v0))]).T
-    m, b = np.linalg.lstsq(a, v1, rcond=None)[0]
-    ph0  = v1 - ((m * v0) + b)
+    # Compute linear line of best fit of x=v0, y=v1
+    m, b   = np.linalg.lstsq(np.vstack([v0, np.ones(len(v0))]).T, v1, rcond=None)[0]
+    ph0_sq = np.square(v1 - ((m * v0) + b))
 
     # Compute final phase error
-    omega_sq    = ((2 * np.pi) / (m * s_steps_per_period)) ** 2
-    phase_error = np.sqrt((np.sum(ph0 ** 2) * omega_sq) / (((4 * nperiods) + 1) - (2 * nskip))) * (360.0 / (2.0 * np.pi))
+    omega_sq    = np.square((2 * np.pi) / (m * s_steps_per_period))
+    phase_error = np.sqrt((np.sum(ph0_sq) * omega_sq) / (((4 * nperiods) + 1) - (2 * nskip))) * (360.0 / (2.0 * np.pi))
 
     return phase_error, trajectories
 
