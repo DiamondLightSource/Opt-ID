@@ -156,11 +156,12 @@ def calculate_trajectory_loss_from_array(info, bfield, ref_trajectories):
 
 def calculate_bfield_phase_error(info, bfield):
     # TODO move ring energy into device JSON file as devices are tied to specific facilities
-    energy         = 3.0                    # Diamond synchrotron 3 GeV storage ring
-    const          = (0.03 / energy) * 1e-2 # Unknown constant... evaluates to 1e-4 for 3 GeV storage ring
-    electron_mass  = 0.511e-3               # Electron resting mass (already in GeV for convenience)
-    gamma          = energy / electron_mass # Ratio of energy of electron to its resting mass
-    speed_of_light = 2.9911124e8            # Speed of light in metres per second
+    energy             = 3.0                           # Diamond synchrotron 3 GeV storage ring
+    const              = (0.03 / energy) * 1e-2        # Unknown constant... evaluates to 1e-4 for 3 GeV storage ring
+    electron_mass      = 0.511e-3                      # Electron resting mass (already in GeV for convenience)
+    gamma_sq           = (energy / electron_mass) ** 2 # Ratio of energy of electron to its resting mass
+    two_speed_of_light = 2.9911124e8 * 2               # Speed of light in metres per second
+    degrees_per_radian = 360.0 / (2.0 * np.pi)
 
     nskip = 8 # Number of periods at the start and end of the device to skip in the calculations
     nperiods               = info['periods']
@@ -172,28 +173,27 @@ def calculate_bfield_phase_error(info, bfield):
     # bfield.shape == (eval_x, eval_z, eval_s, 3) where 3 refers to slices for the X, Z, and S field strength measurements
     # We only care about integrals of motion in X and Z so discard S measurements below
 
-    # Trapezium rule applied to bfield measurements in X and Z
+    # Trapezium rule applied to bfield measurements in X and Z helps compute the second integral of motion
     # TODO roll is on X axis (0) between neighbouring eval points, is this correct? Should be S axis (2)?
     trap_bfield = np.roll(bfield[...,:2], shift=1, axis=0)
     trap_bfield[...,0,:] = 0 # Set first samples on S axis to 0
     trap_bfield = (trap_bfield + bfield[...,:2]) * (s_step_size / 2)
 
-    # Compute the second integral of motion w.r.t the X and Z axes, along the orbital S axis
-    # TODO why do we swap X,Z for Z,X order?
+    # Accumulate the second integral of motion w.r.t the X and Z axes, along the orbital S axis
+    # TODO why do we swap X,Z for Z,X order for the field measurements?
     traj_2nd_integral = np.cumsum((trap_bfield[...,::-1] * np.array([-const, const])), axis=2)
 
     # Trapezium rule applied to second integral of motion helps compute the first integral of motion
-    # TODO why shift by 4 indices? One period? (no gaurantees on how many world space units 4 indicies corresponds to) Should this be 1?
+    # TODO why shift by 4 indices? One period? (no gaurantees on how many world space units 4 indices corresponds to) Should this be 1?
     # TODO roll is on X axis (0) between neighbouring eval points, is this correct? Should be S axis (2)?
     trap_traj_2nd_integral = np.roll(traj_2nd_integral, shift=4, axis=0)
     trap_traj_2nd_integral[:,:,0,:] = 0 # Set first samples on S axis to 0
     trap_traj_2nd_integral = (trap_traj_2nd_integral + traj_2nd_integral) * (s_step_size / 2)
 
-    # Slices 0 and 1 of trajectories are the first integral of motion w.r.t the X and Z axes, along the orbital S axis
+    # Accumulate the first integral of motion w.r.t the X and Z axes, along the orbital S axis
     traj_1st_integral = np.cumsum(trap_traj_2nd_integral, axis=2)
 
-    # Trajectory first and second integrals of motion have been computed,
-    # now we compute the phase error of those trajectories
+    # Trajectory first and second integrals of motion have been computed, now we compute the phase error of those trajectories
     trajectories = np.concatenate([traj_1st_integral, traj_2nd_integral], axis=-1)
 
     # Extract the second integral of motion for the central trajectory going down the centre of the eval point grid
@@ -202,35 +202,33 @@ def calculate_bfield_phase_error(info, bfield):
     j = ((bfield.shape[1] + 1) // 2) - 1
     w = np.square(traj_2nd_integral[i,j])
 
-    # Trapezium rule applied to second integral of motion for central trajectory
+    # Trapezium rule applied to second integral of motion for central trajectory helps computes first integral of motion
     trap_w = np.roll(w, shift=1, axis=0) # TODO Axis 0 is S axis in this np.roll! This makes sense, previous two do not!
     trap_w[0,:] = 0.0 # Set first samples on S axis to 0
     trap_w = (trap_w + w) * 1e-3 * (s_step_size / 2)
+    w_1st_integral = np.cumsum(np.sum(trap_w, axis=-1), axis=0) # Cumulative sum along S axis (0)
 
-    # Cumulative sum along S axis for
-    ph0 = np.cumsum(np.sum(trap_w, axis=-1), axis=0) / (2.0 * speed_of_light)
-
-    # ph1 is derived from ph0 plus a factor that grows linearly along the length of the S axis
-    ph1 = ph0 + ((s_step_size * (1e-3 / (2.0 * speed_of_light * gamma ** 2))) * np.arange(s_total_steps))
-
-    # v0 is regular sampling interval along S axis
-    v0 = (s_steps_per_qtr_period * np.arange((4 * nperiods) - (2 * nskip))) + \
+    # x is regular sampling interval along S axis for computing line of best fit
+    x = np.arange(0, s_steps_per_qtr_period * ((4 * nperiods) - (2 * nskip)), s_steps_per_qtr_period) + \
          (s_total_steps // 2) - (nperiods * (s_steps_per_period // 2)) + ((nskip - 1) * s_steps_per_qtr_period)
 
-    # v1 is resampled from ph1 at the sampling interval that matches v0
-    v1 = ph1[v0[0]:(v0[-1] + s_steps_per_qtr_period):s_steps_per_qtr_period]
+    # y is derived from w_1st_integral plus a factor that grows linearly along the length of the S axis
+    sample_step = s_step_size * (1e-3 / (two_speed_of_light * gamma_sq))
+    y = (w_1st_integral / two_speed_of_light) + np.arange(0, sample_step * s_total_steps, sample_step)
+    y = y[x[0]:(x[-1] + s_steps_per_qtr_period):s_steps_per_qtr_period] # Resample y at same sample rate as x
 
-    # Compute linear line of best fit of x=v0, y=v1
-    m, b   = np.linalg.lstsq(np.vstack([v0, np.ones(len(v0))]).T, v1, rcond=None)[0]
-    ph0_sq = np.square(v1 - ((m * v0) + b))
+    # Compute linear line of best fit for the central trajectory
+    m, b = np.linalg.lstsq(np.vstack([x, np.ones_like(x)]).T, y, rcond=None)[0]
+    # Compute the squared error between the line of best fit and the observed values
+    phase_error_sq = np.square(y - ((m * x) + b))
 
-    # Compute final phase error
-    omega_sq    = np.square((2 * np.pi) / (m * s_steps_per_period))
-    phase_error = np.sqrt((np.sum(ph0_sq) * omega_sq) / (((4 * nperiods) + 1) - (2 * nskip))) * (360.0 / (2.0 * np.pi))
+    # Compute final scaled phase error
+    phase_error = np.sqrt((np.sum(phase_error_sq) * np.square((2 * np.pi) / (m * s_steps_per_period))) /
+                          (((4 * nperiods) + 1) - (2 * nskip))) * degrees_per_radian
 
     return phase_error, trajectories
 
-# TODO currently broken, fix or remove
+# TODO currently broken and not used anywhere, fix or remove
 def calculate_trajectory_straightness(info, trajectories):
     nperiods = info['periods']
     points_per_period = (trajectories.shape[0] / nperiods) / 3
