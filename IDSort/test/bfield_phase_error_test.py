@@ -91,9 +91,8 @@ class BfieldPhaseErrorTest(unittest.TestCase):
             ref_magnet_lists = MagLists(ref_magnet_sets)
             ref_bfield       = generate_bfield(info, ref_magnet_lists, ref_magnet_sets, lookup)
 
-            # Execute the function under test
+            # Execute the function under test for perfect reference magnets
             obs_ref_phase_error, obs_ref_trajectories = calculate_bfield_phase_error(info, ref_bfield)
-            logger.debug('Perfect bfield phase error [%s]', obs_ref_phase_error)
 
             # Save the observed values for the reference magnets (for failure inspection)
             np.save(obs_ref_phase_error_path,  obs_ref_phase_error)
@@ -103,12 +102,21 @@ class BfieldPhaseErrorTest(unittest.TestCase):
             exp_ref_phase_error  = np.load(exp_ref_phase_error_path)
             exp_ref_trajectories = np.load(exp_ref_trajectories_path)
 
+            logger.debug('Perfect bfield phase error exp [%s] obs [%s] MSE [%s]',
+                         exp_ref_phase_error, obs_ref_phase_error,
+                         np.mean(np.square(exp_ref_phase_error - obs_ref_phase_error)))
+
+            logger.debug('Perfect bfield trajectories MSE [%s]',
+                         np.mean(np.square(exp_ref_trajectories - obs_ref_trajectories)))
+
+            # Assert that the observed values are all similar to the expected ones
+            assert np.allclose(exp_ref_phase_error,  obs_ref_phase_error)
+            assert np.allclose(exp_ref_trajectories, obs_ref_trajectories)
+
+            # Execute the function under test for real magnets (with no optimization applied, expect values to be poor)
             magnet_lists = MagLists(magnet_sets)
             bfield       = generate_bfield(info, magnet_lists, magnet_sets, lookup)
-
-            # Execute the function under test
             obs_phase_error, obs_trajectories = calculate_bfield_phase_error(info, bfield)
-            logger.debug('Real bfield phase error [%s]', obs_phase_error)
 
             # Save the observed values for the reference magnets (for failure inspection)
             np.save(obs_phase_error_path,  obs_phase_error)
@@ -118,9 +126,14 @@ class BfieldPhaseErrorTest(unittest.TestCase):
             exp_phase_error  = np.load(exp_phase_error_path)
             exp_trajectories = np.load(exp_trajectories_path)
 
+            logger.debug('Real (unoptimized) bfield phase error exp [%s] obs [%s] MSE [%s]',
+                         exp_phase_error, obs_phase_error,
+                         np.mean(np.square(exp_phase_error - obs_phase_error)))
+
+            logger.debug('Real (unoptimized) bfield trajectories MSE [%s]',
+                         np.mean(np.square(exp_trajectories - obs_trajectories)))
+
             # Assert that the observed values are all similar to the expected ones
-            assert np.allclose(exp_ref_phase_error,  obs_ref_phase_error)
-            assert np.allclose(exp_ref_trajectories, obs_ref_trajectories)
             assert np.allclose(exp_phase_error,  obs_phase_error)
             assert np.allclose(exp_trajectories, obs_trajectories)
 
