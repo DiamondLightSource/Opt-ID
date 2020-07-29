@@ -130,16 +130,19 @@ def generate_reference_magnets(mags):
 
 
 def calculate_bfield_loss(bfield, ref_bfield):
-    # TODO why only slice [...,2:4] ?
-    return np.sum(np.square(bfield[...,2:4] - ref_bfield[...,2:4]))
-
+    # Compute MSE between two bfield tensors (eval_x, eval_z, eval_s, 3)
+    # where 3 refers to slices for the X, Z, and S field strength measurements
+    return np.mean(np.square(bfield - ref_bfield))
 
 def calculate_cached_bfield_loss(info, lookup, magnets, maglist, ref_bfield):
     bfield = generate_bfield(info, maglist, magnets, lookup)
     return calculate_bfield_loss(bfield, ref_bfield)
 
 def calculate_trajectory_loss(trajectories, ref_trajectories):
-    # TODO why only slice [...,2:4] ?
+    # Compute MSE between two tensors representing the integrals of motion through a bfield w.r.t a sampling lattice
+    # Slice 0:2 represent the X and Z components of the first integral of motion
+    # Slice 2:4 represent the X and Z components of the second integral of motion
+    # TODO refactor to be np.mean when we fix the bugs in calculate_bfield_phase_error(...)
     return np.sum(np.square(trajectories[...,2:4] - ref_trajectories[...,2:4]))
 
 def calculate_cached_trajectory_loss(info, lookup, magnets, maglist, ref_trajectories):
