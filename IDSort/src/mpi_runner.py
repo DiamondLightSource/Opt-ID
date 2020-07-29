@@ -32,23 +32,23 @@
 #
 
 import os
-import socket
+import random
 import itertools
 
 import json
 import h5py
-from mpi4py import MPI
 
-import random
 import numpy as np
+
+import socket
+from mpi4py import MPI
 
 from .magnets import Magnets, MagLists
 from .genome_tools import ID_BCell
 
 from .field_generator import generate_reference_magnets,   \
                              generate_bfield,              \
-                             calculate_bfield_phase_error, \
-                             calculate_trajectory_straightness
+                             calculate_bfield_phase_error
 
 from .logging_utils import logging, getLogger, setLoggerLevel
 logger = getLogger(__name__)
@@ -119,8 +119,9 @@ def process(options, args):
         with h5py.File(options.lookup_filename, 'r') as fp:
             lookup = {}
             for beam in info['beams']:
-                logger.debug('Loading beam [%s]', beam['name'])
                 lookup[beam['name']] = fp[beam['name']][...]
+                logger.debug('Loaded beam [%s] with shape [%s]', beam['name'], lookup[beam['name']].shape)
+
 
     except Exception as ex:
         logger.error('Failed to load ID lookup table [%s]', options.lookup_filename, exc_info=ex)
@@ -151,63 +152,8 @@ def process(options, args):
 
     barrier()
 
-    # Initial estar used for sampling mutations
-    estar = options.e
-
-    # Array to hold the current population
-    population = []
-
-    # If continuing an existing sort only load the genomes on the master node and communicate them to all nodes
-    # so that extra genomes can be sampled / mutated consistently if they are needed
-    if options.restart and (comm_rank == 0):
-
-        # Sort genome filenames to ensure test consistency
-        genome_names = sorted(os.listdir(output_path))
-        for genome_index, genome_name in enumerate(genome_names):
-            genome_path = os.path.join(output_path, genome_name)
-
-            # Attempt loading the current genome file and adding it to the population
-            # Sorting paths before ensures that first genome is the one with the best fitness
-            try:
-                logger.info('Loading genome %03d of %03d [%s]', genome_index, len(genome_names), genome_path)
-                genome = ID_BCell()
-                genome.load(genome_path)
-                population.append(genome)
-
-            except Exception as ex:
-                logger.error('Failed to genome [%s]', genome_path, exc_info=ex)
-                raise ex
-
-        # Assert that if we are restarting the optimization at least one existing genome was successfully loaded
-        if len(population) == 0:
-            error_message = 'Cannot restart optimization as no existing genomes were found!'
-            logger.error(error_message)
-            raise Exception(error_message)
-
-        # If the number of loaded genomes is smaller than the target population size, then
-        # initialize the rest of the population using children mutated for the first (best) genome that was loaded
-        if len(population) < options.setup:
-            logger.info('%d of %d expected genomes were discovered and loaded', len(population), options.setup)
-            num_children  = options.setup - len(population)
-            num_mutations = 20
-            logger.info('Sampling the remaining %d genomes from the best genome using %d mutations each', num_children, num_mutations)
-            population   += population[0].generate_children(num_children, num_mutations, info, lookup,
-                                                            magnet_sets, ref_trajectories)
-
-    else:
-        # If starting a new sort then generate a population of randomly initialized genomes
-
-        logger.info('Creating %d randomly initialized genomes', options.setup)
-        for genome_index in range(options.setup):
-            # Create a new random genome and add it to the population
-            magnet_lists = MagLists(magnet_sets)
-            magnet_lists.shuffle_all()
-            genome = ID_BCell()
-            genome.create(info, lookup, magnet_sets, magnet_lists, ref_trajectories)
-            population.append(genome)
-
+    # Filter the population for unique fitness values keeping the oldest genome when there are genomes with the same fitness
     def filter_genomes(population):
-        # Filter the population for unique fitness values keeping the oldest genome when there are genomes with the same fitness
         genomes = {}
         for genome in population:
             # TODO remove dependency on filename scientific notation encoding
@@ -231,6 +177,7 @@ def process(options, args):
 
         return population
 
+    # Synchronize nodes sequentially to print diagnostics about local genome populations
     def log_genomes(population):
         # Early return if logger is not set to at least output INFO messages
         if not logger.isEnabledFor(logging.INFO): return
@@ -255,14 +202,80 @@ def process(options, args):
                                  comm_rank, comm_size, genome_index, len(population), genome.uid,
                                  genome.fitness, genome.age, genome.mutations)
 
-    logger.debug('Initial population created')
+    # Initial estar used for sampling mutations
+    estar = options.e
+
+    # Array to hold the current population
+    population = []
+
+    # Create genomes on master node only and communicate them to all nodes for consistency
+    if comm_rank == 0:
+        if options.restart:
+            # If continuing an existing sort job then load saved genomes and sample random genomes to bring us up to the full population
+
+            # Sort genome filenames to ensure test consistency
+            genome_names = sorted(os.listdir(output_path))
+            for genome_index, genome_name in enumerate(genome_names):
+                genome_path = os.path.join(output_path, genome_name)
+
+                # Attempt loading the current genome file and adding it to the population
+                # Sorting paths before ensures that first genome is the one with the best fitness
+                try:
+                    logger.info('Loading genome %03d of %03d [%s]', genome_index, len(genome_names), genome_path)
+                    genome = ID_BCell()
+                    genome.load(genome_path)
+                    population.append(genome)
+
+                except Exception as ex:
+                    logger.error('Failed to genome [%s]', genome_path, exc_info=ex)
+                    raise ex
+
+            # Assert that if we are restarting the optimization at least one existing genome was successfully loaded
+            if len(population) == 0:
+                error_message = 'Cannot restart optimization as no existing genomes were found!'
+                logger.error(error_message)
+                raise Exception(error_message)
+
+            # If the number of loaded genomes is smaller than the target population size, then
+            # initialize the rest of the population using children mutated for the first (best) genome that was loaded
+            if len(population) < options.setup:
+                logger.info('%d of %d expected genomes were discovered and loaded', len(population), options.setup)
+                num_children  = options.setup - len(population)
+                num_mutations = 20
+                logger.info('Sampling the remaining %d genomes from the best genome using %d mutations each', num_children, num_mutations)
+                population   += population[0].generate_children(num_children, num_mutations, info, lookup,
+                                                                magnet_sets, ref_trajectories)
+
+        else:
+            # If starting a new sort then generate a population of randomly initialized genomes
+
+            logger.info('Creating %d randomly initialized genomes', options.setup)
+            for genome_index in range(options.setup):
+                logger.debug('Sampling random genome %d of %d', genome_index, options.setup)
+
+                # Create a new random genome and add it to the population
+                magnet_lists = MagLists(magnet_sets)
+                magnet_lists.shuffle_all()
+                genome = ID_BCell()
+                genome.create(info, lookup, magnet_sets, magnet_lists, ref_trajectories)
+                population.append(genome)
+
+        logger.debug('Initial population created')
 
     population = filter_genomes(exchange_genomes(population))
     log_genomes(population)
 
-    # Checkpoint best genome from the master node
+    # Checkpoint best genome with lowest fitness from the master node
     if comm_rank == 0:
-        population[0].save(output_path)
+        try:
+            best_genome = population[0]
+            logger.info('Saving best genome %s with fitness %1.8E age %d mutations %d',
+                        best_genome.uid, best_genome.fitness, best_genome.age, best_genome.mutations)
+            best_genome.save(output_path)
+
+        except Exception as ex:
+            logger.error('Failed to save best genome to [%s]', output_path, exc_info=ex)
+            raise ex
 
     # Perform multiple iterations of mutations and communications
     for iteration in range(options.iterations):
@@ -287,10 +300,10 @@ def process(options, args):
         population = filter_genomes(exchange_genomes(new_population))
 
         estar = population[0].fitness * 0.99
-        logger.info('Node %3d of %3d updated estar %f', comm_rank, comm_size, estar)
+        logger.info('Node %3d of %3d updated estar %0.8f', comm_rank, comm_size, estar)
 
         # TODO should checkpoint all genomes from all nodes so we can restart from exactly where we left off,
-        #  random number generator will not be restored properly unless handled explicitly
+        #      random number generator will not be restored properly unless handled explicitly
         # Checkpoint best genome with lowest fitness from the master node
         if comm_rank == 0:
             try:
