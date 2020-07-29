@@ -180,11 +180,10 @@ def calculate_bfield_phase_error(info, bfield):
     trap_bfield = (trap_bfield + bfield[...,:2]) * (s_step_size / 2)
 
     # Accumulate the second integral of motion w.r.t the X and Z axes, along the orbital S axis
-    # TODO why do we swap X,Z for Z,X order for the field measurements?
-    traj_2nd_integral = np.cumsum((trap_bfield[...,::-1] * np.array([-const, const])), axis=2)
+    traj_2nd_integral = np.cumsum((trap_bfield * const), axis=2)
 
     # Trapezium rule applied to second integral of motion helps compute the first integral of motion
-    # TODO why shift by 4 indices? One period? (no gaurantees on how many world space units 4 indices corresponds to) Should this be 1?
+    # TODO why shift by 4 indices? One period? (no guarantees on how many world space units 4 indices corresponds to) Should this be 1?
     # TODO roll is on X axis (0) between neighbouring eval points, is this correct? Should be S axis (2)?
     trap_traj_2nd_integral = np.roll(traj_2nd_integral, shift=4, axis=0)
     trap_traj_2nd_integral[:,:,0,:] = 0 # Set first samples on S axis to 0
@@ -194,10 +193,13 @@ def calculate_bfield_phase_error(info, bfield):
     traj_1st_integral = np.cumsum(trap_traj_2nd_integral, axis=2)
 
     # Trajectory first and second integrals of motion have been computed, now we compute the phase error of those trajectories
-    trajectories = np.concatenate([traj_1st_integral, traj_2nd_integral], axis=-1)
+    # TODO why do we swap X,Z for Z,X order for the field measurements?
+    #      Consistent Z,X ordering across all expected files for tests but no actual reason other than that they were all computed with this.
+    #      Removal of swap forces careful conversion of expected data files.
+    #      Same goes for removing Z integral negation.
+    trajectories = np.concatenate([traj_1st_integral[...,::-1], traj_2nd_integral[...,::-1]], axis=-1) * np.array([-1, 1, -1, 1])
 
     # Extract the second integral of motion for the central trajectory going down the centre of the eval point grid
-    # TODO is +1 and -1 correct? Potentially this is needed in 1 base indexed languages but not python
     i = ((bfield.shape[0] + 1) // 2) - 1
     j = ((bfield.shape[1] + 1) // 2) - 1
     w = np.square(traj_2nd_integral[i,j])
@@ -210,7 +212,7 @@ def calculate_bfield_phase_error(info, bfield):
 
     # x is regular sampling interval along S axis for computing line of best fit
     x = np.arange(0, s_steps_per_qtr_period * ((4 * nperiods) - (2 * nskip)), s_steps_per_qtr_period) + \
-         (s_total_steps // 2) - (nperiods * (s_steps_per_period // 2)) + ((nskip - 1) * s_steps_per_qtr_period)
+        (s_total_steps // 2) - (nperiods * (s_steps_per_period // 2)) + ((nskip - 1) * s_steps_per_qtr_period)
 
     # y is derived from w_1st_integral plus a factor that grows linearly along the length of the S axis
     sample_step = s_step_size * (1e-3 / (two_speed_of_light * gamma_sq))

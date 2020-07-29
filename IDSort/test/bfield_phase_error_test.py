@@ -102,11 +102,11 @@ class BfieldPhaseErrorTest(unittest.TestCase):
             exp_ref_phase_error  = np.load(exp_ref_phase_error_path)
             exp_ref_trajectories = np.load(exp_ref_trajectories_path)
 
-            logger.debug('Perfect bfield phase error exp [%s] obs [%s] MSE [%s]',
+            logger.debug('Perfect bfield phase error exp [%0.8f] obs [%0.8f] MSE [%1.4E]',
                          exp_ref_phase_error, obs_ref_phase_error,
                          np.mean(np.square(exp_ref_phase_error - obs_ref_phase_error)))
 
-            logger.debug('Perfect bfield trajectories MSE [%s]',
+            logger.debug('Perfect bfield trajectories MSE [%1.4E]',
                          np.mean(np.square(exp_ref_trajectories - obs_ref_trajectories)))
 
             # Execute the function under test for real magnets (with no optimization applied, expect values to be poor)
@@ -122,11 +122,11 @@ class BfieldPhaseErrorTest(unittest.TestCase):
             exp_phase_error  = np.load(exp_phase_error_path)
             exp_trajectories = np.load(exp_trajectories_path)
 
-            logger.debug('Real (unoptimized) bfield phase error exp [%s] obs [%s] MSE [%s]',
+            logger.debug('Real (unoptimized) bfield phase error exp [%0.8f] obs [%0.8f] MSE [%1.4E]',
                          exp_phase_error, obs_phase_error,
                          np.mean(np.square(exp_phase_error - obs_phase_error)))
 
-            logger.debug('Real (unoptimized) bfield trajectories MSE [%s]',
+            logger.debug('Real (unoptimized) bfield trajectories MSE [%1.4E]',
                          np.mean(np.square(exp_trajectories - obs_trajectories)))
 
             # Assert that the observed values are all similar to the expected ones
