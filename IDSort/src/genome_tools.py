@@ -29,7 +29,7 @@ import numpy as np
 
 from .field_generator import calculate_trajectory_loss_from_array, \
                              calculate_cached_trajectory_loss,     \
-                             generate_per_magnet_array,               \
+                             generate_per_magnet_array,            \
                              compare_magnet_arrays
 
 from .logging_utils import logging, getLogger
@@ -76,50 +76,54 @@ class BCell(object):
 class ID_BCell(BCell):
 
     def __init__(self):
-        BCell.__init__(self)
+        super().__init__()
         self.mutations = 0
 
     def create(self, info, lookup, magnets, maglist, ref_trajectories):
         self.genome = maglist
-        _, self.fitness = calculate_cached_trajectory_loss(info, lookup, magnets, maglist, ref_trajectories)
+        _, self.fitness = calculate_cached_trajectory_loss(info, lookup, magnets, self.genome, ref_trajectories)
 
-    def generate_children(self, number_of_children, number_of_mutations, info, lookup, magnets, ref_trajectories, real_bfield=None):
-        # first age, as we are now creating children
+    def generate_children(self, number_of_children, number_of_mutations, info, lookup, magnets, ref_trajectories):
+        # Increment the age of the parent genome
         self.age_bcell()
-        children = []
-        
-        # Generate the IDfiled for the parent, as we need to calculate it fully here.
-        original_bfield = None
-        if real_bfield == None:
-            original_bfield, calculated_fitness = calculate_cached_trajectory_loss(info, lookup, magnets, self.genome, ref_trajectories)
-            fitness_error = abs(self.fitness - calculated_fitness)
-            logging.debug("Estimated fitness to real fitness error %2.10e"%(fitness_error))
-            self.fitness = calculated_fitness
-        else :
-            original_bfield = real_bfield
-            logging.debug("Using real bfield")
-            
-        original_magnets = generate_per_magnet_array(info, self.genome, magnets)
 
-        for i in range(number_of_children):
-            maglist = copy.deepcopy(self.genome)
-            available_magnets = {key : range(len(magnets.magnet_sets[key])) for key in magnets.magnet_sets.keys()}
-            maglist.mutate(number_of_mutations, available=available_magnets)
-            new_magnets = generate_per_magnet_array(info, maglist, magnets)
-            update = compare_magnet_arrays(original_magnets, new_magnets, lookup)
-            child = ID_BCell()
-            child.mutations = number_of_mutations
-            child.genome = maglist
-            updated_bfield = np.array(original_bfield)
-            for beam in update.keys() :
-                if update[beam].size != 0:
-                    updated_bfield = updated_bfield - update[beam]
-            child.fitness = calculate_trajectory_loss_from_array(info, updated_bfield, ref_trajectories)
-            #child.create(info, lookup, magnets, maglist, ref_total_id_field)
-            children.append(child)
-            logging.debug("Child created with fitness : %f" % (child.fitness))
+        # Evaluate the parent genome and calculate its bfield
+        # TODO this can be cached on genome creation incase this genome lives through multiple generations
+        parent_bfield, trajectory_loss = calculate_cached_trajectory_loss(info, lookup, magnets, self.genome, ref_trajectories)
+        parent_per_magnet_array        = generate_per_magnet_array(info, self.genome, magnets)
+
+        logger.debug('Estimated fitness to real fitness error %1.8E', abs(self.fitness - trajectory_loss))
+        self.fitness = trajectory_loss
+
+        # Sample a set of child genomes mutated from the current parent
+        children = []
+        for genome_index in range(number_of_children):
+
+            # Clone the current genome and apply a number of random mutations
+            child_magnet_lists = copy.deepcopy(self.genome)
+            child_magnet_lists.mutate(number_of_mutations)
+
+            # Calculate the bfield of the child genome w.r.t to the parent one for efficiency
+            child_per_magnet_array  = generate_per_magnet_array(info, child_magnet_lists, magnets)
+            per_beam_bfield_updates = compare_magnet_arrays(parent_per_magnet_array, child_per_magnet_array, lookup)
+            child_bfield  = parent_bfield - sum(per_beam_bfield_updates.values())
+            child_fitness = calculate_trajectory_loss_from_array(info, child_bfield, ref_trajectories)
+
+            # Create the child genome object
+            genome = ID_BCell()
+            genome.mutations = number_of_mutations
+            genome.genome    = child_magnet_lists
+            genome.fitness   = child_fitness
+            children.append(genome)
+
+            logger.debug('Created child genome %d of %d with fitness %1.8E',
+                         genome_index, number_of_children, genome.fitness)
+
         return children
 
+# TODO ID_Shim_BCell is marked for deprecation and removal along with the mpi_runner_for_shim_opt.py script
+#      due to data dependency on the initial parent genome (due to reference holding) and required determinism
+#      of the RNG and function call order
 class ID_Shim_BCell(BCell):
 
     def __init__(self):
