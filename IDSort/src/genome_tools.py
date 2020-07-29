@@ -23,6 +23,7 @@ import copy
 import pickle
 import binascii
 
+import copy
 import random
 import numpy as np
 
@@ -42,6 +43,9 @@ class BCell(object):
         self.fitness = None
         self.genome = None
         self.uid = binascii.hexlify(os.urandom(6)).decode()
+
+    def clone(self):
+        return copy.deepcopy(self)
 
     def create(self, *args, **kargs):
         raise Exception("create needs to be implemented")
@@ -77,7 +81,7 @@ class ID_BCell(BCell):
 
     def create(self, info, lookup, magnets, maglist, ref_trajectories):
         self.genome = maglist
-        field_unused, self.fitness = calculate_cached_trajectory_loss(info, lookup, magnets, maglist, ref_trajectories)
+        _, self.fitness = calculate_cached_trajectory_loss(info, lookup, magnets, maglist, ref_trajectories)
 
     def generate_children(self, number_of_children, number_of_mutations, info, lookup, magnets, ref_trajectories, real_bfield=None):
         # first age, as we are now creating children
