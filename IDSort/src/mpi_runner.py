@@ -268,7 +268,7 @@ def process(options, args):
     for iteration in range(options.iterations):
         barrier()
         if comm_rank == 0:
-            logger.debug('Iteration %d', iteration)
+            logger.info('Iteration %d', iteration)
 
         new_population = []
 
@@ -283,13 +283,11 @@ def process(options, args):
             new_population += [genome] + genome.generate_children(num_children, num_mutations, info, lookup,
                                                                   magnet_sets, ref_trajectories)
 
-        # Echange the genomes between compute nodes filter them, and redistribute them fairly between nodes for the next iteration
+        # Exchange the genomes between compute nodes filter them, and redistribute them fairly between nodes for the next iteration
         population = filter_genomes(exchange_genomes(new_population))
 
-        # TODO should estar be synchronized across all compute nodes? Probably is best to make it different per node as
-        #  populations vary in quality between nodes
         estar = population[0].fitness * 0.99
-        logger.debug('Node %3d of %3d updated estar %f', comm_rank, comm_size, estar)
+        logger.info('Node %3d of %3d updated estar %f', comm_rank, comm_size, estar)
 
         # TODO should checkpoint all genomes from all nodes so we can restart from exactly where we left off,
         #  random number generator will not be restored properly unless handled explicitly
