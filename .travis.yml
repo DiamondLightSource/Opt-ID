@@ -12,7 +12,7 @@ install:
   - pip install coveralls coverage
 
 script:
-  - python -m pytest IDSort/test
+  - python -m pytest --cov=IDSort --log-format='%(asctime)s.%(msecs)03d %(levelname)8s | %(threadName)s | %(module)s::%(funcName)s::%(lineno)-4d | %(message)s' IDSort/test
 
 after_script:
   - coveralls
