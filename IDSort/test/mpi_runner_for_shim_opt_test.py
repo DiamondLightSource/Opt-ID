@@ -1,140 +1,226 @@
-import unittest
-import numpy as np
-import h5py
-import shutil
-import os
-from tempfile import mkdtemp
+import unittest, os, shutil
 from collections import namedtuple
-from IDSort.src.mpi_runner_for_shim_opt import process
+
+import pickle
+import h5py
+import numpy as np
+
+from ..src.magnets import MagLists
+from ..src.mpi_runner_for_shim_opt import process
 
 
 class MpiRunnerForShimOptTest(unittest.TestCase):
 
     def test_process(self):
+        # inp == Inputs
+        # exp == Expected Outputs
+        # obs == Observed Outputs
 
-        test_json_filepath = 'IDSort/data/test_data/shim/test_cpmu_shim.json'
-        test_mag_filepath = 'IDSort/data/test_data/sort/test_cpmu.mag'
-        test_h5_filepath = 'IDSort/data/test_data/shim/test_cpmu_shim.h5'
-        test_genome_filepath = 'IDSort/data/test_data/sort/mpi_runner_output/1.07788212e-08_000_c0833a96b82c.genome'
-        test_genome_copy_filepath = '1.0_000_test_genome.genome'
-        test_bfield_filepath = 'IDSort/data/test_data/sort/process_genome_analyse_output/1.07788212e-08_000_c0833a96b82c.genome.h5'
+        data_path = 'IDSort/test/data/mpi_runner_for_shim_opt_test/test_process'
+        inp_path  = os.path.join(data_path, 'inputs')
+        exp_path  = os.path.join(data_path, 'expected_outputs')
+        obs_path  = os.path.join(data_path, 'observed_outputs')
 
-        shutil.copyfile(test_genome_filepath, test_genome_copy_filepath)
+        # Prepare input file paths
+        inp_json_path   = os.path.join(inp_path, 'test_cpmu_shim.json')
+        inp_mag_path    = os.path.join(inp_path, 'test_cpmu.mag')
+        inp_h5_path     = os.path.join(inp_path, 'test_cpmu_shim.h5')
+        inp_genome_path = os.path.join(inp_path, '1.0_000_test_genome.genome') # Renamed from 1.12875826e-08_000_7c51ecd01f73.genome
+        inp_bfield_path = os.path.join(inp_path, '1.12875826e-08_000_7c51ecd01f73.genome.h5')
 
+        # Prepare expected output file paths
+        # TODO understand the difference between A and non A genome
+        exp_genome_nonA_paths = [
+            os.path.join(exp_path, '1.20847271e-07_000_85a13cc425d0.genome'),
+            os.path.join(exp_path, '1.20952907e-07_000_9228436240f4.genome'),
+            os.path.join(exp_path, '1.20965365e-07_000_763473ed8598.genome'),
+            os.path.join(exp_path, '1.23262940e-07_000_3fa353e9cf87.genome'),
+        ]
+        exp_genome_A_paths = [
+            os.path.join(exp_path, '1.20847271e-07_000_A85a13cc425d0.genome'),
+            os.path.join(exp_path, '1.20952907e-07_000_A9228436240f4.genome'),
+            os.path.join(exp_path, '1.20965365e-07_000_A763473ed8598.genome'),
+        ]
+        exp_h5_paths = [
+            os.path.join(exp_path, 'test-A763473ed8598.h5'),
+            os.path.join(exp_path, 'test-A85a13cc425d0.h5'),
+            os.path.join(exp_path, 'test-A9228436240f4.h5'),
+        ]
+        exp_genome_test_path = os.path.join(exp_path, '1.00000000e+00_001_test.genome')
+
+        # Prepare observed output file path, others are searched for as filenames can change
+        obs_genome_test_path = os.path.join(obs_path, '1.00000000e+00_001_test.genome')
+
+        # Always clear any observed output files before running test
+        shutil.rmtree(obs_path, ignore_errors=True)
+        os.makedirs(obs_path)
+
+        # Prepare parameters for process function
         options = {
-            'iterations': 3,
-            'number_of_mutations': 5,
-            'id_filename': test_json_filepath,
-            'magnets_filename': test_mag_filepath,
-            'lookup_filename': test_h5_filepath,
-            'bfield_filename': test_bfield_filepath,
-            'genome_filename': test_genome_copy_filepath,
-            'setup': 24,
-            'number_of_changes': 2,
-            'mutations': 5,
-            'c': 2,
-            'e': 0.0,
-            'restart': False,
-            'max_age': 10,
-            'scale': 10.0,
-            'singlethreaded': True,
-            'seed': True,
-            'seed_value': 30
+            'iterations'          : 3,
+            'number_of_mutations' : 5,
+            'id_filename'         : inp_json_path,
+            'magnets_filename'    : inp_mag_path,
+            'lookup_filename'     : inp_h5_path,
+            'bfield_filename'     : inp_bfield_path,
+            'genome_filename'     : inp_genome_path,
+            'setup'               : 24,
+            'number_of_changes'   : 2,
+            'mutations'           : 5,
+            'c'                   : 2,
+            'e'                   : 0.0,
+            'restart'             : False,
+            'max_age'             : 10,
+            'scale'               : 10.0,
+            'singlethreaded'      : True,
+            'seed'                : True,
+            'seed_value'          : 30,
+            'verbose'             : 4,
         }
-
         options_named = namedtuple("options", options.keys())(*options.values())
-        new_genome_dir = mkdtemp()
-        args = [new_genome_dir]
-
-        test_genome_filepath_default = 'IDSort/data/test_data/shim/1.00000000e+00_001_test.genome'
-        test_genome_filepaths = [
-            'IDSort/data/test_data/shim/1.21718320e-07_000_5bd3ebe937ee.genome',
-            'IDSort/data/test_data/shim/1.21768535e-07_000_cd5fba3a36ae.genome',
-            'IDSort/data/test_data/shim/1.21818136e-07_000_5ff34ab877e0.genome',
-            'IDSort/data/test_data/shim/1.23936830e-07_000_8bcddb88074d.genome'
-        ]
-
-        test_genome_A_filepaths = [
-            'IDSort/data/test_data/shim/1.21718320e-07_000_A5bd3ebe937ee.genome',
-            'IDSort/data/test_data/shim/1.21768535e-07_000_Acd5fba3a36ae.genome',
-            'IDSort/data/test_data/shim/1.21818136e-07_000_A5ff34ab877e0.genome'
-        ]
-
-        test_h5_filepaths = [
-            'IDSort/data/test_data/shim/test-A5bd3ebe937ee.h5',
-            'IDSort/data/test_data/shim/test-A5ff34ab877e0.h5',
-            'IDSort/data/test_data/shim/test-Acd5fba3a36ae.h5'
+        args = [
+            obs_path
         ]
 
         try:
+
+            # Execute the function under test
             process(options_named, args)
-            new_filenames = os.listdir(new_genome_dir)
-            new_genome_filenames = [filename for filename in new_filenames if 'genome' in filename]
-            new_h5_filenames = [filename for filename in new_filenames if 'genome' not in filename]
 
-            # tests the genome that's always named the same: 1.00000000e+00_001_test.genome
-            with open(test_genome_filepath_default) as test_genome_file, \
-                    open(os.path.join(new_genome_dir, '1.00000000e+00_001_test.genome')) as new_genome_file:
-                assert new_genome_file.read() == test_genome_file.read()
+            # Find observed output files
+            obs_genome_paths = [os.path.join(obs_path, file_name)
+                                for file_name in os.listdir(obs_path) if '.genome' in file_name]
 
-            # tests all genome files with no leading "A" in their UID
-            for test_genome_filepath in test_genome_filepaths:
-                genome_to_compare_with = None
-                filename = os.path.split(test_genome_filepath)[1]
-                fitness = filename.split('_')[0]
+            obs_h5_paths     = [os.path.join(obs_path, file_name)
+                                for file_name in os.listdir(obs_path) if '.h5' in file_name]
 
-                for new_genome_filename in new_genome_filenames:
-                    uid = new_genome_filename.split('_')[2].split('.')[0]
-                    if fitness in new_genome_filename and len(uid) == 12:
-                        genome_to_compare_with = new_genome_filename
+            # Compare the test genomes
+            with open(exp_genome_test_path, 'rb') as exp_genome_file, \
+                 open(obs_genome_test_path, 'rb') as obs_genome_file:
+
+                exp_maglist = pickle.load(exp_genome_file)
+                obs_maglist = pickle.load(obs_genome_file)
+
+                assert (type(exp_maglist) is MagLists)
+                assert (type(obs_maglist) is MagLists)
+
+                # Offloads comparison to MagLists::__eq__ method
+                assert exp_maglist == obs_maglist
+
+            # Compare shimlists for each genome
+            for exp_genome_path in exp_genome_nonA_paths:
+
+                # Assert the expected genome exists for comparison
+                assert os.path.exists(exp_genome_path)
+
+                # TODO reliance on floating point precision in filename might not be stable between versions
+                # Extract the fitness from the genome file name
+                exp_genome_fitness = os.path.split(exp_genome_path)[1].split('_')[0]
+
+                # Scan file names in the observed output directory and look for the genome with the matching fitness and uid
+                obs_genome_path = None
+                for candidate_genome_path in obs_genome_paths:
+                    candidate_genome_uid = os.path.split(candidate_genome_path)[1].split('_')[2].split('.')[0]
+
+                    # TODO refactor for more robust test than length of UID being 12 or 13 chars with a leading A char
+                    if (exp_genome_fitness in candidate_genome_path) and (len(candidate_genome_uid) == 12):
+                        obs_genome_path = candidate_genome_path
                         break
 
-                assert genome_to_compare_with is not None
+                # Assert we found the matching genome
+                assert (obs_genome_path is not None)
 
-                with open(os.path.join(new_genome_dir, genome_to_compare_with)) as new_genome_file, \
-                        open(test_genome_filepath) as test_genome_file:
-                    assert new_genome_file.read() == test_genome_file.read()
+                # TODO should shimlist and maglist both be .genome files despite holding different class types?
+                # Compare the output file to the expected one
+                with open(exp_genome_path, 'rb') as exp_genome_file, \
+                     open(obs_genome_path, 'rb') as obs_genome_file:
 
-            test_to_new_uids = {} # used for matching h5 files for comparison later
-            # tests all genome files with a leading "A" in their UID
-            for test_genome_A_filepath in test_genome_A_filepaths:
-                genome_to_compare_with = None
-                filename = os.path.split(test_genome_A_filepath)[1]
-                fitness = filename.split('_')[0]
-                test_genome_uid = filename.split('_')[2].split('.')[0]
+                    exp_shimlist = pickle.load(exp_genome_file)
+                    obs_shimlist = pickle.load(obs_genome_file)
 
-                for new_genome_filename in new_genome_filenames:
-                    uid = new_genome_filename.split('_')[2].split('.')[0]
-                    if fitness in new_genome_filename and len(uid) == 13:
-                        genome_to_compare_with = new_genome_filename
-                        test_to_new_uids[test_genome_uid] = uid
+                    assert (type(exp_shimlist) is list)
+                    assert (type(obs_shimlist) is list)
+
+                    # Offloads comparison to list::__eq__ method
+                    assert exp_shimlist == obs_shimlist
+
+
+            # Used to perform .h5 tests in next phase
+            obs_uids = {}
+
+            # Compare maglists for each genome
+            for exp_genome_path in exp_genome_A_paths:
+
+                # Assert the expected genome exists for comparison
+                assert os.path.exists(exp_genome_path)
+
+                # TODO reliance on floating point precision in filename might not be stable between versions
+                # Extract the fitness and uid from the expected genome file name
+                exp_genome_name_parts = os.path.split(exp_genome_path)[1].split('_')
+                exp_genome_fitness    = exp_genome_name_parts[0]
+                exp_genome_uid        = exp_genome_name_parts[2].split('.')[0]
+
+                # Scan file names in the observed output directory and look for the genome with the matching fitness and uid
+                obs_genome_path = None
+                for candidate_genome_path in obs_genome_paths:
+                    candidate_genome_uid = os.path.split(candidate_genome_path)[1].split('_')[2].split('.')[0]
+
+                    # TODO refactor for more robust test than length of UID being 12 or 13 chars with a leading A char
+                    if (exp_genome_fitness in candidate_genome_path) and (len(candidate_genome_uid) == 13):
+                        obs_genome_path          = candidate_genome_path
+                        obs_uids[exp_genome_uid] = candidate_genome_uid
                         break
 
-                assert genome_to_compare_with is not None
+                # Assert we found the matching genome
+                assert (obs_genome_path is not None)
 
-                with open(os.path.join(new_genome_dir, genome_to_compare_with)) as new_genome_file, \
-                        open(test_genome_A_filepath) as test_genome_file:
-                    assert new_genome_file.read() == test_genome_file.read()
+                # Compare the output file to the expected one
+                with open(exp_genome_path, 'rb') as exp_genome_file, \
+                     open(obs_genome_path, 'rb') as obs_genome_file:
 
-            # tests all h5 files
-            for test_h5_filepath in test_h5_filepaths:
-                h5_file_to_compare_with = None
-                filename = os.path.split(test_h5_filepath)[1]
-                test_h5_uid = filename.split('-')[1].split('.')[0]
+                    exp_maglist = pickle.load(exp_genome_file)
+                    obs_maglist = pickle.load(obs_genome_file)
 
-                for new_h5_filename in new_h5_filenames:
-                    if test_to_new_uids[test_h5_uid] in new_h5_filename:
-                        h5_file_to_compare_with = new_h5_filename
+                    assert (type(exp_maglist) is MagLists)
+                    assert (type(obs_maglist) is MagLists)
+
+                    # Offloads comparison to MagLists::__eq__ method
+                    assert exp_maglist == obs_maglist
+
+            # Compare the h5 files
+            for exp_h5_path in exp_h5_paths:
+
+                # Assert the expected genome exists for comparison
+                assert os.path.exists(exp_h5_path)
+
+                exp_h5_uid = os.path.split(exp_h5_path)[1].split('-')[1].split('.')[0]
+
+                # Scan file names in the observed output directory and look for the genome with the matching fitness and uid
+                obs_h5_path = None
+                for candidate_h5_path in obs_h5_paths:
+                    if (obs_uids[exp_h5_uid] in candidate_h5_path):
+                        obs_h5_path = candidate_h5_path
                         break
 
-                assert h5_file_to_compare_with is not None
+                # Assert we found the matching genome
+                assert (obs_h5_path is not None)
 
-                with h5py.File(test_h5_filepath, 'r') as test_h5_file, \
-                        h5py.File(os.path.join(new_genome_dir, h5_file_to_compare_with), 'r') as new_h5_file:
-                    for dataset in new_h5_file:
-                        new_data = new_h5_file.get(dataset).value
-                        old_data = test_h5_file.get(dataset).value
-                        assert np.allclose(new_data, old_data)
-        finally:
-            shutil.rmtree(new_genome_dir)
-            os.remove(test_genome_copy_filepath)
+                # Compare the output file to the expected one
+                with h5py.File(exp_h5_path, 'r') as exp_h5_file, \
+                     h5py.File(obs_h5_path, 'r') as obs_h5_file:
+
+                    assert sorted(list(exp_h5_file.keys())) == sorted(list(obs_h5_file.keys()))
+
+                    for dataset in exp_h5_file.keys():
+
+                        exp_data = exp_h5_file.get(dataset)[()]
+                        obs_data = obs_h5_file.get(dataset)[()]
+                        assert np.allclose(exp_data, obs_data)
+
+        # Use (except + else) instead of (finally) so that output files can be inspected if the test fails
+        except Exception as ex: raise ex
+        else:
+
+            # Clear any observed output files after running successful test
+            shutil.rmtree(obs_path, ignore_errors=True)
+            os.makedirs(obs_path)

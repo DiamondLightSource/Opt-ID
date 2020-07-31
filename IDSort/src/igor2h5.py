@@ -55,13 +55,16 @@ f.create_dataset('id_Bfield',data=all_data)
 f.close()
 '''
 all_data=np.zeros((1,5,2581,3))
-all_data[0,0,:,:]=np.genfromtxt('/dls/technical/id/I03_CPMU_build_list/X0Z0.bfield')
-all_data[0,1,:,:]=np.genfromtxt('/dls/technical/id/I03_CPMU_build_list/X0Z1.bfield')
-all_data[0,2,:,:]=np.genfromtxt('/dls/technical/id/I03_CPMU_build_list/X0Z2.bfield')
-all_data[0,3,:,:]=np.genfromtxt('/dls/technical/id/I03_CPMU_build_list/X0Z3.bfield')
-all_data[0,4,:,:]=np.genfromtxt('/dls/technical/id/I03_CPMU_build_list/X0Z4.bfield')
-filname='/dls/technical/id/I03_CPMU_build_list/field_meas.h5'
-f=h5py.File(filname,'w')
-f.create_dataset('id_Bfield',data=all_data)
-f.close()
+all_data[0,0,:,:] = np.genfromtxt('/dls/technical/id/I03_CPMU_build_list/X0Z0.bfield')
+all_data[0,1,:,:] = np.genfromtxt('/dls/technical/id/I03_CPMU_build_list/X0Z1.bfield')
+all_data[0,2,:,:] = np.genfromtxt('/dls/technical/id/I03_CPMU_build_list/X0Z2.bfield')
+all_data[0,3,:,:] = np.genfromtxt('/dls/technical/id/I03_CPMU_build_list/X0Z3.bfield')
+all_data[0,4,:,:] = np.genfromtxt('/dls/technical/id/I03_CPMU_build_list/X0Z4.bfield')
+filename = '/dls/technical/id/I03_CPMU_build_list/field_meas.h5'
+
+with h5py.File(filename,'w') as fp:
+    fp.create_dataset('id_Bfield',data=all_data)
+
+# TODO make this a proper script
+
 

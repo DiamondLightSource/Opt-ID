@@ -1,8 +1,12 @@
 mock>=1.0.1
-pytest>=3.10.1
+pytest>=4.5.0
 coverage>=3.7.1
 pytest-cov>=2.6.1
-numpy>=1.14.2
+numpy>=1.17.3
 h5py>=2.9.0
-mpi4py>=2.0.0
-scipy==1.0.0
+mpi4py>=3.0.0
+scipy>=1.2.1
+ruamel.yaml>=0.15.46
+Jinja2>=2.10.1
+nbformat>=4.4.0
+nbconvert>=5.5.0

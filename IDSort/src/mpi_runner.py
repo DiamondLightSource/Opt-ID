@@ -31,268 +31,303 @@
 #
 #
 
-from mpi4py import MPI
-import h5py
-import numpy as np
-import socket
-
-import time
-
-import logging
-logging.basicConfig(level=0,format=' %(asctime)s.%(msecs)03d %(threadName)-16s %(levelname)-6s %(message)s', datefmt='%H:%M:%S')
-
-import magnets
-from genome_tools import ID_BCell
-import field_generator as fg
-import magnet_tools as mt
+import os
+import random
+import itertools
 
 import json
+import h5py
 
-import os
+import numpy as np
 
-import random
+import socket
+from mpi4py import MPI
+
+from .magnets import Magnets, MagLists
+from .genome_tools import ID_BCell
+
+from .field_generator import generate_reference_magnets,   \
+                             generate_bfield,              \
+                             calculate_bfield_phase_error
+
+from .logging_utils import logging, getLogger, setLoggerLevel
+logger = getLogger(__name__)
+
 
 def mutations(c, e_star, fitness, scale):
-    inverse_proportional_hypermutation =  abs(((1.0-(e_star/fitness)) * c) + c)
+    inverse_proportional_hypermutation =  abs(((1.0 - (e_star / fitness)) * c) + c)
     a = random.random()
     b = random.random()
-    hypermacromuation = abs((a-b) * scale)
+    hypermacromuation = abs((a - b) * scale)
     return int(inverse_proportional_hypermutation + hypermacromuation)
 
-def barrier(is_single_threaded):
-    if is_single_threaded:
-        pass
-    else:
-        MPI.COMM_WORLD.Barrier()
-
-def alltoall(is_single_threaded, trans):
-    if is_single_threaded:
-        return trans
-    else:
-        return MPI.COMM_WORLD.alltoall(trans)
 
 def process(options, args):
 
+    if hasattr(options, 'verbose'):
+        setLoggerLevel(logger, options.verbose)
+
+    logger.debug('Starting')
+
+    output_path = args[0]
+
     if options.seed:
+        logger.info('Random seed set to %d', int(options.seed_value))
         random.seed(int(options.seed_value))
 
     if options.singlethreaded:
-        rank = 0
-        size = 1
+        # Who am I within the set of compute nodes
+        comm_rank, comm_size, comm_ip = (0, 1, 'localhost')
+
+        # No synchronization needed in single node case
+        def barrier():
+            pass
+
+        # No exchange needed in single node case
+        def exchange_genomes(local_population):
+            return local_population
+
     else:
-        rank = MPI.COMM_WORLD.rank  # The process ID (integer 0-3 for 4-process run)
-        size = MPI.COMM_WORLD.size  # The number of processes in the job.
+        # Who am I within the set of compute nodes
+        comm_rank, comm_size, comm_ip = (MPI.COMM_WORLD.rank, MPI.COMM_WORLD.size,
+                                         socket.gethostbyname(socket.gethostname()))
 
-    # get the hostname
-    if options.singlethreaded:
-        ip = 'localhost'
-    else:
-        ip = socket.gethostbyname(socket.gethostname())
+        # Use a collective MPI barrier to synchronize all compute nodes
+        def barrier():
+            MPI.COMM_WORLD.Barrier()
 
-    logging.debug("Process %d ip address is : %s" % (rank, ip))
+        # TODO need test case that uses multiple MPI nodes to test this communication works properly
+        # Exchange local population of genomes between compute nodes so that every node has the global population
+        def exchange_genomes(local_population):
+            return list(itertools.chain.from_iterable(MPI.COMM_WORLD.alltoall([local_population] * comm_size)))
+
+    logger.info('Node %3d of %3d @ [%s]', comm_rank, comm_size, comm_ip)
+
+    # Attempt to load the ID json data
+    try:
+        logger.info('Loading ID info from json [%s]', options.id_filename)
+        with open(options.id_filename, 'r') as fp:
+            info = json.load(fp)
+
+    except Exception as ex:
+        logger.error('Failed to load ID info from json [%s]', options.id_filename, exc_info=ex)
+        raise ex
+
+    # Attempt to load the ID's lookup table for the eval points defined in the JSON file
+    try:
+        logger.info('Loading ID lookup table [%s]', options.lookup_filename)
+        with h5py.File(options.lookup_filename, 'r') as fp:
+            lookup = {}
+            for beam in info['beams']:
+                lookup[beam['name']] = fp[beam['name']][...]
+                logger.debug('Loaded beam [%s] with shape [%s]', beam['name'], lookup[beam['name']].shape)
 
 
-    f2 = open(options.id_filename, 'r')
-    info = json.load(f2)
-    f2.close()
+    except Exception as ex:
+        logger.error('Failed to load ID lookup table [%s]', options.lookup_filename, exc_info=ex)
+        raise ex
 
-    logging.debug("Loading Lookup")
-    f1 = h5py.File(options.lookup_filename, 'r')
-    lookup = {}
-    for beam in info['beams']:
-        logging.debug("Loading beam %s" %(beam['name']))
-        lookup[beam['name']] = f1[beam['name']][...]
-    f1.close()
+    # Attempt to load the real magnet data
+    try:
+        logger.info('Loading ID magnets [%s]', options.magnets_filename)
+        magnet_sets = Magnets()
+        magnet_sets.load(options.magnets_filename)
 
-    barrier(options.singlethreaded)
+    except Exception as ex:
+        logger.error('Failed to load ID info from json [%s]', options.magnets_filename, exc_info=ex)
+        raise ex
 
-    logging.debug("Loading magnets")
-    mags = magnets.Magnets()
-    mags.load(options.magnets_filename)
+    # From loaded data construct a perfect magnet array that the loss will be computed with respect to
+    logger.info('Constructing perfect reference magnets to shadow real magnets and ideal bfield')
+    ref_magnet_sets  = generate_reference_magnets(magnet_sets)
+    ref_magnet_lists = MagLists(ref_magnet_sets)
+    ref_bfield       = generate_bfield(info, ref_magnet_lists, ref_magnet_sets, lookup)
 
-    ref_mags = fg.generate_reference_magnets(mags)
-    ref_maglist = magnets.MagLists(ref_mags)
-    ref_total_id_field = fg.generate_id_field(info, ref_maglist, ref_mags, lookup)
-    #logging.debug("before phase calculate error call")
-    #logging.debug(ref_total_id_field.shape())
-    pherr, ref_trajectories = mt.calculate_phase_error(info, ref_total_id_field)
+    ref_phase_error, ref_trajectories = calculate_bfield_phase_error(info, ref_bfield)
+    logger.debug('Perfect bfield phase error [%s]', ref_phase_error)
 
-    barrier(options.singlethreaded)
+    # TODO currently broken, fix or remove
+    # ref_strx, ref_strz = calculate_trajectory_straightness(info, ref_trajectories)
+    # logger.debug('Perfect bfield trajectory straightness [%s] [%s]', ref_strx, ref_strz)
 
-    #epoch_path = os.path.join(args[0], 'epoch')
-    #next_epoch_path = os.path.join(args[0], 'nextepoch')
-    # start by creating the directory to put the initial population in
+    barrier()
 
-    population = []
+    # Filter the population for unique fitness values keeping the oldest genome when there are genomes with the same fitness
+    def filter_genomes(population):
+        genomes = {}
+        for genome in population:
+            # TODO remove dependency on filename scientific notation encoding
+            genome_key = f'{genome.fitness:1.8E}'
+
+            # Keep the genome with the highest age if there are two with the same fitness value
+            if (genome_key not in genomes.keys()) or \
+               ((genome_key in genomes.keys()) and (genomes[genome_key].age < genome.age)):
+                genomes[genome_key] = genome
+
+        # Filter the population to remove genomes that have an age higher than the maximum allowed age
+        population = filter((lambda genome : (genome.age < options.max_age)), genomes.values())
+
+        # Sort the population so that the first one is the best genome
+        population = sorted(population, key=(lambda genome : genome.fitness))
+
+        # TODO this places all the best genomes on node with rank 0, consider replacing with strided distribution
+        #  so all nodes get some of the best and some of the worse genomes
+        population = population[(options.setup * comm_rank):(options.setup * (comm_rank + 1))]
+        # population = population[comm_rank::comm_size][:options.setup] # Strided distribution of genomes
+
+        return population
+
+    # Synchronize nodes sequentially to print diagnostics about local genome populations
+    def log_genomes(population):
+        # Early return if logger is not set to at least output INFO messages
+        if not logger.isEnabledFor(logging.INFO): return
+
+        # Synchronize nodes sequentially to print diagnostics about local genome populations
+        for rank in range(comm_size):
+            barrier()
+            if rank != comm_rank: continue
+
+            # Compute the min, max, and average for the fitness, age, and mutations for each genome in the local population
+            fitness_stats, age_stats, mutation_stats = [(np.min(data), np.max(data), np.mean(data))
+                                                        for data in zip(*[(genome.fitness, genome.age, genome.mutations)
+                                                                          for genome in population])]
+
+            logger.info('Node %3d of %3d has %d genomes with fitness (min %1.8E, max %1.8E, avg %1.8E) '
+                        'age (min %0.0f, max %0.0f, avg %0.2f) mutations (min %0.0f, max %0.0f, avg %0.2f)',
+                        comm_rank, comm_size, len(population), *fitness_stats, *age_stats, *mutation_stats)
+
+            if logger.isEnabledFor(logging.DEBUG):
+                for genome_index, genome in enumerate(population):
+                    logger.debug('Node %3d of %3d Genome %3d of %3d %s with fitness %1.8E age %d mutations %d',
+                                 comm_rank, comm_size, genome_index, len(population), genome.uid,
+                                 genome.fitness, genome.age, genome.mutations)
+
+    # Initial estar used for sampling mutations
     estar = options.e
 
+    # Array to hold the current population
+    population = []
 
-    if options.restart and (rank == 0) :
-        filenames = os.listdir(args[0])
-        # sort the genome filenames to ensure that when given the same set of
-        # files in a directory, population[0] is the same across different
-        # orderings of the listed directory contents: this is to fix the test
-        # MpiRunnerTest.test_process_initial_population() in mpi_runner_test.py
-        # when run on travis
-        filenames.sort()
-        for filename in filenames:
-            fullpath = os.path.join(args[0],filename)
-            try :
-                logging.debug("Trying to load %s" % (fullpath))
+    # Create genomes on master node only and communicate them to all nodes for consistency
+    if comm_rank == 0:
+        if options.restart:
+            # If continuing an existing sort job then load saved genomes and sample random genomes to bring us up to the full population
+
+            # Sort genome filenames to ensure test consistency
+            genome_names = sorted(os.listdir(output_path))
+            for genome_index, genome_name in enumerate(genome_names):
+                genome_path = os.path.join(output_path, genome_name)
+
+                # Attempt loading the current genome file and adding it to the population
+                # Sorting paths before ensures that first genome is the one with the best fitness
+                try:
+                    logger.info('Loading genome %03d of %03d [%s]', genome_index, len(genome_names), genome_path)
+                    genome = ID_BCell()
+                    genome.load(genome_path)
+                    population.append(genome)
+
+                except Exception as ex:
+                    logger.error('Failed to genome [%s]', genome_path, exc_info=ex)
+                    raise ex
+
+            # Assert that if we are restarting the optimization at least one existing genome was successfully loaded
+            if len(population) == 0:
+                error_message = 'Cannot restart optimization as no existing genomes were found!'
+                logger.error(error_message)
+                raise Exception(error_message)
+
+            # If the number of loaded genomes is smaller than the target population size, then
+            # initialize the rest of the population using children mutated for the first (best) genome that was loaded
+            if len(population) < options.setup:
+                logger.info('%d of %d expected genomes were discovered and loaded', len(population), options.setup)
+                num_children  = options.setup - len(population)
+                num_mutations = 20
+                logger.info('Sampling the remaining %d genomes from the best genome using %d mutations each', num_children, num_mutations)
+                population   += population[0].generate_children(num_children, num_mutations, info, lookup,
+                                                                magnet_sets, ref_trajectories)
+
+        else:
+            # If starting a new sort then generate a population of randomly initialized genomes
+
+            logger.info('Creating %d randomly initialized genomes', options.setup)
+            for genome_index in range(options.setup):
+                logger.debug('Sampling random genome %d of %d', genome_index, options.setup)
+
+                # Create a new random genome and add it to the population
+                magnet_lists = MagLists(magnet_sets)
+                magnet_lists.shuffle_all()
                 genome = ID_BCell()
-                genome.load(fullpath)
+                genome.create(info, lookup, magnet_sets, magnet_lists, ref_trajectories)
                 population.append(genome)
-                logging.debug("Loaded %s" % (fullpath))
-            except :
-                logging.debug("Failed to load %s" % (fullpath))
-        if len(population) < options.setup:
-            # Seed with children from first
-            children = population[0].generate_children(options.setup-len(population), 20, info, lookup, mags, ref_trajectories)
-            # now save the children into the new file
-            for child in children:
-                population.append(child)
-    else :
-        logging.debug("make the initial population")
-        for i in range(options.setup):
-            # create a fresh maglist
-            maglist = magnets.MagLists(mags)
-            maglist.shuffle_all()
-            genome = ID_BCell()
-            genome.create(info, lookup, mags, maglist, ref_trajectories)
-            population.append(genome)
 
-    logging.debug("Initial population created")
+        logger.debug('Initial population created')
 
-    # gather the population
-    trans = []
-    for i in range(size):
-        trans.append(population)
+    population = filter_genomes(exchange_genomes(population))
+    log_genomes(population)
 
-    allpop = alltoall(options.singlethreaded, trans)
+    # Checkpoint best genome with lowest fitness from the master node
+    if comm_rank == 0:
+        try:
+            best_genome = population[0]
+            logger.info('Saving best genome %s with fitness %1.8E age %d mutations %d',
+                        best_genome.uid, best_genome.fitness, best_genome.age, best_genome.mutations)
+            best_genome.save(output_path)
 
-    barrier(options.singlethreaded)
+        except Exception as ex:
+            logger.error('Failed to save best genome to [%s]', output_path, exc_info=ex)
+            raise ex
 
-    newpop = []
-    for pop in allpop:
-        newpop += pop
+    # Perform multiple iterations of mutations and communications
+    for iteration in range(options.iterations):
+        barrier()
+        if comm_rank == 0:
+            logger.info('Iteration %d', iteration)
 
-    # Need to deal with replicas and old genomes
-    popdict = {}
-    for genome in newpop:
-        fitness_key = "%1.8E"%(genome.fitness)
-        if fitness_key in popdict.keys():
-            if popdict[fitness_key].age < genome.age:
-                popdict[fitness_key] = genome
-        else :
-            popdict[fitness_key] = genome
+        new_population = []
 
-    newpop = []
-    for genome in popdict.values():
-        if genome.age < options.max_age:
-            newpop.append(genome)
+        # Apply mutations to each genome in the local population
+        for genome_index, genome in enumerate(population):
 
-    newpop.sort(key=lambda x: x.fitness)
+            # For each genome we will generate multiple children by applying randomized numbers of random mutations to the current genome
+            num_children  = options.setup
+            num_mutations = mutations(options.c, estar, genome.fitness, options.scale)
 
-    newpop = newpop[options.setup*rank:options.setup*(rank+1)]
+            # The new population will include the current genome and the random children of the current genome
+            new_population += [genome] + genome.generate_children(num_children, num_mutations, info, lookup,
+                                                                  magnet_sets, ref_trajectories)
 
-    for genome in newpop:
-        logging.debug("genome fitness: %1.8E   Age : %2i   Mutations : %4i" % (genome.fitness, genome.age, genome.mutations))
+        # Exchange the genomes between compute nodes filter them, and redistribute them fairly between nodes for the next iteration
+        population = filter_genomes(exchange_genomes(new_population))
 
-    #Checkpoint best solution
-    if rank == 0:
-        newpop[0].save(args[0])
+        estar = population[0].fitness * 0.99
+        logger.info('Node %3d of %3d updated estar %0.8f', comm_rank, comm_size, estar)
 
-    # now run the processing
-    for i in range(options.iterations):
+        # TODO should checkpoint all genomes from all nodes so we can restart from exactly where we left off,
+        #      random number generator will not be restored properly unless handled explicitly
+        # Checkpoint best genome with lowest fitness from the master node
+        if comm_rank == 0:
+            try:
+                best_genome = population[0]
+                logger.info('Saving best genome %s with fitness %1.8E age %d mutations %d',
+                            best_genome.uid, best_genome.fitness, best_genome.age, best_genome.mutations)
+                best_genome.save(output_path)
 
-        barrier(options.singlethreaded)
-        logging.debug("Starting itteration %i" % (i))
+            except Exception as ex:
+                logger.error('Failed to save best genome to [%s]', output_path, exc_info=ex)
+                raise ex
 
-        nextpop = []
+        log_genomes(population)
 
-        for genome in newpop:
+    barrier()
 
-            # now we have to create the offspring
-            # TODO this is for the moment
-            logging.debug("Generating children for %s" % (genome.uid))
-            number_of_children = options.setup
-            number_of_mutations = mutations(options.c, estar, genome.fitness, options.scale)
-            children = genome.generate_children(number_of_children, number_of_mutations, info, lookup, mags, ref_trajectories)
-
-            # now save the children into the new file
-            for child in children:
-                nextpop.append(child)
-
-            # and save the original
-            nextpop.append(genome)
-
-        # gather the population
-        trans = []
-        for i in range(size):
-            trans.append(nextpop)
-
-        allpop = alltoall(options.singlethreaded, trans)
-
-        newpop = []
-        for pop in allpop:
-            newpop += pop
-
-        popdict = {}
-        for genome in newpop:
-            fitness_key = "%1.8E"%(genome.fitness)
-            if fitness_key in popdict.keys():
-                if popdict[fitness_key].age < genome.age:
-                    popdict[fitness_key] = genome
-            else :
-                popdict[fitness_key] = genome
-
-        newpop = []
-        for genome in popdict.values():
-            if genome.age < options.max_age:
-                newpop.append(genome)
-
-        newpop.sort(key=lambda x: x.fitness)
-
-        estar = newpop[0].fitness * 0.99
-        logging.debug("new estar is %f" % (estar) )
-
-        newpop = newpop[options.setup*rank:options.setup*(rank+1)]
-
-        #Checkpoint best solution
-        if rank == 0:
-            newpop[0].save(args[0])
-
-        for genome in newpop:
-            logging.debug("genome fitness: %1.8E   Age : %2i   Mutations : %4i" % (genome.fitness, genome.age, genome.mutations))
-
-        barrier(options.singlethreaded)
-
-    barrier(options.singlethreaded)
-
-    # gather the population
-    trans = []
-    for i in range(size):
-        trans.append(nextpop)
-
-    allpop = alltoall(options.singlethreaded, trans)
-
-    newpop = []
-    for pop in allpop:
-        newpop += pop
-
-    newpop.sort(key=lambda x: x.fitness)
-
-    newpop = newpop[options.setup*rank:options.setup*(rank+1)]
-
-    #Checkpoint best solution
-    if rank == 0:
-        newpop[0].save(args[0])
+    logger.debug('Halting')
 
 if __name__ == "__main__":
     import optparse
 
     usage = "%prog [options] run_directory"
     parser = optparse.OptionParser(usage=usage)
+    parser.add_option('-v', '--verbose', dest='verbose', help='Set the verbosity level [0-4]', default=0, type='int')
     parser.add_option("-f", "--fitness", dest="fitness", help="Set the target fitness", default=0.0, type="float")
     parser.add_option("-p", "--processing", dest="processing", help="Set the total number of processing units per file", default=5, type="int")
     parser.add_option("-n", "--numnodes", dest="nodes", help="Set the total number of nodes to use", default=10, type="int")
@@ -311,4 +346,8 @@ if __name__ == "__main__":
     parser.add_option("--seed_value", dest="seed_value", help="Seed value for the random number generator")
 
     (options, args) = parser.parse_args()
-    process(options, args)
+
+    try:
+        process(options, args)
+    except Exception as ex:
+        logger.critical('Fatal exception in mpi_runner::process', exc_info=ex)
