@@ -71,9 +71,9 @@ def compare_magnet_arrays(mag_array_a, mag_array_b, lookup):
 
 def generate_per_beam_bfield(info, maglist, mags, lookup, nthreads=8):
 
-    def generate_sub_array(beam_array, eval_list, lookup, beam, results):
+    def generate_sub_array(beam_array, chunk, lookup, beam, results):
         # This sum is calculated like this to avoid memory errors
-        result = sum(np.sum((lookup[beam][..., m] * beam_array[:, m]), axis=4) for m in eval_list)
+        result = sum(np.sum((lookup[beam][..., m] * beam_array[:, m]), axis=4) for m in chunk)
         results.append(result)
 
     beam_arrays = generate_per_magnet_array(info, maglist, mags)
@@ -102,9 +102,10 @@ def generate_per_beam_bfield(info, maglist, mags, lookup, nthreads=8):
     return bfields
 
 
-def generate_bfield(info, maglist, mags, f1):
-    bfields = generate_per_beam_bfield(info, maglist, mags, f1)
-    return sum(bfields.values()) # shape == (17,5,2622,3)
+def generate_bfield(info, maglist, mags, lookup, return_per_beam_bfield=False):
+    per_beam_bfield = generate_per_beam_bfield(info, maglist, mags, lookup)
+    bfield = sum(per_beam_bfield.values())
+    return bfield if (not return_per_beam_bfield) else (bfield, per_beam_bfield)
 
 
 def generate_reference_magnets(mags):
@@ -129,16 +130,19 @@ def generate_reference_magnets(mags):
 
 
 def calculate_bfield_loss(bfield, ref_bfield):
-    # TODO why only slice [...,2:4] ?
-    return np.sum(np.square(bfield[...,2:4] - ref_bfield[...,2:4]))
-
+    # Compute MSE between two bfield tensors (eval_x, eval_z, eval_s, 3)
+    # where 3 refers to slices for the X, Z, and S field strength measurements
+    return np.mean(np.square(bfield - ref_bfield))
 
 def calculate_cached_bfield_loss(info, lookup, magnets, maglist, ref_bfield):
     bfield = generate_bfield(info, maglist, magnets, lookup)
     return calculate_bfield_loss(bfield, ref_bfield)
 
 def calculate_trajectory_loss(trajectories, ref_trajectories):
-    # TODO why only slice [...,2:4] ?
+    # Compute MSE between two tensors representing the integrals of motion through a bfield w.r.t a sampling lattice
+    # Slice 0:2 represent the X and Z components of the first integral of motion
+    # Slice 2:4 represent the X and Z components of the second integral of motion
+    # TODO refactor to be np.mean when we fix the bugs in calculate_bfield_phase_error(...)
     return np.sum(np.square(trajectories[...,2:4] - ref_trajectories[...,2:4]))
 
 def calculate_cached_trajectory_loss(info, lookup, magnets, maglist, ref_trajectories):
@@ -153,69 +157,90 @@ def calculate_trajectory_loss_from_array(info, bfield, ref_trajectories):
     return calculate_trajectory_loss(trajectories, ref_trajectories)
 
 
-def calculate_bfield_phase_error(info, b_array):
-    Energy = 3.0                    # Ideally needs to be tunable. Is a machine parameter. Would need a new Machine Class
-    Const  = (0.03 / Energy) * 1e-2 # Appears to be defining 10^5eV... (Includes random 1e4 B factor)
-    c      = 2.9911124e8            # The speed of light. For now.
-    Mass   = 0.511e-3
-    Gamma  = Energy / Mass
+def calculate_bfield_phase_error(info, bfield):
+    # TODO move ring energy into device JSON file as devices are tied to specific facilities
+    energy             = 3.0                           # Diamond synchrotron 3 GeV storage ring
+    const              = (0.03 / energy) * 1e-2        # Unknown constant... evaluates to 1e-4 for 3 GeV storage ring
+    electron_mass      = 0.511e-3                      # Electron resting mass (already in GeV for convenience)
+    gamma_sq           = (energy / electron_mass) ** 2 # Ratio of energy of electron to its resting mass
+    two_speed_of_light = 2.9911124e8 * 2               # Speed of light in metres per second
+    degrees_per_radian = 360.0 / (2.0 * np.pi)
 
+    nskip = 8 # Number of periods at the start and end of the device to skip in the calculations
+    nperiods               = info['periods']
+    s_step_size            = info['sstep']
+    s_total_steps          = int(round((info['smax'] - info['smin']) / s_step_size))
+    s_steps_per_period     = int(info['period_length'] / s_step_size)
+    s_steps_per_qtr_period = s_steps_per_period // 4
+
+    # bfield.shape == (eval_x, eval_z, eval_s, 3) where 3 refers to slices for the X, Z, and S field strength measurements
+    # We only care about integrals of motion in X and Z so discard S measurements below
+
+    # Trapezium rule applied to bfield measurements in X and Z helps compute the second integral of motion
+    # TODO roll is on X axis (0) between neighbouring eval points, is this correct? Should be S axis (2)?
+    trap_bfield = np.roll(bfield[...,:2], shift=1, axis=0)
+    trap_bfield[...,0,:] = 0 # Set first samples on S axis to 0
+    trap_bfield = (trap_bfield + bfield[...,:2]) * (s_step_size / 2)
+
+    # Accumulate the second integral of motion w.r.t the X and Z axes, along the orbital S axis
+    traj_2nd_integral = np.cumsum((trap_bfield * const), axis=2)
+
+    # Trapezium rule applied to second integral of motion helps compute the first integral of motion
+    # TODO why shift by 4 indices? One period? (no guarantees on how many world space units 4 indices corresponds to) Should this be 1?
+    # TODO roll is on X axis (0) between neighbouring eval points, is this correct? Should be S axis (2)?
+    trap_traj_2nd_integral = np.roll(traj_2nd_integral, shift=4, axis=0)
+    trap_traj_2nd_integral[:,:,0,:] = 0 # Set first samples on S axis to 0
+    trap_traj_2nd_integral = (trap_traj_2nd_integral + traj_2nd_integral) * (s_step_size / 2)
+
+    # Accumulate the first integral of motion w.r.t the X and Z axes, along the orbital S axis
+    traj_1st_integral = np.cumsum(trap_traj_2nd_integral, axis=2)
+
+    # Trajectory first and second integrals of motion have been computed, now we compute the phase error of those trajectories
+    # TODO why do we swap X,Z for Z,X order for the field measurements?
+    #      Consistent Z,X ordering across all expected files for tests but no actual reason other than that they were all computed with this.
+    #      Removal of swap forces careful conversion of expected data files.
+    #      Same goes for removing Z integral negation.
+    trajectories = np.concatenate([traj_1st_integral[...,::-1], traj_2nd_integral[...,::-1]], axis=-1) * np.array([-1, 1, -1, 1])
+
+    # Extract the second integral of motion for the central trajectory going down the centre of the eval point grid
+    i = ((bfield.shape[0] + 1) // 2) - 1
+    j = ((bfield.shape[1] + 1) // 2) - 1
+    w = np.square(traj_2nd_integral[i,j])
+
+    # Trapezium rule applied to second integral of motion for central trajectory helps computes first integral of motion
+    trap_w = np.roll(w, shift=1, axis=0) # TODO Axis 0 is S axis in this np.roll! This makes sense, previous two do not!
+    trap_w[0,:] = 0.0 # Set first samples on S axis to 0
+    trap_w = (trap_w + w) * 1e-3 * (s_step_size / 2)
+    w_1st_integral = np.cumsum(np.sum(trap_w, axis=-1), axis=0) # Cumulative sum along S axis (0)
+
+    # x is regular sampling interval along S axis for computing line of best fit
+    x = np.arange(0, s_steps_per_qtr_period * ((4 * nperiods) - (2 * nskip)), s_steps_per_qtr_period) + \
+        (s_total_steps // 2) - (nperiods * (s_steps_per_period // 2)) + ((nskip - 1) * s_steps_per_qtr_period)
+
+    # y is derived from w_1st_integral plus a factor that grows linearly along the length of the S axis
+    sample_step = s_step_size * (1e-3 / (two_speed_of_light * gamma_sq))
+    y = (w_1st_integral / two_speed_of_light) + np.arange(0, sample_step * s_total_steps, sample_step)
+    y = y[x[0]:(x[-1] + s_steps_per_qtr_period):s_steps_per_qtr_period] # Resample y at same sample rate as x
+
+    # Compute linear line of best fit for the central trajectory
+    m, b = np.linalg.lstsq(np.vstack([x, np.ones_like(x)]).T, y, rcond=None)[0]
+    # Compute the squared error between the line of best fit and the observed values
+    phase_error_sq = np.square(y - ((m * x) + b))
+
+    # Compute final scaled phase error
+    phase_error = np.sqrt((np.sum(phase_error_sq) * np.square((2 * np.pi) / (m * s_steps_per_period))) /
+                          (((4 * nperiods) + 1) - (2 * nskip))) * degrees_per_radian
+
+    return phase_error, trajectories
+
+# TODO currently broken and not used anywhere, fix or remove
+def calculate_trajectory_straightness(info, trajectories):
     nperiods = info['periods']
-    step     = info['sstep']
-    n_stp    = int(info['period_length'] / step)
-    n_s_stp  = int(round((info['smax'] - info['smin']) / step))
-    nskip    = 8
-
-    trap_b_array = np.roll(b_array, 1, 0)
-    trap_b_array[...,0,:] = 0.0
-    trap_b_array = (trap_b_array + b_array) * (step / 2)
-
-    trajectories        = np.zeros([*b_array.shape[:3], 4])
-    trajectories[...,2] = -np.cumsum(np.multiply(Const, trap_b_array[...,1]), axis=2)
-    trajectories[...,3] =  np.cumsum(np.multiply(Const, trap_b_array[...,0]), axis=2)
-
-    trap_traj = np.roll(trajectories, 4, 0)
-    trap_traj[:,:,0,:] = 0.0
-    trap_traj = (trap_traj + trajectories) * (step / 2)
-
-    trajectories[...,0] = np.cumsum(trap_traj[...,2], axis=2)
-    trajectories[...,1] = np.cumsum(trap_traj[...,3], axis=2)
-
-    i = ((b_array.shape[0] + 1) // 2) - 1
-    j = ((b_array.shape[1] + 1) // 2) - 1
-
-    w      = np.zeros([n_s_stp, 2])
-    w[:,0] = np.square(trajectories[i,j,:,2])
-    w[:,1] = np.square(trajectories[i,j,:,3])
-
-    trap_w = np.roll(w, 1, 0)
-    trap_w[0,:] = 0.0
-    trap_w = (trap_w + w) * 1e-3 * (step / 2)
-
-    # TODO unwind the order of operations going on here...
-    ph  = np.cumsum(trap_w[:,0] + trap_w[:,1]) / (2.0 * c)
-    ph2 = (step * 1e-3 / (2.0 * c * Gamma ** 2)) * np.arange(n_s_stp) + ph
-    v1  = (n_stp // 4) * np.arange(4 * nperiods - 2 * nskip) + n_s_stp // 2 - nperiods * n_stp // 2 + (nskip - 1) * n_stp // 4
-    v2  = ph2[(v1[0]):(v1[-1] + (n_stp // 4)):(n_stp // 4)]
-
-    A = np.vstack([v1, np.ones(len(v1))]).T
-    m, intercept = np.linalg.lstsq(A, v2, rcond=None)[0]
-
-    Omega0 = 2 * np.pi / (m * n_stp)
-    phfit  = intercept + m * v1
-    ph     = v2 - phfit
-    pherr  = np.sum(ph ** 2) * Omega0 ** 2
-    pherr  = np.sqrt(pherr / (4 * nperiods + 1 - 2 * nskip)) * 360.0 / (2.0 * np.pi)
-    return pherr, trajectories
-
-
-def calculate_trajectory_straightness(trajectories, nperiods):
-
     points_per_period = (trajectories.shape[0] / nperiods) / 3
 
     # Magic number not documented (to do with how data is interleaved into trajectories tensor?)
     nskip  = 2 # Value of 8 in other functions...
-    skip   = (trajectories.shape[0] / 3) + (nskip * points_per_period)
+    skip   = int((trajectories.shape[0] / 3) + (nskip * points_per_period))
 
     xmean  = np.mean(trajectories[skip:-skip,0])
     dxmean = trajectories[skip:-skip,0] - xmean
@@ -225,44 +250,52 @@ def calculate_trajectory_straightness(trajectories, nperiods):
     strz   = np.max(zabs)
     return strx, strz
 
+
 def write_bfields(filename, id_filename, lookup_filename, magnets_filename, maglist):
 
+    # Load JSON configuration for a given device describing magnet types and positions and dimensions
     with open(id_filename, 'r') as fp:
         info = json.load(fp)
 
+    # Load lookup table for a given device configuration measured at a grid of sample locations along the device gap
     with h5py.File(lookup_filename, 'r') as fp:
         lookup = {}
         for beam in info['beams']:
             lookup[beam['name']] = fp[beam['name']][...]
 
+    # Load a set of real magnets and generate a set of perfect reference magnets mimicking the real magnets
     mags = Magnets()
     mags.load(magnets_filename)
     ref_mags = generate_reference_magnets(mags)
 
     with h5py.File(filename, 'w') as fp:
 
-        # Store the bfield data for the real magnets
-        per_beam_bfield = generate_per_beam_bfield(info, maglist, mags, lookup)
-        bfield          = generate_bfield(info, maglist, mags, lookup)
+        # Compute the bfield data for the real magnets
+        bfield, per_beam_bfield = generate_bfield(info, maglist, mags, lookup, return_per_beam_bfield=True)
 
-        for name in per_beam_bfield.keys():
-            fp.create_dataset("%s_per_beam" % (name), data=per_beam_bfield[name])
-
+        # Save the full bfield
         fp.create_dataset('id_Bfield', data=bfield)
 
+        # Save the partial bfields for each beam in the device
+        for beam_name, beam_bfield in per_beam_bfield.items():
+            fp.create_dataset(f'{beam_name}_per_beam', data=beam_bfield)
+
+        # Compute the phase error and electron trajectories through the bfield and save them
         phase_error, trajectories = calculate_bfield_phase_error(info, bfield)
         fp.create_dataset('id_phase_error', data=phase_error)
         fp.create_dataset('id_trajectory',  data=trajectories)
 
-        # Store the bfield data for the reference magnets
-        ref_per_beam_bfield = generate_per_beam_bfield(info, maglist, ref_mags, lookup)
-        ref_bfield          = generate_bfield(info, maglist, ref_mags, lookup)
+        # Compute the bfield data for the reference magnets
+        ref_bfield, ref_per_beam_bfield = generate_bfield(info, maglist, ref_mags, lookup, return_per_beam_bfield=True)
 
-        for name in per_beam_bfield.keys():
-            fp.create_dataset("%s_per_beam_perfect" % (name), data=ref_per_beam_bfield[name])
-
+        # Save the full bfield assuming perfect magnets
         fp.create_dataset('id_Bfield_perfect', data=ref_bfield)
 
+        # Save the partial bfields for each beam in the device assuming perfect magnets
+        for beam_name, beam_bfield in ref_per_beam_bfield.items():
+            fp.create_dataset(f'{beam_name}_per_beam_perfect', data=beam_bfield)
+
+        # Compute the phase error and electron trajectories through the bfield assuming perfect magnets and save them
         ref_phase_error, ref_trajectories = calculate_bfield_phase_error(info, ref_bfield)
         fp.create_dataset('id_phase_error_perfect', data=ref_phase_error)
         fp.create_dataset('id_trajectory_perfect',  data=ref_trajectories)

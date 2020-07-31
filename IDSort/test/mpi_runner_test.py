@@ -50,7 +50,8 @@ class MpiRunnerTest(unittest.TestCase):
             'scale'            : 10.0,
             'singlethreaded'   : True,
             'seed'             : True,
-            'seed_value'       : 30
+            'seed_value'       : 30,
+            'verbose'          : 4,
         }
         options_named  = namedtuple("options", options.keys())(*options.values())
         args = [
@@ -155,7 +156,8 @@ class MpiRunnerTest(unittest.TestCase):
             'scale'            : 10.0,
             'singlethreaded'   : True,
             'seed'             : True,
-            'seed_value'       : 30
+            'seed_value'       : 30,
+            'verbose'          : 4,
         }
         options_named = namedtuple("options", options.keys())(*options.values())
         args = [

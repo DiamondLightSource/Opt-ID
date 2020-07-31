@@ -253,8 +253,8 @@ class MagLists():
             if random.random() > flip_prob:
                 # Swap two random magnets from the magnet list
                 if available is None:
-                    mag_a, mag_b = random.randint(0, len(self.magnet_lists[set_name])), \
-                                   random.randint(0, len(self.magnet_lists[set_name]))
+                    mag_a, mag_b = random.randint(0, len(self.magnet_lists[set_name]) - 1), \
+                                   random.randint(0, len(self.magnet_lists[set_name]) - 1)
                 else:
                     mag_a, mag_b = random.choice(available[set_name]), \
                                    random.choice(available[set_name])
@@ -267,7 +267,7 @@ class MagLists():
             else:
                 # Flip one random magnet from the magnet list
                 if available is None:
-                    mag = random.randint(0, len(self.magnet_lists[set_name]))
+                    mag = random.randint(0, len(self.magnet_lists[set_name]) - 1)
                 else:
                     mag = random.choice(available[set_name])
 
@@ -323,7 +323,7 @@ def process(options, args):
 
     logger.debug('Starting')
 
-    if hasattr(options, 'output_path'):
+    if hasattr(options, 'output_path') and (options.output_path is not None):
         if (len(args) > 0):
             logger.warning('Output path argument overrides unnamed trailing argument!')
             logger.warning('Ignoring all %d unnamed arguments [%s]', len(args), args)

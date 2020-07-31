@@ -15,392 +15,171 @@
 # order  x, z, s
 import json
 
-# TODO refactor this file split each ID type into its own submodule
+from .logging_utils import logging, getLogger, setLoggerLevel
+logger = getLogger(__name__)
 
-def create_type_list_symmetric_apple(nperiods):
-    # do the first end
-    types = []
-    vertical = True
+# Helper matrices for representing magnet major directions and flip actions
 
-    types.append('HE')
-    types.append('VE')
-    types.append('HE')
-    
-    # now put in all the middle periods
-    for i in range(3, (4 * nperiods - 1) - 3, 1):
-        if vertical :
-            types.append('VV')
-            vertical = False
-        else :
-            types.append('HH')
-            vertical = True
+MATRIX_IDENTITY          = (( 1, 0, 0), ( 0, 1, 0), ( 0, 0, 1))
+MATRIX_ROTX_180          = (( 1, 0, 0), ( 0,-1, 0), ( 0, 0,-1))
+MATRIX_ROTZ_180          = ((-1, 0, 0), ( 0, 1, 0), ( 0, 0,-1))
+MATRIX_ROTS_90           = (( 0, 1, 0), (-1, 0, 0), ( 0, 0, 1))
+MATRIX_ROTS_180          = ((-1, 0, 0), ( 0,-1, 0), ( 0, 0, 1))
+MATRIX_ROTS_270          = (( 0,-1, 0), ( 1, 0, 0), ( 0, 0, 1))
+MATRIX_ROTS_270_ROTX_180 = (( 0,-1, 0), (-1, 0, 0), ( 0, 0,-1))
+MATRIX_ROTS_270_ROTZ_180 = (( 0, 1, 0), ( 1, 0, 0), ( 0, 0,-1))
 
-    # finally add in the other end
-    types.append('HE')
-    types.append('VE')
-    types.append('HE')
+# Helper functions for Hybrid Symmetric devices
 
-    return types
+def create_type_list_hybrid_symmetric(nperiods):
+    # Hybrid Symmetric devices uses end magnets (HE) as well as special kicker magnets (HT)
+    # Number of periods of the device refers to number of full 2-magnet periods
+    # HT, HE, [HH, HH]*, HE, HT
+    end_types    = ['HT', 'HE']
+    magnet_types = ['HH'] * (2 * nperiods)
+    # Concatenate full magnet type list
+    return end_types + magnet_types + end_types[::-1]
 
-def create_direction_matrix_list_symmetric_apple_q1(nperiods):
-    direction = []
-    for i in range(0, (4 * nperiods - 1) - 3, 4):
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        direction.append(((0,1,0),(1,0,0),(0,0,-1)))
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
+def create_flip_matrix_hybrid_symmetric(nperiods):
+    # Flip over the X and Z axes without altering the easy S-axis
+    # HT, HE, [HH, HH]*, HE, HT
+    return [MATRIX_ROTS_180] * ((2 * nperiods) + 4)
 
-    # Append last elements
-    direction.append(((1,0,0),(0,1,0),(0,0,1)))
-    direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
-    direction.append(((0,1,0),(1,0,0),(0,0,-1)))
-    return direction
+def create_position_list_hybrid_symmetric(x, z, nperiods, fullmagdims, hemagdims, htmagdims, poledims, endgapsym, terminalgapsymhybrid, interstice):
+    # Hybrid Symmetric devices uses end magnets (HE) as well as special kicker magnets (HT)
+    # Number of periods of the device refers to number of full 2-magnet periods
+    # HT, HE, [HH, HH]*, HE, HT
 
-def create_direction_matrix_list_symmetric_apple_q2(nperiods):
-    direction = []
-    for i in range(0, (4 * nperiods - 1) - 3, 4):
-        direction.append(((0,-1,0),(1,0,0),(0,0,1)))
-        direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+    # Full length of the device including end magnets, full magnets, iron poles, and all spacings
+    length = (nperiods * ((2 * poledims[2]) + (2 * fullmagdims[2]) + (4 * interstice))) + \
+             (2 * (poledims[2] + interstice + hemagdims[2] + endgapsym + terminalgapsymhybrid + htmagdims[2]))
 
-    # Append last elements
-    direction.append(((0,-1,0),(1,0,0),(0,0,1)))
-    direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
-    direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-    return direction
+    # Location of HT magnet where step along S-axis between magnets takes into account special end spacing
+    s = -(length / 2)
+    positions = [(x,z,s)]
+    s += (htmagdims[2] + endgapsym + terminalgapsymhybrid + (poledims[2] / 2))
 
-def create_direction_matrix_list_symmetric_apple_q3(nperiods):
-    direction = []
-    for i in range(0, (4 * nperiods - 1) - 3, 4):
-        direction.append(((0,-1,0),(-1,0,0),(0,0,-1)))
-        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
+    # Location of HE magnet where step along S-axis between magnets takes into account size of HE magnet
+    positions += [(x,z,s)]
+    s += (hemagdims[2] + poledims[2] + (2 * interstice))
 
-    # Append last elements
-    direction.append(((0,-1,0),(-1,0,0),(0,0,-1)))
-    direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
-    direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+    for _ in range(2 * nperiods):
+        # Location of full HH magnet where S-axis step based on full magnet thickness
+        positions += [(x,z,s)]
+        s += (fullmagdims[2] + poledims[2] + (2 * interstice))
 
-    return direction
+    # Location of final HE magnet where step along S-axis taking into account special end spacing
+    positions += [(x,z,s)]
+    s += (hemagdims[2] + (poledims[2] / 2) + endgapsym + terminalgapsymhybrid)
 
-def create_direction_matrix_list_symmetric_apple_q4(nperiods):
-    direction = []
-    for i in range(0, (4 * nperiods - 1) - 3, 4):
-        direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
-        direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
-        direction.append(((0,1,0),(-1,0,0),(0,0,1)))
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+    # Location of final HT magnet
+    positions += [(x,z,s)]
+    return positions
 
-    # Append last elements
-    direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
-    direction.append(((1,0,0),(0,-1,0),(0,0,-1)))
-    direction.append(((0,1,0),(-1,0,0),(0,0,1)))
-    
-    return direction
+def create_position_list_hybrid_symmetric_top(nperiods, fullmagdims, hemagdims, htmagdims, poledims, mingap, endgapsym, terminalgapsymhybrid, interstice):
+    # Full device is centered at 0,0,0
+    # Magnets are located w.r.t the bottom-left-near corner when looking along the S-axis from the start of the device
+    # i.e. [Top]
+    #        e
+    #       Btm
+    x = -(fullmagdims[0] / 2)
+    z =  (mingap / 2)
+    return create_position_list_hybrid_symmetric(x, z, nperiods, fullmagdims, hemagdims, htmagdims, poledims,
+                                                 endgapsym, terminalgapsymhybrid, interstice)
 
-def create_flip_matrix_list_symmetric_apple_q1(nperiods):
-    flip = []
-    for i in range(0, (4 * nperiods - 1) - 3, 4):
-        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        flip.append(((1,0,0),(0,1,0),(0,0,1)))
-        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        flip.append(((1,0,0),(0,1,0),(0,0,1)))
-    
-    # Append last elements
-    
-    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-    flip.append(((1,0,0),(0,1,0),(0,0,1)))
-    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-    return flip
+def create_position_list_hybrid_symmetric_btm(nperiods, fullmagdims, hemagdims, htmagdims, poledims, mingap, endgapsym, terminalgapsymhybrid, interstice):
+    # Full device is centered at 0,0,0
+    # Magnets are located w.r.t the bottom-left-near corner when looking along the S-axis from the start of the device
+    # i.e.  Top
+    #        e
+    #      [Btm]
+    x = -(fullmagdims[0] / 2)
+    z = -fullmagdims[1] - (mingap / 2)
+    return create_position_list_hybrid_symmetric(x, z, nperiods, fullmagdims, hemagdims, htmagdims, poledims,
+                                                 endgapsym, terminalgapsymhybrid, interstice)
 
-def create_flip_matrix_list_symmetric_apple_q2(nperiods):
-    flip = []
-    for i in range(0, (4 * nperiods - 1) - 3, 4):
-        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        flip.append(((1,0,0),(0,1,0),(0,0,1)))
-        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        flip.append(((1,0,0),(0,1,0),(0,0,1)))
-    
-    # Append last elements
-    
-    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-    flip.append(((1,0,0),(0,1,0),(0,0,1)))
-    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-    return flip
+def create_direction_matrix_list_hybrid_symmetric_top(nperiods):
+    # Hybrid Symmetric has all magnets aligned to the S-axis alternating between frontward and backward facing easy axis
+    # Top and bottom beams have opposite frontwards / backwards ordering
+    # -HT, +HE, [-HH, +HH]*, -HE, +HT
+    return [MATRIX_ROTZ_180, MATRIX_IDENTITY] * (nperiods + 2)
 
-def create_flip_matrix_list_symmetric_apple_q3(nperiods):
-    flip = []
-    for i in range(0, (4 * nperiods - 1) - 3, 4):
-        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        flip.append(((1,0,0),(0,1,0),(0,0,1)))
-        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        flip.append(((1,0,0),(0,1,0),(0,0,1)))
+def create_direction_matrix_list_hybrid_symmetric_btm(nperiods):
+    # Hybrid Symmetric has all magnets aligned to the S-axis alternating between frontward and backward facing easy axis
+    # Top and bottom beams have opposite frontwards / backwards ordering
+    # +HT, -HE, [+HH, -HH]*, +HE, -HT
+    return [MATRIX_IDENTITY, MATRIX_ROTZ_180] * (nperiods + 2)
 
-    
-    # Append last elements
-    
-    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-    flip.append(((1,0,0),(0,1,0),(0,0,1)))
-    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
+# Helper functions for PPM Anti Symmetric devices
 
-    return flip
+def create_type_list_ppm_antisymmetric(nperiods):
+    # PPM Anti Symmetric devices uses horizontal and vertical end magnets as well as one extra half period to add anti symmetry
+    # Number of periods of the device refers to number of full 4-magnet periods
+    # HE, VE, [HH, VV, HH, VV]*, (HH), VE, HE
+    end_types    = ['HE', 'VE']
+    magnet_types = [('HH' if (index % 2 == 0) else 'VV') for index in range((4 * nperiods) + 1)]
+    # Concatenate full magnet type list
+    return end_types + magnet_types + end_types[::-1]
 
-def create_flip_matrix_list_symmetric_apple_q4(nperiods):
-    flip = []
-    for i in range(0, (4 * nperiods - 1) - 3, 4):
-        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        flip.append(((1,0,0),(0,1,0),(0,0,1)))
-        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        flip.append(((1,0,0),(0,1,0),(0,0,1)))
-    
-    # Append last elements
-    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-    flip.append(((1,0,0),(0,1,0),(0,0,1)))
-    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-    return flip
-    
-def create_location_list_symmetric_apple_q2(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
-    #locate most negative point of block on x,z,s axes
-    V1 = []
-    length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
-    x=-fullmagdims[0]-phasinggap/2.0
-    z=mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+endgap)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    for i in range(3,(4*nperiods-1)-3,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+endgap)
-    V1.append((x,z,s))
-    return V1
+def create_flip_matrix_list_ppm_antisymmetric(nperiods):
+    # Flip horizontal magnets over XZ and vertical magnets over XS
+    # HE, VE, [HH, VV, HH, VV]*, (HH), VE, HE
+    return ([MATRIX_ROTS_180, MATRIX_ROTZ_180] * ((nperiods + 1) * 2)) + [MATRIX_ROTS_180]
 
-def create_location_list_symmetric_apple_q1(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
-    #locate most negative point of block on x,z,s axes
-    V1 = []
-    length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
-    x=phasinggap/2.0
-    z=mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+endgap)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    for i in range(3,(4*nperiods-1)-3,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+endgap)
-    V1.append((x,z,s))
-    return V1
+def create_position_list_ppm_antisymmetric(x, z, nperiods, fullmagdims, vemagdims, hemagdims, interstice):
+    # PPM Anti Symmetric devices uses horizontal and vertical end magnets as well as one extra half period to add anti symmetry
+    # Number of periods of the device refers to number of full 4-magnet periods
+    # HE, VE, [HH, VV, HH, VV]*, (HH), VE, HE
 
-def create_location_list_symmetric_apple_q4(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
-    #locate most negative point of block on x,z,s axes
-    V1 = []
-    length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
-    x=phasinggap/2.0
-    z=-fullmagdims[1]-mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+endgap)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    for i in range(3,(4*nperiods-1)-3,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+endgap)
-    V1.append((x,z,s))
-    return V1
+    # Full length of the device including end magnets, full magnets, and all spacings
+    length = (((4 * nperiods) + 1) * (fullmagdims[2] + interstice) +
+              (2 * (vemagdims[2] + interstice) + 2 * (hemagdims[2] + interstice))) - interstice
 
-def create_location_list_symmetric_apple_q3(period, nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
-    #locate most negative point of block on x,z,s axes
-    V1 = []
-    length = 4*hemagdims[2]+2*vemagdims[2]+(4*(nperiods-2)+1)*fullmagdims[2]+(4*(nperiods-2)+4)*interstice+2*endgap
-    x=-fullmagdims[0]-phasinggap/2.0
-    z=-fullmagdims[1]-mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+endgap)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    for i in range(3,(4*nperiods-1)-3,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+endgap)
-    V1.append((x,z,s))
-    return V1
+    # Location of first HE magnet where step along S-axis between magnets takes into account HE magnet thickness
+    s = -(length / 2)
+    positions = [(x, z, s)]
+    s += (hemagdims[2] + interstice)
 
-def create_type_list_symmetric_hybrid(nperiods):
-    # do the first end
-    types = []
-    #start = 0
-    #stop = 0
+    # Location of first VE magnet where step along S-axis between magnets takes into account VE magnet thickness
+    positions += [(x, z, s)]
+    s += (vemagdims[2] + interstice)
 
-    types.append('HT')
-    types.append('HE')
+    # Anti Symmetric device has 1 extra magnet after last period to kick the electron beam back
+    for _ in range((4 * nperiods) + 1):
+        # Location of full HH or VV magnet where S-axis step based on full magnet thickness
+        positions += [(x, z, s)]
+        s += (fullmagdims[2] + interstice)
 
-    start, stop = (2, (2*nperiods+4)-2)
+    # Location of last VE magnet where step along S-axis between magnets takes into account VE magnet thickness
+    positions += [(x, z, s)]
+    s += (vemagdims[2] + interstice)
 
-    # now put in all the middle periods
-    for i in range(start, stop):
-        types.append('HH')
+    # Location of last HE magnet
+    positions += [(x, z, s)]
+    return positions
 
+def create_position_list_ppm_antisymmetric_top(nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice):
+    # Full device is centered at 0,0,0
+    # Magnets are located w.r.t the bottom-left-near corner when looking along the S-axis from the start of the device
+    # i.e. [Top]
+    #        e
+    #       Btm
+    x = -(fullmagdims[0] / 2)
+    z =  (mingap / 2)
+    return create_position_list_ppm_antisymmetric(x, z, nperiods, fullmagdims, vemagdims, hemagdims, interstice)
 
-    # finally add in the other end
-    types.append('HE')
-    types.append('HT')
+def create_position_list_ppm_antisymmetric_btm(nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice):
+    # Full device is centered at 0,0,0
+    # Magnets are located w.r.t the bottom-left-near corner when looking along the S-axis from the start of the device
+    # i.e.  Top
+    #        e
+    #      [Btm]
+    x = -(fullmagdims[0] / 2)
+    z = -fullmagdims[1] - (mingap / 2)
+    return create_position_list_ppm_antisymmetric(x, z, nperiods, fullmagdims, vemagdims, hemagdims, interstice)
 
-    return types
-
-def create_direction_matrix_list_symmetric_hybrid_bottom(nperiods):
-    direction = []
-    for i in range(0, (2 * nperiods + 4), 2):
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        #no V magnet in Hybrids
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-        #no V magnets in hybrid
-
-    return direction
-
-def create_direction_matrix_list_symmetric_hybrid_top(nperiods):
-    direction = []
-    for i in range(0, (2 * nperiods + 4), 2):
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-        #no V magnets in Hybrids
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        #no V magnets in Hybrids
-
-    return direction
-
-def create_flip_matrix_symmetric_hybrid_bottom_top(nperiods):
-    flip = []
-    for i in range(0, (2 * nperiods + 4)):
-        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-
-    return flip
-
-def create_location_list_symmetric_hybrid_top(nperiods,fullmagdims,hemagdims,htmagdims,poledims,mingap,endgapsym,terminalgapsymhybrid,interstice):
-    V1 = []
-    length = nperiods * (2 * poledims[2]+2*fullmagdims[2]+4*interstice)+2*(poledims[2]+interstice + hemagdims[2] + endgapsym + terminalgapsymhybrid + htmagdims[2])
-    x=-fullmagdims[0]/2.0
-    z= mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+= (htmagdims[2]+endgapsym + terminalgapsymhybrid + poledims[2]/2)
-    V1.append((x,z,s))
-    s+=hemagdims[2]+poledims[2]+2*interstice
-    for i in range(2,(2*nperiods+4)-2,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+poledims[2]+2*interstice)
-    V1.append((x,z,s))
-    s+=hemagdims[2]+poledims[2]/2+endgapsym+terminalgapsymhybrid
-    V1.append((x,z,s))
-    return V1
-
-def create_location_list_symmetric_hybrid_bottom(nperiods,fullmagdims,hemagdims,htmagdims,poledims,mingap,endgapsym,terminalgapsymhybrid,interstice):
-    V1 = []
-    length = nperiods * (2 * poledims[2]+2*fullmagdims[2]+4*interstice)+2*(poledims[2]+interstice + hemagdims[2] + endgapsym + terminalgapsymhybrid + htmagdims[2])
-    x=-fullmagdims[0]/2.0
-    z= -fullmagdims[1]-mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+= (htmagdims[2]+endgapsym + terminalgapsymhybrid + poledims[2]/2)
-    V1.append((x,z,s))
-    s+=hemagdims[2]+poledims[2]+2*interstice
-    for i in range(2,(2*nperiods+4)-2,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+poledims[2]+2*interstice)
-    V1.append((x,z,s))
-    s+=hemagdims[2]+poledims[2]/2+endgapsym+terminalgapsymhybrid
-    V1.append((x,z,s))
-    return V1
-
-def create_type_list_antisymetric_ppm(nperiods):
-    # do the first end
-    types = []
-    #start = 0
-    #stop = 0
-    vertical = False
-
-    types.append('HE')
-    types.append('VE')
-
-    start, stop = (2, (4*nperiods+5)-2)
-
-    # now put in all the middle periods
-    for i in range(start, stop):
-        if vertical :
-            types.append('VV')
-            vertical = False
-        else :
-            types.append('HH')
-            vertical = True
-
-    # finally add in the other end
-    types.append('VE')
-    types.append('HE')
-
-    return types
-
-
-def create_direction_list_antisymetric_ppm_bottom(nperiods):
-    direction = []
-    for i in range(0, (4 * nperiods + 5) - 1, 4):
-        direction.append((1, 1, 1))
-        direction.append((1, 1, 1))
-        direction.append((-1, 1, -1))
-        direction.append((-1, -1, 1))
-
-    # Append last element
-    direction.append((1, 1, 1))
-    return direction
-
-def create_direction_matrix_list_antisymetric_ppm_bottom(nperiods):
-    direction = []
-    for i in range(0, (4 * nperiods + 5) - 1, 4):
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
-
-    # Append last element
-    direction.append(((1,0,0),(0,1,0),(0,0,1)))
-    return direction
-
-def create_flip_matrix_antisymmetric_ppm_bottom(nperiods):
-    flip = []
-    for i in range(0, (4 * nperiods + 5) - 1, 2):
-        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        flip.append(((-1,0,0),(0,1,0),(0,0,-1)))
-    
-    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-    return flip
-
-
-def create_direction_list_antisymetric_ppm_top(nperiods):
+# TODO marked for removal, only used in human readable genome output, can be derived directly from direction matrices
+def create_direction_list_ppm_antisymmetric_top(nperiods):
     direction = []
     for i in range(0, (4 * nperiods + 5) - 1, 4):
         direction.append((-1, 1, -1))
@@ -412,365 +191,482 @@ def create_direction_list_antisymetric_ppm_top(nperiods):
     direction.append((-1, 1, -1))
     return direction
 
-def create_direction_matrix_list_antisymetric_ppm_top(nperiods):
+# TODO marked for removal, only used in human readable genome output, can be derived directly from direction matrices
+def create_direction_list_ppm_antisymmetric_btm(nperiods):
     direction = []
     for i in range(0, (4 * nperiods + 5) - 1, 4):
-        direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        direction.append(((1,0,0),(0,1,0),(0,0,1)))
-        direction.append(((-1,0,0),(0,-1,0),(0,0,1)))
+        direction.append((1, 1, 1))
+        direction.append((1, 1, 1))
+        direction.append((-1, 1, -1))
+        direction.append((-1, -1, 1))
 
     # Append last element
-    direction.append(((-1,0,0),(0,1,0),(0,0,-1)))
+    direction.append((1, 1, 1))
     return direction
 
-def create_flip_matrix_antisymmetric_ppm_top(nperiods):
-    flip = []
-    for i in range(0, (4 * nperiods + 5) - 1, 2):
-        flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-        flip.append(((-1,0,0),(0,1,0),(0,0,-1)))
-    
-    flip.append(((-1,0,0),(0,-1,0),(0,0,1)))
-    return flip
+def create_direction_matrix_list_ppm_antisymmetric_top(nperiods):
+    # PPM Anti Symmetric has 4 magnets rotating through 180 degrees on the X-axis
+    # Top and bottom beams have opposite frontwards / backwards ordering and equal upwards / downwards ordering
+    # -HE, +VE, [+HH, -VV, -HH, +VV]*, (+HH), -VE, -HE
+    return ([MATRIX_ROTZ_180, MATRIX_IDENTITY, MATRIX_IDENTITY, MATRIX_ROTS_180] * (nperiods + 1)) + [MATRIX_ROTZ_180]
 
-def create_location_list_antisymmetric_ppm_top(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap,interstice):
-    V1 = []
-    length = (4*(nperiods)+1)*(fullmagdims[2]+interstice)+2*(vemagdims[2]+interstice)+2*(hemagdims[2]+interstice)-interstice
-    x=-fullmagdims[0]/2.0
-    z=mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    for i in range(2,(4*nperiods+5)-2,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    V1.append((x,z,s))
-    return V1
+def create_direction_matrix_list_ppm_antisymmetric_btm(nperiods):
+    # PPM Anti Symmetric has 4 magnets rotating through 180 degrees on the X-axis
+    # Top and bottom beams have opposite frontwards / backwards ordering and equal upwards / downwards ordering
+    # +HE, +VE, [-HH, -VV, +HH, +VV]*, (-HH), -VE, +HE
+    return ([MATRIX_IDENTITY, MATRIX_IDENTITY, MATRIX_ROTZ_180, MATRIX_ROTS_180] * (nperiods + 1)) + [MATRIX_IDENTITY]
 
-def create_location_list_antisymmetric_ppm_bottom(period, nperiods,fullmagdims,vemagdims,hemagdims,mingap,interstice):
-    V1 = []
-    length = (4*(nperiods)+1)*(fullmagdims[2]+interstice)+2*(vemagdims[2]+interstice)+2*(hemagdims[2]+interstice)-interstice
-    x=-fullmagdims[0]/2.0
-    z=-fullmagdims[1]-mingap/2.0
-    s=-length/2.0
-    V1.append((x,z,s))
-    s+=(hemagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    for i in range(2,(4*nperiods+5)-2,1):
-        V1.append((x,z,s))
-        s+=(fullmagdims[2]+interstice)
-    V1.append((x,z,s))
-    s+=(vemagdims[2]+interstice)
-    V1.append((x,z,s))
-    return V1
+# Helper functions for APPLE-II Symmetric devices
+
+def create_type_list_apple_symmetric(nperiods):
+    # APPLE Symmetric devices uses horizontal and vertical end magnets
+    # Number of periods of the device refers to number of full 4-magnet periods excluding those added by the end magnets
+    # HE, VE, HE, [VV, HH, VV, HH]*, VV, HE, VE, HE
+    end_types    = ['HE', 'VE', 'HE']
+    magnet_types = [('VV' if (index % 2 == 0) else 'HH') for index in range((4 * nperiods) - 7)]
+    # Concatenate full magnet type list
+    return end_types + magnet_types + end_types[::-1]
+
+def create_flip_matrix_list_apple_symmetric(nperiods):
+    # Flip horizontal magnets over XZ and do not flip vertical magnets at all
+    # TODO find out if optimization search space will still try to flip vertical magnets
+    # HE, VE, HE, [VV, HH, VV, HH]*, VV, HE, VE, HE
+    return ([MATRIX_ROTS_180, MATRIX_IDENTITY] * ((nperiods * 2) - 1)) + [MATRIX_ROTS_180]
+
+def create_position_list_apple_symmetric(x, z, nperiods, fullmagdims, vemagdims, hemagdims, interstice, endgap):
+    # APPLE Symmetric devices uses horizontal and vertical end magnets
+    # Number of periods of the device refers to number of full 4-magnet periods excluding those added by the end magnets
+    # HE, VE, HE, [VV, HH, VV, HH]*, VV, HE, VE, HE
+
+    # Full length of the device including end magnets, full magnets, and all spacings
+    length = (4 * hemagdims[2]) + (2 * vemagdims[2]) + \
+             ((4 * (nperiods - 2) + 1) * fullmagdims[2]) + \
+             ((4 * (nperiods - 2) + 4) * interstice) + (2 * endgap)
+
+    # Location of first HE magnet where step along S-axis between magnets takes into account HE magnet thickness
+    s = -(length / 2)
+    positions = [(x, z, s)]
+    s += (hemagdims[2] + endgap)
+
+    # Location of first VE magnet where step along S-axis between magnets takes into account VE magnet thickness
+    positions += [(x, z, s)]
+    s += (vemagdims[2] + interstice)
+
+    # Location of second HE magnet where step along S-axis between magnets takes into account HE magnet thickness
+    positions += [(x, z, s)]
+    s += (hemagdims[2] + interstice)
+
+    for i in range((4 * nperiods) - 7):
+        # Location of full HH or VV magnet where S-axis step based on full magnet thickness
+        positions += [(x, z, s)]
+        s += (fullmagdims[2] + interstice)
+
+    # Location of second to last HE magnet where step along S-axis between magnets takes into account HE magnet thickness
+    positions += [(x, z, s)]
+    s += (hemagdims[2] + interstice)
+
+    # Location of last VE magnet where step along S-axis between magnets takes into account VE magnet thickness
+    positions += [(x, z, s)]
+    s += (vemagdims[2] + endgap)
+
+    # Location of last HE magnet
+    positions += [(x, z, s)]
+    return positions
+
+def create_position_list_apple_symmetric_q1(nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+    # Full device is centered at 0,0,0
+    # Magnets are located w.r.t the bottom-left-near corner when looking along the S-axis from the start of the device
+    # i.e.  Q2  [Q1]
+    #          e
+    #       Q3   Q4
+    x = (phasinggap / 2)
+    z = (mingap / 2)
+    return create_position_list_apple_symmetric(x, z, nperiods, fullmagdims, vemagdims, hemagdims, interstice, endgap)
+
+def create_position_list_apple_symmetric_q2(nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+    # Full device is centered at 0,0,0
+    # Magnets are located w.r.t the bottom-left-near corner when looking along the S-axis from the start of the device
+    # i.e. [Q2]  Q1
+    #          e
+    #       Q3   Q4
+    x = -fullmagdims[0] - (phasinggap / 2)
+    z = (mingap / 2)
+    return create_position_list_apple_symmetric(x, z, nperiods, fullmagdims, vemagdims, hemagdims, interstice, endgap)
+
+def create_position_list_apple_symmetric_q3(nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+    # Full device is centered at 0,0,0
+    # Magnets are located w.r.t the bottom-left-near corner when looking along the S-axis from the start of the device
+    # i.e.  Q2   Q1
+    #          e
+    #      [Q3]  Q4
+    x = -fullmagdims[0] - (phasinggap / 2)
+    z = -fullmagdims[1] - (mingap / 2)
+    return create_position_list_apple_symmetric(x, z, nperiods, fullmagdims, vemagdims, hemagdims, interstice, endgap)
+
+def create_position_list_apple_symmetric_q4(nperiods, fullmagdims, vemagdims, hemagdims, mingap, interstice, endgap, phasinggap):
+    # Full device is centered at 0,0,0
+    # Magnets are located w.r.t the bottom-left-near corner when looking along the S-axis from the start of the device
+    # i.e.  Q2   Q1
+    #          e
+    #       Q3  [Q4]
+    x = (phasinggap / 2)
+    z = -fullmagdims[1] - (mingap / 2)
+    return create_position_list_apple_symmetric(x, z, nperiods, fullmagdims, vemagdims, hemagdims, interstice, endgap)
+
+def create_direction_matrix_list_apple_symmetric_q1(nperiods):
+    # APPLE Symmetric devices uses horizontal and vertical end magnets
+    # Number of periods of the device refers to number of full 4-magnet periods excluding those added by the end magnets
+    # +HE, -VE, -HE, [+VV, +HH, -VV, -HH]*, +VV, +HE, -VE, -HE
+    # i.e.  Q2  [Q1]
+    #          e
+    #       Q3   Q4
+    return ([MATRIX_IDENTITY, MATRIX_ROTS_180, MATRIX_ROTS_270_ROTZ_180, MATRIX_IDENTITY] * (nperiods - 1)) + \
+            [MATRIX_IDENTITY, MATRIX_ROTS_180, MATRIX_ROTS_270_ROTZ_180]
+
+def create_direction_matrix_list_apple_symmetric_q2(nperiods):
+    # APPLE Symmetric devices uses horizontal and vertical end magnets
+    # Number of periods of the device refers to number of full 4-magnet periods excluding those added by the end magnets
+    # +HE, -VE, -HE, [+VV, +HH, -VV, -HH]*, +VV, +HE, -VE, -HE
+    # i.e. [Q2]  Q1
+    #          e
+    #       Q3   Q4
+    return ([MATRIX_ROTS_270, MATRIX_ROTX_180, MATRIX_ROTZ_180, MATRIX_ROTZ_180] * (nperiods - 1)) + \
+            [MATRIX_ROTS_270, MATRIX_ROTX_180, MATRIX_ROTZ_180]
+
+def create_direction_matrix_list_apple_symmetric_q3(nperiods):
+    # APPLE Symmetric devices uses horizontal and vertical end magnets
+    # Number of periods of the device refers to number of full 4-magnet periods excluding those added by the end magnets
+    # -HE, -VE, +HE, [+VV, -HH, -VV, +HH]*, +VV, -HE, -VE, +HE
+    # i.e.  Q2   Q1
+    #          e
+    #      [Q3]  Q4
+    return ([MATRIX_ROTS_270_ROTX_180, MATRIX_ROTS_180, MATRIX_ROTS_180, MATRIX_IDENTITY] * (nperiods - 1)) + \
+            [MATRIX_ROTS_270_ROTX_180, MATRIX_ROTS_180, MATRIX_ROTS_180]
+
+def create_direction_matrix_list_apple_symmetric_q4(nperiods):
+    # APPLE Symmetric devices uses horizontal and vertical end magnets
+    # Number of periods of the device refers to number of full 4-magnet periods excluding those added by the end magnets
+    # -HE, -VE, +HE, [+VV, -HH, -VV, +HH]*, +VV, -HE, -VE, +HE
+    # i.e.  Q2   Q1
+    #          e
+    #       Q3  [Q4]
+    return ([MATRIX_ROTX_180, MATRIX_ROTX_180, MATRIX_ROTS_90, MATRIX_ROTZ_180] * (nperiods - 1)) + \
+            [MATRIX_ROTX_180, MATRIX_ROTX_180, MATRIX_ROTS_90]
 
 def process(options, args):
+
+    if hasattr(options, 'verbose'):
+        setLoggerLevel(logger, options.verbose)
+
+    logger.debug('Starting')
+
+    if hasattr(options, 'output_path'):
+        if (len(args) > 0):
+            logger.warning('Output path argument overrides unnamed trailing argument!')
+            logger.warning('Ignoring all %d unnamed arguments [%s]', len(args), args)
+
+        # Output path is the value of the named argument
+        output_path = options.output_path
+    else:
+        if (len(args) == 0):
+            error_message = 'Output path argument not provided, so must provide one unnamed trailing argument!'
+            logger.error(error_message)
+            raise Exception(error_message)
+
+        elif (len(args) > 1):
+            logger.warning('Multiple unnamed trailing arguments provided but only need one for output path!')
+            logger.warning('Ignoring remaining %d unnamed arguments [%s]', len(args[1:]), args[1:])
+
+        # Output path is first unnamed argument
+        output_path = args[0]
+
+    logger.info('Output path set to [%s]', output_path)
+
+    # Generic data for all device types
+    output = {
+        # Device identifiers
+        'name'       : options.name,
+        'type'       : options.type,
+
+        # Generic spacing and length data for all device types
+        'gap'        : options.gap,
+        'interstice' : options.interstice,
+        'periods'    : options.periods,
+
+        # TODO should we consider moving to --xmin, --xmax, --xstep, ect as named arguments?
+        # Configure sampling bounds for lookup generator and trajectory evaluation
+        # S-axis sampling bounds are device dependent due to full length, X-axis and Z-axis (transverse) are same for all
+        'xmin'  : options.x[0], 'xmax'  : options.x[1], 'xstep' : options.x[2],
+        'zmin'  : options.z[0], 'zmax'  : options.z[1], 'zstep' : options.z[2],
+    }
+
+    logger.info('type [%s]', options.type)
+
     if options.type == 'Hybrid_Symmetric':
-        output = {}
-        output['name'] = options.name
-        output['type'] = options.type
+
+        # Hybrid Symmetric device has two beams, one top, one bottom
         output['number_of_beams'] = 2
-        output['gap'] = options.gap
-        output['periods'] = options.periods
-        output['period_length'] = 4*options.interstice+2*options.fullmagdims[2]+2*options.poledims[2]
-        # TODO needs sorting out
-        output['xmin'] = options.x[0]
-        output['xmax'] = options.x[1]
-        output['xstep'] = options.x[2]
-        output['zmin'] = options.z[0]
-        output['zmax'] = options.z[1]
-        output['zstep'] = options.z[2]
-        length = (options.fullmagdims[2]+options.poledims[2]+2*options.interstice)*2*(options.periods+16)
-        output['smin'] = -length/2.0
-        output['smax'] = (length/2.0)+2 * (options.fullmagdims[2]+options.poledims[2]+2*options.interstice)/(4*options.steps)
-        output['sstep'] = 2 * (options.fullmagdims[2]+options.poledims[2]+2*options.interstice)/(4*options.steps)
-        output['sstep'] = (int(round(output['sstep']*100000))/100000.)
-        output['interstice'] = options.interstice
 
-        # calculate all magnet values
-        types = create_type_list_symmetric_hybrid(options.periods)
-        top_directions_matrix = create_direction_matrix_list_symmetric_hybrid_top(options.periods)
-        bottom_directions_matrix = create_direction_matrix_list_symmetric_hybrid_bottom(options.periods)
-        top_positions = create_location_list_symmetric_hybrid_top(options.periods, options.fullmagdims, options.hemagdims, options.htmagdims, options.poledims, options.gap, options.endgapsym, options.terminalgapsymhyb, options.interstice)
-        bottom_positions = create_location_list_symmetric_hybrid_bottom(options.periods, options.fullmagdims, options.hemagdims, options.htmagdims, options.poledims, options.gap, options.endgapsym, options.terminalgapsymhyb,options.interstice)
-        top_flip_matrix = create_flip_matrix_symmetric_hybrid_bottom_top(options.periods)
-        bottom_flip_matrix = create_flip_matrix_symmetric_hybrid_bottom_top(options.periods)
-        # output beams
+        # A period consists of two horizontally aligned magnets in alternating directions separated by non magnetized iron pole blocks
+        output['period_length'] = (4 * options.interstice) + (2 * options.fullmagdims[2]) + (2 * options.poledims[2])
+
+        # Eval length here is only used for S-axis sampling points for lookup generator
+        # 16 extra periods is fudge factor to measure overhang on either end of the device
+        # TODO this could be calculated from the bounds of the device after magnets have been added, making it the same for all devices
+        # TODO only difference between above period_length and this one is due to numerical precision issue
+        period_length   = (2 * (options.fullmagdims[2] + options.poledims[2] + (2 * options.interstice)))
+        eval_length     = period_length * (options.periods + 16)
+        # TODO rounding in this way can probably be avoided
+        output['sstep'] = int(round((period_length / (4 * options.steps)) * 100000)) / 100000
+        output['smin']  = -(eval_length / 2.0)
+        output['smax']  =  (eval_length / 2.0) + output['sstep']
+
+        # Hybrid Symmetric device has the same type ordering and flip matrices on both top and bottom beams
+        types         = create_type_list_hybrid_symmetric(options.periods)
+        flip_matrices = create_flip_matrix_hybrid_symmetric(options.periods)
+
+        # Top and bottom beam position functions take same arguments (use dictionary for safety)
+        postion_params = {
+            'nperiods'            : options.periods,
+            'fullmagdims'         : options.fullmagdims,
+            'hemagdims'           : options.hemagdims,
+            'htmagdims'           : options.htmagdims,
+            'poledims'            : options.poledims,
+            'mingap'              : options.gap,
+            'interstice'          : options.interstice,
+            'endgapsym'           : options.endgapsym,
+            'terminalgapsymhybrid': options.terminalgapsymhyb,
+        }
+        top_positions = create_position_list_hybrid_symmetric_top(**postion_params)
+        btm_positions = create_position_list_hybrid_symmetric_btm(**postion_params)
+
+        # Top and bottom beams will have same matrices for vertical magnets and alternating for horizontal magnets
+        top_direction_matrices = create_direction_matrix_list_hybrid_symmetric_top(options.periods)
+        btm_direction_matrices = create_direction_matrix_list_hybrid_symmetric_btm(options.periods)
+
+        # Lookup table mapping magnet type keys to dimension tuples
+        magnet_dimensions = {
+            # Standard horizontal field magnets
+            'HH' : options.fullmagdims,
+            # End magnets with different dims to normal magnets (tending to be thinner in the S-axis)
+            'HE' : options.hemagdims,
+            # Special end kicker magnets
+            'HT' : options.htmagdims,
+        }
+
         output['beams'] = []
-        top_beam = {}
-        top_beam['name'] = "Top Beam"
-        top_beam['mags'] = []
+        for beam_index, (beam_name, positions, directions_matrices) in \
+                enumerate([('Top Beam',    top_positions, top_direction_matrices),
+                           ('Bottom Beam', btm_positions, btm_direction_matrices)]):
+
+            logger.info('type [%s] beam %d [%s]', options.type, beam_index, beam_name)
+
+            # Assert all lists have the same length
+            assert len(set(map(len, [types, flip_matrices, positions, directions_matrices]))) == 1
+
+            # Merge the per magnet data arrays computed from each helper function to describe the full beam
+            beam = { 'name' : beam_name, 'mags' : [] }
+            for magnet_index, (magnet_type, position, direction_matrix, flip_matrix) in \
+                    enumerate(zip(types, positions, directions_matrices, flip_matrices)):
+
+                logger.debug('type [%s] beam %d [%s] magnet %3d [%s]', options.type, beam_index, beam_name, magnet_index, magnet_type)
+
+                beam['mags'].append({
+                    'type'             : magnet_type,
+                    'position'         : position,
+                    'direction_matrix' : direction_matrix,
+                    'flip_matrix'      : flip_matrix,
+                    'dimensions'       : magnet_dimensions[magnet_type],
+                })
+
+            # Add the complete quadrant beam to the output data
+            output['beams'] += [beam]
         
-        bottom_beam = {}
-        bottom_beam['name'] = "Bottom Beam"
-        bottom_beam['mags'] = []
+    elif options.type == 'PPM_AntiSymmetric':
 
-        # top beam
-        for i in range(len(types)):
-            mag = {}
-            mag['type'] = types[i]
-            mag['direction_matrix'] = top_directions_matrix[i]
-            mag['position'] = top_positions[i]
-            mag['flip_matrix'] = top_flip_matrix[i]
-            if types[i] == 'VV':
-                mag['dimensions'] = options.fullmagdims
-            elif types[i] == 'HH':
-                mag['dimensions'] = options.fullmagdims
-            elif types[i] == 'HE':
-                mag['dimensions'] = options.hemagdims
-            elif types[i] == 'VE':
-                mag['dimensions'] = options.vemagdims
-            elif types[i] == 'HT':
-                mag['dimensions'] = options.htmagdims
-            top_beam['mags'].append(mag)
-
-        # bottom beam
-        for i in range(len(types)):
-            mag = {}
-            mag['type'] = types[i]
-            mag['direction_matrix'] = bottom_directions_matrix[i]
-            mag['position'] = bottom_positions[i]
-            mag['flip_matrix'] = bottom_flip_matrix[i]
-            if types[i] == 'VV':
-                mag['dimensions'] = options.fullmagdims
-            elif types[i] == 'HH':
-                mag['dimensions'] = options.fullmagdims
-            elif types[i] == 'HE':
-                mag['dimensions'] = options.hemagdims
-            elif types[i] == 'VE':
-                mag['dimensions'] = options.vemagdims
-            elif types[i] == 'HT':
-                mag['dimensions'] = options.htmagdims
-            bottom_beam['mags'].append(mag)
-
-        output['beams'].append(top_beam)
-        output['beams'].append(bottom_beam)
-
-        with open(args[0], 'w') as fp:
-            json.dump(output, fp, indent=4)
-        
-    if options.type == 'PPM_AntiSymmetric':
-        output = {}
-        output['name'] = options.name
-        output['type'] = options.type
+        # PPM Anti Symmetric device has two beams, one top, one bottom
         output['number_of_beams'] = 2
-        output['gap'] = options.gap
-        output['periods'] = options.periods
-        output['period_length'] = 4*(options.interstice+options.fullmagdims[2])
-        # TODO needs sorting out
-        output['xmin'] = options.x[0]
-        output['xmax'] = options.x[1]
-        output['xstep'] = options.x[2]
-        output['zmin'] = options.z[0]
-        output['zmax'] = options.z[1]
-        output['zstep'] = options.z[2]
-        length = (options.fullmagdims[2]+options.interstice)*4*(options.periods+16)
-        output['smin'] = -length/2.0
-        output['smax'] = (length/2.0)+((options.fullmagdims[2]+options.interstice)/options.steps)
-        output['sstep'] = (options.fullmagdims[2]+options.interstice)/options.steps
-        output['sstep'] = (int(round(output['sstep']*100000))/100000.)
-        output['interstice'] = options.interstice
 
-        # calculate all magnet values
-        types = create_type_list_antisymetric_ppm(options.periods)
-        top_directions = create_direction_list_antisymetric_ppm_top(options.periods)
-        bottom_directions = create_direction_list_antisymetric_ppm_bottom(options.periods)
-        top_directions_matrix = create_direction_matrix_list_antisymetric_ppm_top(options.periods)
-        bottom_directions_matrix = create_direction_matrix_list_antisymetric_ppm_bottom(options.periods)
-        top_positions = create_location_list_antisymmetric_ppm_top(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
-        bottom_positions = create_location_list_antisymmetric_ppm_bottom(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice)
-        top_flip_matrix = create_flip_matrix_antisymmetric_ppm_top(options.periods)
-        bottom_flip_matrix = create_flip_matrix_antisymmetric_ppm_bottom(options.periods)
+        # A period consists of two horizontally aligned and two vertically aligned magnets
+        # rotating through 360 degrees on the X-axis (tangent transverse)
+        magnet_length = options.interstice + options.fullmagdims[2]
+        output['period_length'] = 4 * magnet_length
 
-        # output beams
-        output['beams'] = []
-        top_beam = {}
-        top_beam['name'] = "Top Beam"
-        top_beam['mags'] = []
+        # Eval length here is only used for S-axis sampling points for lookup generator
+        # 16 extra periods is fudge factor to measure overhang on either end of the device
+        # TODO this could be calculated from the bounds of the device after magnets have been added, making it the same for all devices
+        eval_length = output['period_length'] * (options.periods + 16)
+        # TODO rounding in this way can probably be avoided
+        output['sstep'] = int(round((magnet_length / options.steps) * 100000)) / 100000
+        output['smin']  = -(eval_length / 2.0)
+        output['smax']  =  (eval_length / 2.0) + output['sstep']
+
+        # PPM Anti Symmetric device has the same type ordering and flip matrices on both top and bottom beams
+        types         = create_type_list_ppm_antisymmetric(options.periods)
+        flip_matrices = create_flip_matrix_list_ppm_antisymmetric(options.periods)
+
+        # Top and bottom beam position functions take same arguments (use dictionary for safety)
+        position_params = {
+            'nperiods'    : options.periods,
+            'fullmagdims' : options.fullmagdims, 
+            'vemagdims'   : options.vemagdims, 
+            'hemagdims'   : options.hemagdims,
+            'mingap'      : options.gap, 
+            'interstice'  : options.interstice,
+        }
+        top_positions = create_position_list_ppm_antisymmetric_top(**position_params)
+        btm_positions = create_position_list_ppm_antisymmetric_btm(**position_params)
         
-        bottom_beam = {}
-        bottom_beam['name'] = "Bottom Beam"
-        bottom_beam['mags'] = []
+        # TODO deprecate and remove this as it is only used for human readable build lists can the direction matrices capture the same information
+        top_directions = create_direction_list_ppm_antisymmetric_top(options.periods)
+        btm_directions = create_direction_list_ppm_antisymmetric_btm(options.periods)
 
-        # top beam
-        for i in range(len(types)):
-            mag = {}
-            mag['type'] = types[i]
-            mag['direction'] = top_directions[i]
-            mag['direction_matrix'] = top_directions_matrix[i]
-            mag['position'] = top_positions[i]
-            mag['flip_matrix'] = top_flip_matrix[i]
-            if types[i] == 'VV':
-                mag['dimensions'] = options.fullmagdims
-            elif types[i] == 'HH':
-                mag['dimensions'] = options.fullmagdims
-            elif types[i] == 'HE':
-                mag['dimensions'] = options.hemagdims
-            elif types[i] == 'VE':
-                mag['dimensions'] = options.vemagdims
-            top_beam['mags'].append(mag)
+        # Top and bottom beams will have same matrices for vertical magnets and alternating for horizontal magnets
+        top_direction_matrices = create_direction_matrix_list_ppm_antisymmetric_top(options.periods)
+        btm_direction_matrices = create_direction_matrix_list_ppm_antisymmetric_btm(options.periods)
 
-        # bottom beam
-        for i in range(len(types)):
-            mag = {}
-            mag['type'] = types[i]
-            mag['direction'] = bottom_directions[i]
-            mag['direction_matrix'] = bottom_directions_matrix[i]
-            mag['position'] = bottom_positions[i]
-            mag['flip_matrix'] = bottom_flip_matrix[i]
-            if types[i] == 'VV':
-                mag['dimensions'] = options.fullmagdims
-            elif types[i] == 'HH':
-                mag['dimensions'] = options.fullmagdims
-            elif types[i] == 'HE':
-                mag['dimensions'] = options.hemagdims
-            elif types[i] == 'VE':
-                mag['dimensions'] = options.vemagdims
-            bottom_beam['mags'].append(mag)
+        # Lookup table mapping magnet type keys to dimension tuples
+        magnet_dimensions = {
+            # Standard vertical and horizontal field magnets
+            'VV' : options.fullmagdims, 'HH' : options.fullmagdims,
+            # End magnets with different dims to normal magnets (tending to be thinner in the S-axis)
+            'VE' : options.vemagdims,   'HE' : options.hemagdims,
+        }
 
-        output['beams'].append(top_beam)
-        output['beams'].append(bottom_beam)
+        # TODO remove direction, only used for human readable output while direction_matrix has same data
+        output['beams'] = []
+        for beam_index, (beam_name, positions, directions, directions_matrices) in \
+                enumerate([('Top Beam',    top_positions, top_directions, top_direction_matrices),
+                           ('Bottom Beam', btm_positions, btm_directions, btm_direction_matrices)]):
 
-        with open(args[0], 'w') as fp:
-            json.dump(output, fp, indent=4)
+            logger.info('type [%s] beam %d [%s]', options.type, beam_index, beam_name)
 
-    if options.type == 'APPLE_Symmetric':
-        output = {}
-        output['name'] = options.name
-        output['type'] = options.type
+            # Assert all lists have the same length
+            assert len(set(map(len, [types, flip_matrices, positions, directions_matrices]))) == 1
+
+            # Merge the per magnet data arrays computed from each helper function to describe the full beam
+            beam = { 'name' : beam_name, 'mags' : [] }
+            for magnet_index, (magnet_type, position, direction, direction_matrix, flip_matrix) in \
+                    enumerate(zip(types, positions, directions, directions_matrices, flip_matrices)):
+
+                logger.debug('type [%s] beam %d [%s] magnet %3d [%s]', options.type, beam_index, beam_name, magnet_index, magnet_type)
+
+                beam['mags'].append({
+                    'type'             : magnet_type,
+                    'position'         : position,
+                    # TODO remove direction, only used for human readable output while direction_matrix has same data
+                    'direction'        : direction,
+                    'direction_matrix' : direction_matrix,
+                    'flip_matrix'      : flip_matrix,
+                    'dimensions'       : magnet_dimensions[magnet_type],
+                })
+
+            # Add the complete quadrant beam to the output data
+            output['beams'] += [beam]
+
+    elif options.type == 'APPLE_Symmetric':
+
+        # APPLE-II Symmetric device has four beams, two top, two bottom
         output['number_of_beams'] = 4
-        output['gap'] = options.gap
-        output['periods'] = options.periods
-        output['period_length'] = 4*(options.interstice+options.fullmagdims[2])
-        # TODO needs sorting out
-        output['xmin'] = options.x[0]
-        output['xmax'] = options.x[1]
-        output['xstep'] = options.x[2]
-        output['zmin'] = options.z[0]
-        output['zmax'] = options.z[1]
-        output['zstep'] = options.z[2]
-        length = (options.fullmagdims[2]+options.interstice)*4*(options.periods+16)
-        output['smin'] = -length/2.0
-        output['smax'] = (length/2.0)+((options.fullmagdims[2]+options.interstice)/options.steps)
-        output['sstep'] = (options.fullmagdims[2]+options.interstice)/options.steps
-        output['sstep'] = (int(round(output['sstep']*100000))/100000.)
-        output['interstice'] = options.interstice
-        output['end_gap'] = options.endgapsym
-        output['phasing_gap'] = options.phasinggap
-        output['clampcut'] = options.clampcut
+        output['end_gap']         = options.endgapsym
+        output['phasing_gap']     = options.phasinggap
+        output['clampcut']        = options.clampcut
 
-        # calculate all magnet values
-        types = create_type_list_symmetric_apple(options.periods)
-        q1_directions_matrix = create_direction_matrix_list_symmetric_apple_q1(options.periods)
-        q2_directions_matrix = create_direction_matrix_list_symmetric_apple_q2(options.periods)
-        q3_directions_matrix = create_direction_matrix_list_symmetric_apple_q3(options.periods)
-        q4_directions_matrix = create_direction_matrix_list_symmetric_apple_q4(options.periods)
+        # A period consists of two horizontally aligned and two vertically aligned magnets
+        # rotating through 360 degrees on the X-axis (tangent transverse)
+        magnet_length = options.interstice + options.fullmagdims[2]
+        output['period_length'] = 4 * magnet_length
 
-        q1_positions = create_location_list_symmetric_apple_q1(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice, options.endgapsym, options.phasinggap)
-        q2_positions = create_location_list_symmetric_apple_q2(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice, options.endgapsym, options.phasinggap)
-        q3_positions = create_location_list_symmetric_apple_q3(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice, options.endgapsym, options.phasinggap)
-        q4_positions = create_location_list_symmetric_apple_q4(options.fullmagdims[2]*4, options.periods, options.fullmagdims, options.vemagdims, options.hemagdims, options.gap, options.interstice, options.endgapsym, options.phasinggap)
+        # Eval length here is only used for S-axis sampling points for lookup generator
+        # 16 extra periods is fudge factor to measure overhang on either end of the device
+        # TODO this could be calculated from the bounds of the device after magnets have been added, making it the same for all devices
+        eval_length = output['period_length'] * (options.periods + 16)
+        # TODO rounding in this way can probably be avoided
+        output['sstep'] = int(round((magnet_length / options.steps) * 100000)) / 100000
+        output['smin']  = -(eval_length / 2.0)
+        output['smax']  =  (eval_length / 2.0) + output['sstep']
 
-        q1_flip_matrix = create_flip_matrix_list_symmetric_apple_q1(options.periods)
-        q2_flip_matrix = create_flip_matrix_list_symmetric_apple_q2(options.periods)
-        q3_flip_matrix = create_flip_matrix_list_symmetric_apple_q3(options.periods)
-        q4_flip_matrix = create_flip_matrix_list_symmetric_apple_q4(options.periods)
-        
-        # output beams
+        # APPLE-II Symmetric device has the same type ordering and flip matrices on all four beams
+        types         = create_type_list_apple_symmetric(options.periods)
+        flip_matrices = create_flip_matrix_list_apple_symmetric(options.periods)
+
+        # All beam position functions take same arguments (use dictionary for safety)
+        position_params = {
+            'nperiods'    : options.periods,
+            'fullmagdims' : options.fullmagdims,
+            'vemagdims'   : options.vemagdims,
+            'hemagdims'   : options.hemagdims,
+            'mingap'      : options.gap,
+            'interstice'  : options.interstice,
+            'endgap'      : options.endgapsym,
+            'phasinggap'  : options.phasinggap
+        }
+        q1_positions = create_position_list_apple_symmetric_q1(**position_params)
+        q2_positions = create_position_list_apple_symmetric_q2(**position_params)
+        q3_positions = create_position_list_apple_symmetric_q3(**position_params)
+        q4_positions = create_position_list_apple_symmetric_q4(**position_params)
+
+        # Top and bottom beams will have same matrices for vertical magnets and alternating for horizontal magnets
+        # Each beam still has a unique direction matrices list because of the transpose between beams
+        q1_directions_matrices = create_direction_matrix_list_apple_symmetric_q1(options.periods)
+        q2_directions_matrices = create_direction_matrix_list_apple_symmetric_q2(options.periods)
+        q3_directions_matrices = create_direction_matrix_list_apple_symmetric_q3(options.periods)
+        q4_directions_matrices = create_direction_matrix_list_apple_symmetric_q4(options.periods)
+
+        # Lookup table mapping magnet type keys to dimension tuples
+        magnet_dimensions = {
+            # Standard vertical and horizontal field magnets
+            'VV' : options.fullmagdims, 'HH' : options.fullmagdims,
+            # End magnets with different dims to normal magnets (tending to be thinner in the S-axis)
+            'VE' : options.vemagdims,   'HE' : options.hemagdims,
+        }
+
         output['beams'] = []
-        q1_beam = {}
-        q1_beam['name'] = "Q1 Beam"
-        q1_beam['mags'] = []
-        q2_beam = {}
-        q2_beam['name'] = "Q2 Beam"
-        q2_beam['mags'] = []
-        q3_beam = {}
-        q3_beam['name'] = "Q3 Beam"
-        q3_beam['mags'] = []
-        q4_beam = {}
-        q4_beam['name'] = "Q4 Beam"
-        q4_beam['mags'] = []
+        for beam_index, (beam_name, positions, directions_matrices) in \
+                enumerate([('Q1 Beam', q1_positions, q1_directions_matrices),
+                           ('Q2 Beam', q2_positions, q2_directions_matrices),
+                           ('Q3 Beam', q3_positions, q3_directions_matrices),
+                           ('Q4 Beam', q4_positions, q4_directions_matrices)]):
 
-        # q1 beam
-        for i in range(len(types)):
-            mag = {}
-            mag['type'] = types[i]
-            mag['direction_matrix'] = q1_directions_matrix[i]
-            mag['position'] = q1_positions[i]
-            mag['flip_matrix'] = q1_flip_matrix[i]
-            if types[i] == 'VV':
-                mag['dimensions'] = options.fullmagdims
-            elif types[i] == 'HH':
-                mag['dimensions'] = options.fullmagdims
-            elif types[i] == 'HE':
-                mag['dimensions'] = options.hemagdims
-            elif types[i] == 'VE':
-                mag['dimensions'] = options.vemagdims
-            q1_beam['mags'].append(mag)
-            
-        # q2 beam
-        for i in range(len(types)):
-            mag = {}
-            mag['type'] = types[i]
-            mag['direction_matrix'] = q2_directions_matrix[i]
-            mag['position'] = q2_positions[i]
-            mag['flip_matrix'] = q2_flip_matrix[i]
-            if types[i] == 'VV':
-                mag['dimensions'] = options.fullmagdims
-            elif types[i] == 'HH':
-                mag['dimensions'] = options.fullmagdims
-            elif types[i] == 'HE':
-                mag['dimensions'] = options.hemagdims
-            elif types[i] == 'VE':
-                mag['dimensions'] = options.vemagdims
-            q2_beam['mags'].append(mag)
-            
-        # q3 beam
-        for i in range(len(types)):
-            mag = {}
-            mag['type'] = types[i]
-            mag['direction_matrix'] = q3_directions_matrix[i]
-            mag['position'] = q3_positions[i]
-            mag['flip_matrix'] = q3_flip_matrix[i]
-            if types[i] == 'VV':
-                mag['dimensions'] = options.fullmagdims
-            elif types[i] == 'HH':
-                mag['dimensions'] = options.fullmagdims
-            elif types[i] == 'HE':
-                mag['dimensions'] = options.hemagdims
-            elif types[i] == 'VE':
-                mag['dimensions'] = options.vemagdims
-            q3_beam['mags'].append(mag)
-            
-        # q4 beam
-        for i in range(len(types)):
-            mag = {}
-            mag['type'] = types[i]
-            mag['direction_matrix'] = q4_directions_matrix[i]
-            mag['position'] = q4_positions[i]
-            mag['flip_matrix'] = q4_flip_matrix[i]
-            if types[i] == 'VV':
-                mag['dimensions'] = options.fullmagdims
-            elif types[i] == 'HH':
-                mag['dimensions'] = options.fullmagdims
-            elif types[i] == 'HE':
-                mag['dimensions'] = options.hemagdims
-            elif types[i] == 'VE':
-                mag['dimensions'] = options.vemagdims
-            q4_beam['mags'].append(mag)
+            logger.info('type [%s] beam %d [%s]', options.type, beam_index, beam_name)
 
-        output['beams'].append(q1_beam)
-        output['beams'].append(q2_beam)
-        output['beams'].append(q3_beam)
-        output['beams'].append(q4_beam)
+            # Assert all lists have the same length
+            assert len(set(map(len, [types, flip_matrices, positions, directions_matrices]))) == 1
 
-        with open(args[0], 'w') as fp:
-            json.dump(output, fp, indent=4)
+            # Merge the per magnet data arrays computed from each helper function to describe the full beam
+            beam = { 'name' : beam_name, 'mags' : [] }
+            for magnet_index, (magnet_type, position, direction_matrix, flip_matrix) in \
+                    enumerate(zip(types, positions, directions_matrices, flip_matrices)):
+
+                logger.debug('type [%s] beam %d [%s] magnet %3d [%s]', options.type, beam_index, beam_name, magnet_index, magnet_type)
+
+                beam['mags'].append({
+                    'type'             : magnet_type,
+                    'position'         : position,
+                    'direction_matrix' : direction_matrix,
+                    'flip_matrix'      : flip_matrix,
+                    'dimensions'       : magnet_dimensions[magnet_type],
+                })
+
+            # Add the complete quadrant beam to the output data
+            output['beams'] += [beam]
+
+    else:
+        # TODO raise properly logged exception in logging refactor
+        error_message = f'Insertion Device Type not implemented! {options.type}'
+        logger.error(error_message)
+        raise NotImplementedError(error_message)
+
+    try:
+        logger.info('Saving json to [%s]', output_path)
+        with open(output_path, 'w') as fp:
+            json.dump(output, fp)
+
+    except Exception as ex:
+        logger.error('Failed to save json to [%s]', output_path, exc_info=ex)
+        raise ex
+
+    logger.debug('Halting')
 
 
 if __name__ == "__main__":  #program starts here
@@ -791,10 +687,16 @@ if __name__ == "__main__":  #program starts here
     parser.add_option("-x", "--xstartstopstep", dest="x", help="X start stop and step", nargs=3, default=(-5.0, 5.1, 2.5), type="float")
     parser.add_option("-z", "--zstartstopstep", dest="z", help="Z start stop and step", nargs=3, default=(-0.0,.1, 0.1), type="float")
     parser.add_option("-s", "--stepsperperiod", dest="steps", help="Number of steps in S per quarter period", default=5, type="float")
+
+    # TODO Arg string says PPM or APPLE but code only applies to Hybrid and APPLE, not PPM which is only anti-symmetric in the code
     parser.add_option("--endgapsym", dest="endgapsym", help="Symmetric PPM or APPLE devices require an end gap in the termination structure, set gap length in mm", default=5.0, type="float")
     parser.add_option("--terminalgapsymhyb", dest="terminalgapsymhyb", help="Symmetric hybrid devices require a terminal end gap between the final half pole and the terminal H magnet in the termination structure, set gap length in mm", default=5.0, type="float")
     parser.add_option("--phasinggap", dest="phasinggap", help="Gap between Quadrants 1/2 and 3/4 that allow these axes to phase past each other; in mm. APPLES only", default=0.5, type="float")
     parser.add_option("--clampcut", dest="clampcut", help="Square corners removed to allow magnets to be clamped, dimensioned in mm. APPLEs only", default = 5.0, type="float")
 
     (options, args) = parser.parse_args()
-    process(options, args)
+
+    try:
+        process(options, args)
+    except Exception as ex:
+        logger.critical('Fatal exception in id_setup::process', exc_info=ex)
