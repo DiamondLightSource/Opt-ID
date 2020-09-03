@@ -5,7 +5,7 @@ Stage: build
 %post
     # Log when this container was built into a .sif file
     CONTAINER_BUILD_DATE=`date`
-    echo "export CONTAINER_BUILD_DATE=\"${CONTAINER_BUILD_DATE}\"" >> $SINGULARIT
+    echo "export CONTAINER_BUILD_DATE=\"${CONTAINER_BUILD_DATE}\"" >> $SINGULARITY_ENVIRONMENT
 
     # Update apt-get so we can install python3-pip
     apt update -q
