@@ -17,7 +17,7 @@ Stage: build
     apt install -y -q build-essential python3-pip libopenmpi-dev openmpi-bin
 
     # Install majority of needed python packages
-    pip3 install --no-cache-dir mock pytest numpy h5py mpi4py scipy ruamel.yaml Jinja2 nbformat nbconvert
+    pip3 install --no-cache-dir mock pytest numpy h5py mpi4py scipy ruamel.yaml Jinja2 jupyter jupyter_client nbformat nbconvert
     find /usr/lib/python3.*/ -name 'tests' -exec rm -r '{}' +
 
     # Clean unused packages to make the image smaller
