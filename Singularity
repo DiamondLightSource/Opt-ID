@@ -14,7 +14,7 @@ Stage: build
 
     # Install build dependencies
     apt update -q
-    apt install -y -q build-essential python3-pip libopenmpi-dev openmpi-bin texlive texlive-xetex texlive-fonts-recommended texlive-generic-recommended pandoc
+    apt install -y -q build-essential python3-pip libopenmpi-dev openmpi-bin texlive texlive-xetex texlive-fonts-recommended texlive-latex-recommended pandoc
 
     # Install majority of needed python packages
     pip3 install --no-cache-dir mock pytest numpy h5py mpi4py scipy ruamel.yaml Jinja2 matplotlib pandoc jupyter jupyter_client nbformat nbconvert
