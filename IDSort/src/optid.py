@@ -313,9 +313,6 @@ def generate_report_notebook(config, job_type, data_dir, processed_data_dir, gen
     with open(report_filepath, 'wb') as report:
         report.write(pdf_data)
 
-    # open report
-    subprocess.Popen(['evince', report_filepath])
-
 def generate_compare_shim_script(config_path, data_dir):
     file_loader = FileSystemLoader(os.path.join(ROOT_DIR, 'IDSort/src'))
     env = Environment(loader=file_loader)
